@@ -1,0 +1,15 @@
+return {
+	{ path = 'assets/scripts/scenes/level1.lua' , thumbnailPath = 'textures/levelCompleted/level1Complete.png'  },
+	{ path = 'assets/scripts/scenes/level2.lua' , thumbnailPath = 'textures/levelCompleted/level2Complete.png'  },
+	{ path = 'assets/scripts/scenes/level3.lua' , thumbnailPath = 'textures/levelCompleted/level3Complete.png'  },
+	{ path = 'assets/scripts/scenes/level4.lua' , thumbnailPath = 'textures/levelCompleted/level4Complete.png'  },
+	{ path = 'assets/scripts/scenes/level5.lua' , thumbnailPath = 'textures/levelCompleted/level5Complete.png'  },
+	{ path = 'assets/scripts/scenes/level6.lua' , thumbnailPath = 'textures/levelCompleted/level6Complete.png'  },
+	{ path = 'assets/scripts/scenes/level8.lua' , thumbnailPath = 'textures/levelCompleted/level8Complete.png'  },
+	{ path = 'assets/scripts/scenes/level9.lua' , thumbnailPath = 'textures/levelCompleted/level9Complete.png'  },
+	{ path = 'assets/scripts/scenes/level10.lua', thumbnailPath = 'textures/levelCompleted/level10Complete.png' },
+	{ path = 'assets/scripts/scenes/level11.lua', thumbnailPath = 'textures/levelCompleted/level11Complete.png' },
+	{ path = 'assets/scripts/scenes/level12.lua', thumbnailPath = 'textures/levelCompleted/level12Complete.png' },
+	{ path = 'assets/scripts/scenes/level13.lua', thumbnailPath = 'textures/levelCompleted/level13Complete.png' },
+	{ path = 'assets/scripts/scenes/level14.lua', thumbnailPath = 'textures/levelCompleted/level14Complete.png' },
+}
