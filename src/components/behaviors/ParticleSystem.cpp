@@ -7,9 +7,8 @@
 #include <algorithm>
 #include "Transform.h"
 #include "ParticleSystem.h"
-#include "MyMath.h"
-#include "GameTime.h"
 #include "EntityRegistry.h"
+#include "GameTime.h"
 #include "Actor.h"
 
 void ParticleSystem::draw() {

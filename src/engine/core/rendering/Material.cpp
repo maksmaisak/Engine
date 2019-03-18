@@ -6,8 +6,8 @@
 #include <iostream>
 #include <utility>
 #include <map>
-#include "engine/components/Transform.h"
-#include "engine/components/Light.h"
+#include "Transform.h"
+#include "Light.h"
 #include "Material.h"
 #include "Resources.h"
 #include "Mesh.hpp"

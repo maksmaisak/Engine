@@ -5,8 +5,10 @@
 #ifndef SAXION_Y2Q1_CPP_RIGIDBODY_H
 #define SAXION_Y2Q1_CPP_RIGIDBODY_H
 
+#include <memory>
 #include "glm.hpp"
 #include "ComponentsToLua.h"
+#include "Collider.h"
 
 namespace en {
 
@@ -15,13 +17,13 @@ namespace en {
         LUA_TYPE(Rigidbody)
         static void initializeMetatable(LuaState& lua);
 
-        bool isKinematic = false;
-        bool useGravity = true;
-        glm::vec3 velocity;
-        float invMass = 1.f;
-        float bounciness = 1.f;
+        std::shared_ptr<Collider> collider;
 
-        float radius = 1.f;
+        bool isKinematic = false;
+        bool useGravity  = true;
+        glm::vec3 velocity;
+        float invMass    = 1.f;
+        float bounciness = 1.f;
     };
 }
 
