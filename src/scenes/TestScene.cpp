@@ -33,13 +33,13 @@ namespace {
 
         auto model = en::Models::get(config::MODEL_PATH + "sphere_smooth.obj");
         auto material = std::make_shared<en::Material>("pbr");
-        material->setUniformValue("albedoMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/albedo.png"));
-        material->setUniformValue("metallicSmoothnessMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/metallic_smoothness.psd", GL_RGBA));
-        material->setUniformValue("normalMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/normal.png", GL_RGBA));
+        material->setUniformValue("albedoMap", en::Textures::white());
+        material->setUniformValue("metallicSmoothnessMap", en::Textures::white());
+        material->setUniformValue("normalMap", en::Textures::defaultNormalMap());
         material->setUniformValue("aoMap", en::Textures::white());
         material->setUniformValue("albedoColor", glm::vec4(1));
-        material->setUniformValue("metallicMultiplier", 1.f);
-        material->setUniformValue("smoothnessMultiplier", 1.f);
+        material->setUniformValue("metallicMultiplier", 0.f);
+        material->setUniformValue("smoothnessMultiplier", 0.5f);
         material->setUniformValue("aoMultiplier", 1.f);
 
         for (int y = 0; y < numSpheresPerSide; ++y) {
@@ -56,7 +56,7 @@ namespace {
                 };
                 tf.setLocalPosition({
                     sideLength * positionNormalized.x * 0.5f,
-                    -10.f + std::sinf(glm::two_pi<float>() * glm::length(positionNormalized)) + 0.1f * glm::length(positionNormalized * glm::vec2(sideLength)),
+                    -10.f + std::sinf(glm::two_pi<float>() * glm::length(positionNormalized)) + 0.6f * glm::length(positionNormalized * glm::vec2(sideLength * 0.5f)),
                     sideLength * positionNormalized.y * 0.5f
                 });
                 tf.setLocalScale({radius, radius, radius});
@@ -105,7 +105,7 @@ namespace {
                 auto& rb = object.add<en::Rigidbody>();
                 //rb.isKinematic = true;
                 //rb.radius = 0.2f;
-                rb.bounciness = 0.9f;
+                rb.bounciness = 0.98f;
                 rb.invMass = 1.f / 0.1f;
             }
 
