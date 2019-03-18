@@ -12,14 +12,14 @@ void AABBCollider::updateTransform(const glm::mat4& transform) {
     center = transform[3];
 }
 
-std::optional<Hit> AABBCollider::collide(Collider& other) {
-    return other.collide(*this);
+std::optional<Hit> AABBCollider::collide(Collider& other, const glm::vec3& movement) {
+    return other.collide(*this, movement);
 }
 
-std::optional<Hit> AABBCollider::collide(AABBCollider& other) {
-    return collisionDetectionDiscrete::AABBVsAABB(other, *this);
+std::optional<Hit> AABBCollider::collide(AABBCollider& other, const glm::vec3& movement) {
+    return collisionDetection::AABBVsAABB(other, *this, movement);
 }
 
-std::optional<Hit> AABBCollider::collide(SphereCollider& other) {
-    return collisionDetectionDiscrete::sphereVsAABB(other, *this);
+std::optional<Hit> AABBCollider::collide(SphereCollider& other, const glm::vec3& movement) {
+    return collisionDetection::sphereVsAABB(other, *this, movement);
 }

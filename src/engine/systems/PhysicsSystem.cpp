@@ -6,7 +6,7 @@
 #include "PhysicsSystem.h"
 #include "Transform.h"
 #include "Rigidbody.h"
-#include "CollisionDetectionContinuous.h"
+#include "Hit.h"
 #include "Messaging.h"
 #include "Collision.h"
 
@@ -106,7 +106,7 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
 
             const auto& otherTf = m_registry->get<Transform>(other);
 
-            std::optional<Hit> hit = rb.collider->collide(*otherRb.collider);
+            std::optional<Hit> hit = rb.collider->collide(*otherRb.collider, movement);
 
 //            std::optional<HitContinuous> hit = en::sphereVsSphereContinuous(
 //                tf.getWorldPosition(), rb.radius, movement,
@@ -127,11 +127,10 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
             if (otherRb.isKinematic)
                 otherRb.velocity = glm::vec3(0);
 
-            //tf.move(movement * hit->timeOfImpact);
-            tf.move(movement);
+            tf.move(movement * hit->timeOfImpact);
 
             m_detectedCollisions.emplace_back(*hit, entity, other);
-            return {true, 0.f /*dt * (1.f - hit->timeOfImpact)*/};
+            return {true, dt * (1.f - hit->timeOfImpact)};
         }
     }
 

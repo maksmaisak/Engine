@@ -12,15 +12,15 @@ void SphereCollider::updateTransform(const glm::mat4& transform) {
     position = transform[3];
 }
 
-std::optional<Hit> SphereCollider::collide(Collider& other) {
-    return other.collide(*this);
+std::optional<Hit> SphereCollider::collide(Collider& other, const glm::vec3& movement) {
+    return other.collide(*this, movement);
 }
 
-std::optional<Hit> SphereCollider::collide(SphereCollider& other) {
-    return collisionDetectionDiscrete::sphereVsSphere(other, *this);
+std::optional<Hit> SphereCollider::collide(SphereCollider& other, const glm::vec3& movement) {
+    return collisionDetection::sphereVsSphere(other, *this, movement);
 }
 
-std::optional<Hit> SphereCollider::collide(AABBCollider& other) {
+std::optional<Hit> SphereCollider::collide(AABBCollider& other, const glm::vec3& movement) {
 
     return std::nullopt;
 }
