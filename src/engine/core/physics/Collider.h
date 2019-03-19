@@ -17,6 +17,7 @@ namespace en {
 
     struct Collider {
 
+        virtual ~Collider() = default;
         virtual void updateTransform(const glm::mat4& transform) = 0;
 
         // Base case when the other is indeterminate

@@ -61,7 +61,7 @@ namespace {
                 });
                 tf.setLocalScale({radius, radius, radius});
 
-                auto& rb = actor.add<en::Rigidbody>(std::make_shared<en::SphereCollider>(radius));
+                auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius));
                 rb.isKinematic = true;
                 //rb.radius = radius;
 
@@ -87,7 +87,7 @@ namespace {
             en::Actor object = engine.makeActor("RingItem");
 
             {
-                const float angle = glm::two_pi<float>() * (float) i / numItems;
+                const float angle = glm::two_pi<float>() * (float)i / numItems;
                 const glm::vec3 offset = {
                     glm::cos(angle) * radius,
                     0,
@@ -115,15 +115,15 @@ namespace {
 
                 //object.add<en::Light>().intensity = 2.f;
                 object.add<en::RenderInfo>(sphereModel, sphereMaterial);
-                object.get<en::Rigidbody>().collider = std::make_shared<en::SphereCollider>(0.2f);
+                object.get<en::Rigidbody>().collider = std::make_unique<en::SphereCollider>(0.2f);
 
             } else {
 
                 object.add<en::RenderInfo>(cubeModel, cubeMaterial);
                 object.get<en::Transform>().scale(glm::vec3(2.f));
                 auto& rb = object.get<en::Rigidbody>();
-                //rb.collider = std::make_shared<en::AABBCollider>(glm::vec3(radius * 2.f));
-                rb.collider = std::make_shared<en::SphereCollider>(0.4f);
+                rb.collider = std::make_unique<en::AABBCollider>(glm::vec3(0.4f));
+                //rb.collider = std::make_unique<en::SphereCollider>(0.4f);
                 rb.invMass /= 2.f;
             }
         }
@@ -197,7 +197,7 @@ void TestScene::open() {
     en::Actor ring = engine.makeActor("Ring");
     ring.add<en::Transform>();
     {
-        auto& rb = ring.add<en::Rigidbody>(std::make_shared<en::SphereCollider>(2.5f));
+        auto& rb = ring.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(2.5f));
         //rb.isKinematic = true;
         //rb.radius = 2.5f;
     }
@@ -209,4 +209,8 @@ void TestScene::open() {
     tf.setParent(ring);
     tf.setLocalScale({2.5f, 2.5f, 2.5f});
     sphere.add<en::RenderInfo>(sphereModel, sphereMaterial);
+
+    auto floor = engine.makeActor("Floor");
+    floor.add<en::Transform>().move({0, -2, 0});
+    //floor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(100.f, 1.f, 100.f))).isKinematic = true;
 }

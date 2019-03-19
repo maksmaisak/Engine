@@ -17,7 +17,7 @@ namespace en {
         LUA_TYPE(Rigidbody)
         static void initializeMetatable(LuaState& lua);
 
-        std::shared_ptr<Collider> collider;
+        std::unique_ptr<Collider> collider;
 
         bool isKinematic = false;
         bool useGravity  = true;

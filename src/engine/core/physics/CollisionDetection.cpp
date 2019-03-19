@@ -63,7 +63,27 @@ std::optional<Hit> en::collisionDetection::sphereVsSphere(SphereCollider& a, Sph
 
 std::optional<Hit> en::collisionDetection::AABBVsAABB(AABBCollider& a, AABBCollider& b, const glm::vec3& movement) {
 
-    return std::nullopt;
+    glm::vec3 delta = a.center - b.center;
+    glm::vec3 penetration = a.halfSize + b.halfSize - glm::abs(delta);
+
+    if (penetration.x <= 0.f || penetration.y <= 0.f || penetration.z <= 0.f)
+        return std::nullopt;
+
+    Hit hit;
+    if (penetration.x < penetration.y) {
+        if (penetration.z < penetration.x) {
+            hit.normal.z = glm::sign(delta.z);
+        } else {
+            hit.normal.x = glm::sign(delta.x);
+        }
+    } else {
+        if (penetration.z < penetration.y) {
+            hit.normal.z = glm::sign(delta.z);
+        } else {
+            hit.normal.y = glm::sign(delta.y);
+        }
+    }
+    return hit;
 }
 
 std::optional<Hit> en::collisionDetection::sphereVsAABB(SphereCollider& a, AABBCollider& b, const glm::vec3& movement) {
