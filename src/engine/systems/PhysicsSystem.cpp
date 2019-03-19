@@ -91,7 +91,7 @@ namespace {
 
 std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities) {
 
-    glm::vec3 movement = rb.velocity * dt;
+    const glm::vec3 movement = rb.velocity * dt;
 
     if (rb.collider) {
 
@@ -115,10 +115,11 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
                 otherRb.velocity, otherInvMass,
                 hit.normal, std::min(rb.bounciness, otherRb.bounciness)
             );
-
             if (otherRb.isKinematic)
                 otherRb.velocity = glm::vec3(0);
+
             tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);
+            rb.collider->updateTransform(tf.getWorldTransform());
 
             m_detectedCollisions.emplace_back(hit, entity, other);
             return {true, dt * (1.f - hit.timeOfImpact)};

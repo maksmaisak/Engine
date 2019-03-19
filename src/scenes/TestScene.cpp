@@ -183,16 +183,13 @@ void TestScene::open() {
     floor.add<en::RenderInfo>(m_floorRenderInfo);
     floor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(100.f, 2.f, 100.f))).isKinematic = true;
 
-    for (int x = 0; x < 3; ++x)
-        makeCube(glm::vec3(x - 1.5f, 0, 0));
+    for (int x = -3; x <= 3; x += 1)
+        for (int z = -3; z <= 3; z += 1)
+            makeCube(glm::vec3(x, 0.f, z));
 
-//    for (int x = -3; x < 3; x += 1)
-//        for (int z = -3; z < 3; z += 1)
-//            makeCube(glm::vec3(x, 0.f, z));
-
-//    for (int x = -2; x < 2; x += 1)
-//        for (int z = -2; z < 2; z += 1)
-//            makeSphere(glm::vec3(x, 1.f, z));
+    for (int x = -2; x <= 2; x += 1)
+        for (int z = -2; z <= 2; z += 1)
+            makeSphere(glm::vec3(x, 5.f, z));
 }
 
 void TestScene::setUpNonBodies() {
@@ -233,8 +230,9 @@ void TestScene::makeSphere(const glm::vec3& position) {
 void TestScene::makeCube(const glm::vec3& position) {
 
     en::Actor actor = getEngine().makeActor();
-    actor.add<en::Transform>().move(position).scale(glm::vec3(0.2f));
+    actor.add<en::Transform>().move(position).scale(glm::vec3(0.4f));
     actor.add<en::RenderInfo>(m_cubeRenderInfo);
 
-    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(0.2f)));
+    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(0.4f)));
+    //rb.bounciness = 0.5f;
 }
