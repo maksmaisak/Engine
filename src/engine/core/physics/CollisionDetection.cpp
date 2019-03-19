@@ -31,7 +31,7 @@ namespace {
 
         // If already overlapping.
         if (c < 0.f)
-            return std::make_optional<Hit>(glm::normalize(relativePosition), 0.f);
+            return Hit {glm::normalize(relativePosition), 0.f};
 
         float d = b * b - 4.f * a * c;
         if (d < 0.f)
@@ -44,7 +44,7 @@ namespace {
         if (t >= 1.f)
             return std::nullopt;
 
-        return std::make_optional<Hit>(glm::normalize(relativePosition + movement * t), t);
+        return Hit {glm::normalize(relativePosition + movement * t), t};
     }
 }
 
@@ -63,24 +63,27 @@ std::optional<Hit> en::collisionDetection::sphereVsSphere(SphereCollider& a, Sph
 
 std::optional<Hit> en::collisionDetection::AABBVsAABB(AABBCollider& a, AABBCollider& b, const glm::vec3& movement) {
 
-    glm::vec3 delta = a.center - b.center;
+    glm::vec3 delta = (a.center + movement) - b.center;
     glm::vec3 penetration = a.halfSize + b.halfSize - glm::abs(delta);
-
     if (penetration.x <= 0.f || penetration.y <= 0.f || penetration.z <= 0.f)
         return std::nullopt;
 
-    Hit hit;
+    Hit hit = {};
     if (penetration.x < penetration.y) {
         if (penetration.z < penetration.x) {
             hit.normal.z = glm::sign(delta.z);
+            hit.depenetrationOffset.z = penetration.z * hit.normal.z;
         } else {
             hit.normal.x = glm::sign(delta.x);
+            hit.depenetrationOffset.x = penetration.x * hit.normal.x;
         }
     } else {
         if (penetration.z < penetration.y) {
             hit.normal.z = glm::sign(delta.z);
+            hit.depenetrationOffset.z = penetration.z * hit.normal.z;
         } else {
             hit.normal.y = glm::sign(delta.y);
+            hit.depenetrationOffset.y = penetration.y * hit.normal.y;
         }
     }
     return hit;

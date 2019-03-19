@@ -12,10 +12,13 @@ namespace en {
     struct Hit {
 
         glm::vec3 normal;
+
         float timeOfImpact = 1.f;
 
-        Hit() = default;
-        inline Hit(const glm::vec3& normal, float timeOfImpact) : normal(normal), timeOfImpact(timeOfImpact) {}
+        glm::vec3 depenetrationOffset;
+
+        //Hit() = default;
+        //inline Hit(const glm::vec3& normal, float timeOfImpact = 1.f) : normal(normal), timeOfImpact(timeOfImpact) {}
     };
 }
 

@@ -104,33 +104,24 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
             if (!otherRb.collider)
                 continue;
 
-            const auto& otherTf = m_registry->get<Transform>(other);
-
-            std::optional<Hit> hit = rb.collider->collide(*otherRb.collider, movement);
-
-//            std::optional<HitContinuous> hit = en::sphereVsSphereContinuous(
-//                tf.getWorldPosition(), rb.radius, movement,
-//                otherTf.getWorldPosition(), otherRb.radius
-//            );
-
-            if (!hit)
+            std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
+            if (!optionalHit)
                 continue;
+            const Hit& hit = *optionalHit;
 
             float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
-
             resolveCollision(
                 rb.velocity, rb.invMass,
                 otherRb.velocity, otherInvMass,
-                hit->normal, std::min(rb.bounciness, otherRb.bounciness)
+                hit.normal, std::min(rb.bounciness, otherRb.bounciness)
             );
 
             if (otherRb.isKinematic)
                 otherRb.velocity = glm::vec3(0);
+            tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);
 
-            tf.move(movement * hit->timeOfImpact);
-
-            m_detectedCollisions.emplace_back(*hit, entity, other);
-            return {true, dt * (1.f - hit->timeOfImpact)};
+            m_detectedCollisions.emplace_back(hit, entity, other);
+            return {true, dt * (1.f - hit.timeOfImpact)};
         }
     }
 

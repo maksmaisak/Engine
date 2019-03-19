@@ -23,7 +23,7 @@ namespace en {
         bool useGravity  = true;
         glm::vec3 velocity;
         float invMass    = 1.f;
-        float bounciness = 1.f;
+        float bounciness = 0.98f;
     };
 }
 

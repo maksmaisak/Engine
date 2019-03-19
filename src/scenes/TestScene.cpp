@@ -9,13 +9,12 @@
 #include "Model.h"
 #include "Texture.hpp"
 #include "Resources.h"
+#include "KeyboardHelper.h"
 #include "config.hpp"
 
 #include "Transform.h"
 #include "Camera.h"
 #include "Light.h"
-#include "RenderInfo.h"
-#include "Rigidbody.h"
 #include "SphereCollider.h"
 #include "AABBCollider.h"
 
@@ -26,7 +25,7 @@
 
 namespace {
 
-    void makeFloorFromSpheres(en::Engine& engine, float sideLength, int numSpheresPerSide) {
+    void makeFloor(en::Engine& engine, float sideLength, int numSpheresPerSide) {
 
         const float diameter = 2.f * sideLength / numSpheresPerSide;
         const float radius = diameter * 0.5f;
@@ -128,18 +127,22 @@ namespace {
             }
         }
     }
+
+    struct ItemsVolume {
+        glm::vec3 boundsMin;
+        glm::vec3 boundsMax;
+        glm::vec<3, int> count;
+    };
 }
 
-void TestScene::open() {
-
-    en::Engine& engine = getEngine();
+TestScene::TestScene() {
 
     m_renderSettings.ambientColor = glm::vec3(1.010478, 1.854524, 2.270603) * 0.5f;
 
     // models
     auto planeModel  = en::Models::get(config::MODEL_PATH + "plane.obj");
     auto cubeModel   = en::Models::get(config::MODEL_PATH + "cube_flat.obj");
-    auto sphereModel = en::Models::get(config::MODEL_PATH + "sphere.obj");
+    auto sphereModel = en::Models::get(config::MODEL_PATH + "sphere_smooth.obj");
 
     // materials
     auto sphereMaterial = std::make_shared<en::Material>("pbr");
@@ -162,55 +165,73 @@ void TestScene::open() {
     cubeMaterial->setUniformValue("smoothnessMultiplier", 1.f);
     cubeMaterial->setUniformValue("aoMultiplier"        , 1.f);
 
-    //en::Models::get(config::MODEL_PATH + "sphere3.obj");
-    //en::Models::removeUnused();
+    m_sphereRenderInfo = {sphereModel, sphereMaterial};
+    m_cubeRenderInfo   = {cubeModel  , cubeMaterial  };
+    m_floorRenderInfo  = {planeModel , sphereMaterial};
+}
 
-    // SCENE SETUP
+void TestScene::open() {
 
-    // Add the camera using en::Actor,
-    // a thin wrapper around en::Engine and en::Entity
-    // Using it to add components also ensures that components
-    // inheriting from en::Behavior actually have their update functions called.
-    // TODO have behaviors work when added via registry too.
+    en::Engine& engine = getEngine();
+
+    setUpNonBodies();
+
+    makeFloor(engine, 30, 20);
+
+    auto floor = engine.makeActor("Floor");
+    floor.add<en::Transform>().move({0, -10, 0});
+    floor.add<en::RenderInfo>(m_floorRenderInfo);
+    floor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(100.f, 2.f, 100.f))).isKinematic = true;
+
+    for (int x = -3; x < 3; x += 1)
+        for (int z = -3; z < 3; z += 1)
+            makeCube(glm::vec3(x, 0.f, z));
+
+    for (int x = -4; x < 4; x += 1)
+        for (int z = -4; z < 4; z += 1)
+            makeSphere(glm::vec3(x, 1.f, z));
+}
+
+void TestScene::setUpNonBodies() {
+
+    en::Engine& engine = getEngine();
+
     en::Actor camera = engine.makeActor("Camera");
     camera.add<en::Camera>();
     camera.add<en::Transform>().move({0,0,10}).rotate(90.f, {0,1,0});
-    auto& cameraOrbitBehavior = camera.add<CameraOrbitBehavior>(10.f, -15.f, 60.f);
 
+    // TODO have behaviors work when added via registry too.
+    auto& cameraOrbitBehavior = camera.add<CameraOrbitBehavior>(10.f, -15.f, 60.f);
     auto center = engine.makeActor();
     center.add<en::Transform>();
     cameraOrbitBehavior.setTarget(center);
 
-    makeFloorFromSpheres(engine, 30, 20);
-
-    // Add a directional light
     en::Actor directionalLight = engine.makeActor("DirectionalLight");
-    directionalLight.add<en::Transform>()
-        .setLocalRotation(glm::toQuat(glm::orientate3(glm::radians(glm::vec3(45, 0, 90)))));
-    {
-        auto& l = directionalLight.add<en::Light>(en::Light::Kind::DIRECTIONAL);
-        l.color = glm::vec3(1.f);
-        l.intensity = 1.f;
-    }
+    directionalLight.add<en::Transform>().rotate(45.f, {1, 0, 0});
+    directionalLight.add<en::Light>(en::Light::Kind::DIRECTIONAL);
+}
 
-    // Add an empty rotating object.
-    en::Actor ring = engine.makeActor("Ring");
-    ring.add<en::Transform>();
-    {
-        auto& rb = ring.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(2.5f));
-        //rb.isKinematic = true;
-        //rb.radius = 2.5f;
-    }
-    //ring.add<RotatingBehavior>();
-    addRingItems(engine, ring, sphereMaterial, cubeMaterial, 20);
+void TestScene::update(float dt) {
 
-    en::Actor sphere = engine.makeActor("Main sphere");
-    auto& tf = sphere.add<en::Transform>();
-    tf.setParent(ring);
-    tf.setLocalScale({2.5f, 2.5f, 2.5f});
-    sphere.add<en::RenderInfo>(sphereModel, sphereMaterial);
+    if (utils::KeyboardHelper::isDown("r"))
+        getEngine().getSceneManager().setCurrentSceneNextUpdate<TestScene>();
+}
 
-    auto floor = engine.makeActor("Floor");
-    floor.add<en::Transform>().move({0, -2, 0});
-    //floor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(100.f, 1.f, 100.f))).isKinematic = true;
+void TestScene::makeSphere(const glm::vec3& position) {
+
+    en::Actor actor = getEngine().makeActor();
+    actor.add<en::Transform>().move(position).scale(glm::vec3(0.2f));
+    actor.add<en::RenderInfo>(m_sphereRenderInfo);
+
+    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(0.2f));
+    rb.bounciness = 0.5f;
+}
+
+void TestScene::makeCube(const glm::vec3& position) {
+
+    en::Actor actor = getEngine().makeActor();
+    actor.add<en::Transform>().move(position).scale(glm::vec3(0.2f));
+    actor.add<en::RenderInfo>(m_cubeRenderInfo);
+
+    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(0.2f)));
 }
