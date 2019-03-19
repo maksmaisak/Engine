@@ -21,6 +21,5 @@ std::optional<Hit> SphereCollider::collide(SphereCollider& other, const glm::vec
 }
 
 std::optional<Hit> SphereCollider::collide(AABBCollider& other, const glm::vec3& movement) {
-
-    return std::nullopt;
+    return collisionDetection::AABBVsSphere(other, *this, movement);
 }

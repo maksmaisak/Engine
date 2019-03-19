@@ -63,12 +63,12 @@ std::optional<Hit> en::collisionDetection::sphereVsSphere(SphereCollider& a, Sph
 
 std::optional<Hit> en::collisionDetection::AABBVsAABB(AABBCollider& a, AABBCollider& b, const glm::vec3& movement) {
 
-    glm::vec3 delta = (a.center + movement) - b.center;
-    glm::vec3 penetration = a.halfSize + b.halfSize - glm::abs(delta);
+    const glm::vec3 delta = (a.center + movement) - b.center;
+    const glm::vec3 penetration = a.halfSize + b.halfSize - glm::abs(delta);
     if (penetration.x <= 0.f || penetration.y <= 0.f || penetration.z <= 0.f)
         return std::nullopt;
 
-    Hit hit = {};
+    Hit hit {};
     if (penetration.x < penetration.y) {
         if (penetration.z < penetration.x) {
             hit.normal.z = glm::sign(delta.z);
@@ -91,5 +91,28 @@ std::optional<Hit> en::collisionDetection::AABBVsAABB(AABBCollider& a, AABBColli
 
 std::optional<Hit> en::collisionDetection::sphereVsAABB(SphereCollider& a, AABBCollider& b, const glm::vec3& movement) {
 
-    return std::nullopt;
+    const glm::vec3 spherePosition = a.position + movement;
+    const glm::vec3 closestPoint = glm::clamp(spherePosition, b.center - b.halfSize, b.center + b.halfSize);
+    const glm::vec3 delta = spherePosition - closestPoint;
+    const float distanceSqr = glm::length2(delta);
+    if (distanceSqr > a.radius * a.radius)
+        return std::nullopt;
+
+    const float distance = glm::sqrt(distanceSqr);
+    const glm::vec3 normal = delta / distance;
+    return Hit {normal, 1.f, normal * (a.radius - distance)};
+}
+
+std::optional<Hit> en::collisionDetection::AABBVsSphere(AABBCollider& a, SphereCollider& b, const glm::vec3& movement) {
+
+    const glm::vec3 aabbPosition = a.center + movement;
+    const glm::vec3 closestPoint = glm::clamp(b.position, aabbPosition - a.halfSize, aabbPosition + a.halfSize);
+    const glm::vec3 delta = closestPoint - b.position;
+    const float distanceSqr = glm::length2(delta);
+    if (distanceSqr > b.radius * b.radius)
+        return std::nullopt;
+
+    const float distance = glm::sqrt(distanceSqr);
+    const glm::vec3 normal = delta / distance;
+    return Hit {normal, 1.f, normal * (b.radius - distance)};
 }
