@@ -11,12 +11,12 @@
 #include "systems/UIEventSystem.h"
 #include "systems/TweenSystem.h"
 
-#include "components/RenderInfo.h"
-#include "components/Camera.h"
-#include "components/Transform.h"
-#include "components/UIRect.h"
-#include "components/Sprite.h"
-#include "components/Text.h"
+#include "RenderInfo.h"
+#include "Camera.h"
+#include "Transform.h"
+#include "UIRect.h"
+#include "Sprite.h"
+#include "Text.h"
 
 #include "TestScene.h"
 #include "LightingScene.h"
@@ -54,7 +54,7 @@ int main() {
         engine->getSceneManager().setCurrentScene<en::LuaScene>(engine->getLuaState(), *startScene);
     lua.pop();
 
-    //engine->getSceneManager().setCurrentScene<TestScene>();
+    engine->getSceneManager().setCurrentScene<TestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 

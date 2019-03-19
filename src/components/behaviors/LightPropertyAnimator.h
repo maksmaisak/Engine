@@ -5,7 +5,7 @@
 #ifndef SAXION_Y2Q2_RENDERING_LIGHTPROPERTYANIMATOR_H
 #define SAXION_Y2Q2_RENDERING_LIGHTPROPERTYANIMATOR_H
 
-#include <engine/components/Light.h>
+#include "Light.h"
 #include "Behavior.h"
 #include "GameTime.h"
 

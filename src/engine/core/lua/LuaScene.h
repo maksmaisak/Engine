@@ -7,8 +7,8 @@
 
 #include "Scene.h"
 #include <string>
-#include "engine/core/lua/LuaState.h"
-#include "engine/actor/Actor.h"
+#include "LuaState.h"
+#include "Actor.h"
 #include "Receiver.h"
 #include "Collision.h"
 #include "LuaReference.h"
