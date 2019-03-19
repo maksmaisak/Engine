@@ -10,17 +10,17 @@
 #include <vector>
 #include <optional>
 #include <tuple>
-#include "engine/Engine.h"
-#include "engine/core/lua/LuaStack.h"
-#include "engine/resources/Resources.h"
+#include "Engine.h"
+#include "LuaStack.h"
+#include "Resources.h"
 
-#include "engine/core/lua/ComponentsToLua.h"
-#include "engine/components/Name.h"
-#include "engine/components/Transform.h"
-#include "engine/components/RenderInfo.h"
-#include "engine/components/Rigidbody.h"
-#include "engine/components/Light.h"
-#include "engine/components/Camera.h"
+#include "ComponentsToLua.h"
+#include "Name.h"
+#include "Transform.h"
+#include "RenderInfo.h"
+#include "Rigidbody.h"
+#include "Light.h"
+#include "Camera.h"
 #include "Material.h"
 
 using namespace en;

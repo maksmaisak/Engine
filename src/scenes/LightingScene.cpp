@@ -6,10 +6,10 @@
 
 #include <memory>
 #include "config.hpp"
-#include "components/Camera.h"
-#include "components/Transform.h"
-#include "components/RenderInfo.h"
-#include "components/Light.h"
+#include "Camera.h"
+#include "Transform.h"
+#include "RenderInfo.h"
+#include "Light.h"
 #include "CameraOrbitBehavior.h"
 #include "RotatingBehavior.hpp"
 #include "LightPropertyAnimator.h"

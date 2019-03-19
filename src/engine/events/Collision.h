@@ -8,7 +8,7 @@
 #include "Entity.h"
 #include <optional>
 #include <tuple>
-#include "PhysicsUtils.h"
+#include "CollisionDetection.h"
 #include "EntityRegistry.h"
 
 namespace en {

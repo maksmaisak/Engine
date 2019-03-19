@@ -6,7 +6,7 @@
 #include "PhysicsSystem.h"
 #include "Transform.h"
 #include "Rigidbody.h"
-#include "PhysicsUtils.h"
+#include "Hit.h"
 #include "Messaging.h"
 #include "Collision.h"
 
@@ -21,10 +21,22 @@ PhysicsSystem& PhysicsSystem::setGravity(const glm::vec3& gravity) {
 void PhysicsSystem::update(float dt) {
 
     auto entities = m_registry->with<Transform, Rigidbody>();
+
     for (Entity entity : entities) {
 
         auto& rb = m_registry->get<Rigidbody>(entity);
-        if (rb.isKinematic) continue;
+        if (!rb.collider)
+            continue;
+
+        const auto& tf = m_registry->get<Transform>(entity);
+        rb.collider->updateTransform(tf.getWorldTransform());
+    }
+
+    for (Entity entity : entities) {
+
+        auto& rb = m_registry->get<Rigidbody>(entity);
+        if (rb.isKinematic)
+            continue;
 
         auto& tf = m_registry->get<Transform>(entity);
 
@@ -44,46 +56,73 @@ void PhysicsSystem::update(float dt) {
         }
     }
 
-    for (Collision& collision : m_detectedCollisions) {
+    for (Collision& collision : m_detectedCollisions)
         Receiver<Collision>::broadcast(collision);
-    }
     m_detectedCollisions.clear();
+}
+
+namespace {
+
+    /// A helper for resolving collisions between physical bodies
+    /// in a way which obeys conservation of momentum.
+    /// Assumes `normal` is normalized.
+    inline void resolveCollision(
+        glm::vec3& aVelocity, float aInverseMass,
+        glm::vec3& bVelocity, float bInverseMass,
+        glm::vec3 normal, float bounciness = 1.f
+    ) {
+        float aSpeedAlongNormal = glm::dot(normal, aVelocity);
+        float bSpeedAlongNormal = glm::dot(normal, bVelocity);
+
+        if (aSpeedAlongNormal - bSpeedAlongNormal > 0.f)
+            return;
+
+        float u =
+            (aSpeedAlongNormal * bInverseMass + bSpeedAlongNormal * aInverseMass) /
+            (aInverseMass + bInverseMass);
+
+        float aDeltaSpeedAlongNormal = -(1.f + bounciness) * (aSpeedAlongNormal - u);
+        aVelocity += normal * aDeltaSpeedAlongNormal;
+
+        float bDeltaSpeedAlongNormal = -(1.f + bounciness) * (bSpeedAlongNormal - u);
+        bVelocity += normal * bDeltaSpeedAlongNormal;
+    }
 }
 
 std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities) {
 
-    glm::vec3 movement = rb.velocity * dt;
+    const glm::vec3 movement = rb.velocity * dt;
 
-    for (Entity other : entities) {
+    if (rb.collider) {
 
-        if (entity == other) continue;
+        for (Entity other : entities) {
 
-        auto& otherRb = m_registry->get<Rigidbody>(other);
-        auto& otherTf = m_registry->get<Transform>(other);
+            if (entity == other)
+                continue;
 
-        std::optional<Hit> hit = en::sphereVsSphereContinuous(
-            tf.getWorldPosition(), rb.radius, movement,
-            otherTf.getWorldPosition(), otherRb.radius
-        );
+            auto& otherRb = m_registry->get<Rigidbody>(other);
+            if (!otherRb.collider)
+                continue;
 
-        if (hit.has_value()) {
+            std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
+            if (!optionalHit)
+                continue;
+            const Hit& hit = *optionalHit;
 
             float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
-
-            en::resolve(
-                rb.velocity,      rb.invMass,
+            resolveCollision(
+                rb.velocity, rb.invMass,
                 otherRb.velocity, otherInvMass,
-                hit->normal, std::min(rb.bounciness, otherRb.bounciness)
+                hit.normal, std::min(rb.bounciness, otherRb.bounciness)
             );
-
-            if (otherRb.isKinematic) {
+            if (otherRb.isKinematic)
                 otherRb.velocity = glm::vec3(0);
-            }
 
-            tf.move(movement * hit->timeOfImpact);
+            tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);
+            rb.collider->updateTransform(tf.getWorldTransform());
 
-            m_detectedCollisions.emplace_back(*hit, entity, other);
-            return {true, dt * (1.f - hit->timeOfImpact)};
+            m_detectedCollisions.emplace_back(hit, entity, other);
+            return {true, dt * (1.f - hit.timeOfImpact)};
         }
     }
 
