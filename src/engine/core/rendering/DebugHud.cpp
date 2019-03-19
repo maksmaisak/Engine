@@ -13,7 +13,7 @@ DebugHud::DebugHud(Engine& engine, VertexRenderer& vertexRenderer) :
 void DebugHud::setDebugInfo(const Info& info) {
 
     std::stringstream s;
-    s << "fps: " << glm::iround(info.fps) << " frame: " << info.frameTimeMicroseconds / 1000.0 << "ms";
+    s << "fps: " << glm::iround(info.fps) << "\nrender time: " << info.frameTimeMicroseconds / 1000.0 << "ms";
     m_text.setString(s.str());
 }
 

@@ -45,35 +45,42 @@ const std::string& Text::getString() const {
     return m_string;
 }
 
-void Text::setString(const std::string& newString) {
+Text& Text::setString(const std::string& newString) {
+
     m_string = newString;
     m_needsGeometryUpdate = true;
+
+    return *this;
 }
 
 const std::shared_ptr<Material>& Text::getMaterial() const {
     return m_material;
 }
 
-void Text::setMaterial(const std::shared_ptr<Material>& material) {
+Text& Text::setMaterial(const std::shared_ptr<Material>& material) {
 
     if (m_material == material)
-        return;
+        return *this;
 
     m_material = material;
     m_needsGeometryUpdate = true;
+
+    return *this;
 }
 
 const std::shared_ptr<sf::Font>& Text::getFont() const {
     return m_font;
 }
 
-void Text::setFont(const std::shared_ptr<sf::Font>& font) {
+Text& Text::setFont(const std::shared_ptr<sf::Font>& font) {
 
     if (m_font == font)
-        return;
+        return *this;
 
     m_font = font;
     m_needsGeometryUpdate = true;
+
+    return *this;
 }
 
 const unsigned int Text::getCharacterSize() const {
@@ -81,32 +88,39 @@ const unsigned int Text::getCharacterSize() const {
     return m_characterSize;
 }
 
-void Text::setCharacterSize(unsigned int size) {
+Text& Text::setCharacterSize(unsigned int size) {
 
     if (m_characterSize == size)
-        return;
+        return *this;
 
     m_characterSize = size;
     m_needsGeometryUpdate = true;
+
+    return *this;
 }
 
 const glm::vec4& Text::getColor() const {
     return m_color;
 }
 
-void Text::setColor(const glm::vec4& color) {
+Text& Text::setColor(const glm::vec4& color) {
 
     m_color = color;
     if (m_material)
         m_material->setUniformValue("textColor", color);
+
+    return *this;
 }
 
 const glm::vec2& Text::getAlignment() const {
     return m_alignment;
 }
 
-void Text::setAlignment(const glm::vec2& alignment) {
+Text& Text::setAlignment(const glm::vec2& alignment) {
+
     m_alignment = alignment;
+
+    return *this;
 }
 
 const std::vector<Vertex>& Text::getVertices() const {
