@@ -6,11 +6,14 @@
 #define SAXION_Y2Q1_CPP_PHYSICSSYSTEM_H
 
 #include <tuple>
+#include <utility>
+#include <chrono>
 #include "System.h"
 #include "Engine.h"
 #include "glm.hpp"
 #include "Collision.h"
 #include "Actor.h"
+#include "Average.h"
 
 namespace en {
 
@@ -25,7 +28,7 @@ namespace en {
 
         struct DiagnosticsInfo {
 
-            float updateTime = 0.f;
+            std::chrono::duration<double, std::milli> updateTime = {};
             int numCollisionChecks = 0;
             int numCollisions = 0;
         };
@@ -44,6 +47,7 @@ namespace en {
         std::vector<Collision> m_detectedCollisions;
 
         DiagnosticsInfo m_diagnosticsInfo;
+        utils::Average<std::chrono::microseconds> m_averageUpdateTime;
         Actor m_debugTextActor;
     };
 }

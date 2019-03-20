@@ -64,8 +64,9 @@ void PhysicsSystem::update(float dt) {
         }
     }
 
-    std::chrono::duration<double> time = clock::now() - start;
-    m_diagnosticsInfo.updateTime = (float)(time.count() * 1000.0);
+    std::chrono::duration<double, std::milli> time  = clock::now() - start;
+    m_diagnosticsInfo.updateTime = clock::now() - start;
+    m_averageUpdateTime.addSample(std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start));
 
     for (Collision& collision : m_detectedCollisions)
         Receiver<Collision>::broadcast(collision);
@@ -162,15 +163,17 @@ void PhysicsSystem::addGravity(Entity entity, Transform& tf, Rigidbody& rb, floa
 void PhysicsSystem::flushDiagnosticsInfo() {
 
     using namespace std::literals::string_literals;
+    using namespace std::chrono;
 
     const auto& i = m_diagnosticsInfo;
     std::stringstream s;
     s <<
         "Physics:\n" <<
-        "update time: " << i.updateTime << "ms" << std::endl <<
+        "update time: " << i.updateTime.count() << "ms" << std::endl <<
+        "update time (average): " << duration_cast<duration<double, std::milli>>(m_averageUpdateTime.get()).count() << "ms" << std::endl <<
         "collision checks: " << i.numCollisionChecks << std::endl <<
         "collisions      : " << i.numCollisions << std::endl;
-    std::cout << s.str();
+    //std::cout << s.str();
     ensureDebugText().setString(s.str());
 
     m_diagnosticsInfo = {};
