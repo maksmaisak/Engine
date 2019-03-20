@@ -24,22 +24,22 @@ namespace en {
         static void initializeMetatable(LuaState& lua);
 
         const std::string& getString() const;
-        void setString(const std::string& newString);
+        Text& setString(const std::string& newString);
 
         const std::shared_ptr<Material>& getMaterial() const;
-        void setMaterial(const std::shared_ptr<Material>& material);
+        Text& setMaterial(const std::shared_ptr<Material>& material);
 
         const std::shared_ptr<sf::Font>& getFont() const;
-        void setFont(const std::shared_ptr<sf::Font>& font);
+        Text& setFont(const std::shared_ptr<sf::Font>& font);
 
         const unsigned int getCharacterSize() const;
-        void setCharacterSize(unsigned int size);
+        Text& setCharacterSize(unsigned int size);
 
         const glm::vec4& getColor() const;
-        void setColor(const glm::vec4& color);
+        Text& setColor(const glm::vec4& color);
 
         const glm::vec2& getAlignment() const;
-        void setAlignment(const glm::vec2& alignment);
+        Text& setAlignment(const glm::vec2& alignment);
 
         const std::vector<Vertex>& getVertices() const;
         const glm::vec2& getBoundsMin() const;

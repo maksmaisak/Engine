@@ -41,6 +41,11 @@ namespace {
         material->setUniformValue("smoothnessMultiplier", 0.5f);
         material->setUniformValue("aoMultiplier", 1.f);
 
+        auto floor = engine.makeActor("Floor");
+        floor.add<en::Transform>().move({0, -6, 0}).scale({100, 1, 100});
+        floor.add<en::RenderInfo>(en::Resources<en::Model>::get(config::MODEL_PATH + "cube_flat.obj"), material);
+        floor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(100.f, 1.f, 100.f))).isKinematic = true;
+
         for (int y = 0; y < numSpheresPerSide; ++y) {
             for (int x = 0; x < numSpheresPerSide; ++x) {
 
@@ -69,66 +74,7 @@ namespace {
         }
     }
 
-    void addRingItems(
-        en::Engine& engine,
-        en::Entity parent,
-        const std::shared_ptr<en::Material>& sphereMaterial,
-        const std::shared_ptr<en::Material>& cubeMaterial,
-        std::size_t numItems = 10,
-        float radius = 3.5f
-    ) {
-
-        auto cubeModel   = en::Models::get(config::MODEL_PATH + "cube_flat.obj");
-        auto sphereModel = en::Models::get(config::MODEL_PATH + "sphere_smooth.obj");
-
-        for (std::size_t i = 0; i < numItems; ++i) {
-
-            en::Actor object = engine.makeActor("RingItem");
-
-            {
-                const float angle = glm::two_pi<float>() * (float)i / numItems;
-                const glm::vec3 offset = {
-                    glm::cos(angle) * radius,
-                    0,
-                    glm::sin(angle) * radius
-                };
-
-                auto& tf = object.add<en::Transform>()
-                    .setLocalPosition(offset)
-                    .scale(glm::vec3(0.2f));
-
-                //tf.setParent(parent);
-            }
-
-            {
-                auto& rb = object.add<en::Rigidbody>();
-                //rb.isKinematic = true;
-                //rb.radius = 0.2f;
-                rb.bounciness = 0.98f;
-                rb.invMass = 1.f / 0.1f;
-            }
-
-            //object.add<RotatingBehavior>();
-
-            if (i % 2 == 0) {
-
-                //object.add<en::Light>().intensity = 2.f;
-                object.add<en::RenderInfo>(sphereModel, sphereMaterial);
-                object.get<en::Rigidbody>().collider = std::make_unique<en::SphereCollider>(0.2f);
-
-            } else {
-
-                object.add<en::RenderInfo>(cubeModel, cubeMaterial);
-                object.get<en::Transform>().scale(glm::vec3(2.f));
-                auto& rb = object.get<en::Rigidbody>();
-                rb.collider = std::make_unique<en::AABBCollider>(glm::vec3(0.4f));
-                //rb.collider = std::make_unique<en::SphereCollider>(0.4f);
-                rb.invMass /= 2.f;
-            }
-        }
-    }
-
-    struct ItemsVolume {
+    struct Volume {
         glm::vec3 boundsMin;
         glm::vec3 boundsMax;
         glm::vec<3, int> count;
@@ -165,9 +111,19 @@ TestScene::TestScene() {
     cubeMaterial->setUniformValue("smoothnessMultiplier", 1.f);
     cubeMaterial->setUniformValue("aoMultiplier"        , 1.f);
 
+    auto planeMaterial = std::make_shared<en::Material>("pbr");
+    planeMaterial->setUniformValue("albedoMap", en::Textures::white());
+    planeMaterial->setUniformValue("metallicSmoothnessMap", en::Textures::white());
+    planeMaterial->setUniformValue("normalMap", en::Textures::defaultNormalMap());
+    planeMaterial->setUniformValue("aoMap", en::Textures::white());
+    planeMaterial->setUniformValue("albedoColor", glm::vec4(1));
+    planeMaterial->setUniformValue("metallicMultiplier", 0.f);
+    planeMaterial->setUniformValue("smoothnessMultiplier", 0.5f);
+    planeMaterial->setUniformValue("aoMultiplier", 1.f);
+
     m_sphereRenderInfo = {sphereModel, sphereMaterial};
     m_cubeRenderInfo   = {cubeModel  , cubeMaterial  };
-    m_floorRenderInfo  = {planeModel , sphereMaterial};
+    m_floorRenderInfo  = {planeModel , planeMaterial };
 }
 
 void TestScene::open() {
@@ -177,11 +133,6 @@ void TestScene::open() {
     setUpNonBodies();
 
     makeFloor(engine, 30, 20);
-
-    auto floor = engine.makeActor("Floor");
-    floor.add<en::Transform>().move({0, -10, 0});
-    floor.add<en::RenderInfo>(m_floorRenderInfo);
-    floor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(glm::vec3(100.f, 2.f, 100.f))).isKinematic = true;
 
     for (int x = -3; x <= 3; x += 1)
         for (int z = -3; z <= 3; z += 1)
