@@ -64,9 +64,11 @@ void PhysicsSystem::update(float dt) {
         }
     }
 
-    std::chrono::duration<double, std::milli> time  = clock::now() - start;
-    m_diagnosticsInfo.updateTime = clock::now() - start;
-    m_averageUpdateTime.addSample(std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - start));
+    const auto time = clock::now() - start;
+    m_currentUpdateInfo.time = time;
+    m_diagnosticsInfo.updateTimeAverage.addSample(time);
+    m_diagnosticsInfo.updateTimeMin = std::min(m_diagnosticsInfo.updateTimeMin, time);
+    m_diagnosticsInfo.updateTimeMax = std::max(m_diagnosticsInfo.updateTimeMax, time);
 
     for (Collision& collision : m_detectedCollisions)
         Receiver<Collision>::broadcast(collision);
@@ -117,11 +119,11 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
             if (!otherRb.collider)
                 continue;
 
-            m_diagnosticsInfo.numCollisionChecks += 1;
+            m_currentUpdateInfo.numCollisionChecks += 1;
             std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
             if (!optionalHit)
                 continue;
-            m_diagnosticsInfo.numCollisions += 1;
+            m_currentUpdateInfo.numCollisions += 1;
             const Hit& hit = *optionalHit;
 
             const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
@@ -165,18 +167,23 @@ void PhysicsSystem::flushDiagnosticsInfo() {
     using namespace std::literals::string_literals;
     using namespace std::chrono;
 
+    using ms = duration<double, std::milli>;
+
     const auto& i = m_diagnosticsInfo;
+    const auto& u = m_currentUpdateInfo;
     std::stringstream s;
     s <<
         "Physics:\n" <<
-        "update time: " << i.updateTime.count() << "ms" << std::endl <<
-        "update time (average): " << duration_cast<duration<double, std::milli>>(m_averageUpdateTime.get()).count() << "ms" << std::endl <<
-        "collision checks: " << i.numCollisionChecks << std::endl <<
-        "collisions      : " << i.numCollisions << std::endl;
+        "update time          : " << duration_cast<ms>(u.time).count() << "ms" << std::endl <<
+        "update time (average): " << duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms" << std::endl <<
+        "update time (max)    : " << duration_cast<ms>(i.updateTimeMax).count() << "ms" << std::endl <<
+        "update time (min)    : " << duration_cast<ms>(i.updateTimeMin).count() << "ms" << std::endl <<
+        "collision checks: " << u.numCollisionChecks << std::endl <<
+        "collisions      : " << u.numCollisions << std::endl;
     //std::cout << s.str();
     ensureDebugText().setString(s.str());
 
-    m_diagnosticsInfo = {};
+    m_currentUpdateInfo = {};
 }
 
 Text& PhysicsSystem::ensureDebugText() {
@@ -186,7 +193,10 @@ Text& PhysicsSystem::ensureDebugText() {
 
     m_debugTextActor = m_engine->makeActor("PhysicsSystemDebug");
     m_debugTextActor.add<Transform>();
-    m_debugTextActor.add<UIRect>();
+
+    auto& rect = m_debugTextActor.add<UIRect>();
+    rect.offsetMin = rect.offsetMax = {30, -30};
+
     return m_debugTextActor.add<Text>()
         .setString("Test")
         .setAlignment({0, 1})

@@ -28,9 +28,16 @@ namespace en {
 
         struct DiagnosticsInfo {
 
-            std::chrono::duration<double, std::milli> updateTime = {};
+            utils::Average<std::chrono::nanoseconds> updateTimeAverage = {};
+            std::chrono::nanoseconds updateTimeMin = std::chrono::nanoseconds::max();
+            std::chrono::nanoseconds updateTimeMax = {};
+        };
+
+        struct UpdateInfo {
+
+            std::chrono::nanoseconds time = {};
             int numCollisionChecks = 0;
-            int numCollisions = 0;
+            int numCollisions      = 0;
         };
 
         void update(float dt) override;
@@ -47,7 +54,7 @@ namespace en {
         std::vector<Collision> m_detectedCollisions;
 
         DiagnosticsInfo m_diagnosticsInfo;
-        utils::Average<std::chrono::microseconds> m_averageUpdateTime;
+        UpdateInfo m_currentUpdateInfo;
         Actor m_debugTextActor;
     };
 }
