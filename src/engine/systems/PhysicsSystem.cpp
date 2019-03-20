@@ -5,6 +5,7 @@
 #include "PhysicsSystem.h"
 #include <SFML/Graphics.hpp>
 #include <sstream>
+#include <fstream>
 #include <chrono>
 #include "Transform.h"
 #include "Rigidbody.h"
@@ -166,7 +167,6 @@ void PhysicsSystem::flushDiagnosticsInfo() {
 
     using namespace std::literals::string_literals;
     using namespace std::chrono;
-
     using ms = duration<double, std::milli>;
 
     const auto& i = m_diagnosticsInfo;
@@ -201,4 +201,24 @@ Text& PhysicsSystem::ensureDebugText() {
         .setString("Test")
         .setAlignment({0, 1})
         .setFont(Resources<sf::Font>::get(config::FONT_PATH + "Menlo.ttc"));
+}
+
+void PhysicsSystem::receive(const SceneManager::OnSceneClosed& info) {
+
+    using namespace std::chrono;
+    using ms = duration<double, std::milli>;
+
+    std::ofstream out("output/test.csv");
+    if (!out.is_open())
+        return;
+
+    const auto& i = m_diagnosticsInfo;
+
+    out << "update time (average), update time (max)\n" <<
+        duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms, " <<
+        duration_cast<ms>(i.updateTimeMax).count() << "ms\n";
+
+    out.close();
+
+    m_diagnosticsInfo = {};
 }

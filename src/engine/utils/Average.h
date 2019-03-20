@@ -17,7 +17,7 @@ namespace utils {
             m_sampleCount += 1;
         }
 
-        inline T get() const {return m_sum / m_sampleCount;};
+        inline T get() const {return m_sampleCount ? m_sum / m_sampleCount : static_cast<T>(0);};
         inline operator T() const {return get();}
 
     private:

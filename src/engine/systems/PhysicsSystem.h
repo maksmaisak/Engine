@@ -14,6 +14,8 @@
 #include "Collision.h"
 #include "Actor.h"
 #include "Average.h"
+#include "SceneManager.h"
+#include "Receiver.h"
 
 namespace en {
 
@@ -22,7 +24,7 @@ namespace en {
     struct Collision;
     class Text;
 
-    class PhysicsSystem : public en::System {
+    class PhysicsSystem : public System, Receiver<SceneManager::OnSceneClosed> {
 
     public:
 
@@ -44,6 +46,9 @@ namespace en {
         PhysicsSystem& setGravity(const glm::vec3& gravity);
 
     private:
+
+        void receive(const SceneManager::OnSceneClosed& info) override;
+
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities);
         void addGravity(Entity entity, Transform& tf, Rigidbody& rb, float dt);
 
