@@ -18,7 +18,7 @@
 #include "Sprite.h"
 #include "Text.h"
 
-#include "TestScene.h"
+#include "PhysicsTestScene.h"
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
@@ -57,7 +57,7 @@ int main() {
     }
 
     //openStartLuaScene(*engine);
-    engine->getSceneManager().setCurrentScene<TestScene>();
+    engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 
