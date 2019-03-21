@@ -25,13 +25,23 @@
 
 #include "Model.h"
 
+void openStartLuaScene(en::Engine& engine) {
+
+    en::LuaState& lua = engine.getLuaState();
+    lua_getglobal(lua, "Config");
+    auto popConfig = lua::PopperOnDestruct(lua);
+    auto startScene = lua.tryGetField<std::string>("startScene");
+    if (startScene)
+        engine.getSceneManager().setCurrentScene<en::LuaScene>(lua, *startScene);
+    lua.pop();
+}
+
 int main() {
 
     std::cout << "Starting Game" << std::endl;
 
     auto engine = std::make_unique<en::Engine>();
     engine->initialize();
-
     {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
@@ -46,19 +56,11 @@ int main() {
         engine->addSystem<en::DestroySystem>();
     }
 
-    en::LuaState& lua = engine->getLuaState();
-    lua_getglobal(lua, "Config");
-    auto popConfig = lua::PopperOnDestruct(lua);
-    auto startScene = lua.tryGetField<std::string>("startScene");
-    if (startScene)
-        engine->getSceneManager().setCurrentScene<en::LuaScene>(engine->getLuaState(), *startScene);
-    lua.pop();
-
+    //openStartLuaScene(*engine);
     engine->getSceneManager().setCurrentScene<TestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 
     engine->run();
-
     return 0;
 }

@@ -5,6 +5,7 @@
 #include "PhysicsSystem.h"
 #include <SFML/Graphics.hpp>
 #include <sstream>
+#include <fstream>
 #include <chrono>
 #include "Transform.h"
 #include "Rigidbody.h"
@@ -82,7 +83,7 @@ namespace {
     /// A helper for resolving collisions between physical bodies
     /// in a way that obeys conservation of momentum.
     /// Assumes `normal` is normalized.
-    inline void resolveCollision(
+    inline void updateVelocities(
         glm::vec3& aVelocity, float aInverseMass,
         glm::vec3& bVelocity, float bInverseMass,
         const glm::vec3& normal, float bounciness = 1.f
@@ -101,6 +102,21 @@ namespace {
 
         const float bDeltaSpeedAlongNormal = -(1.f + bounciness) * (bSpeedAlongNormal - u);
         bVelocity += normal * bDeltaSpeedAlongNormal;
+    }
+
+    inline void resolveCollision(Rigidbody& rb, Transform& tf, const glm::vec3& movement, Rigidbody& otherRb, const Hit& hit) {
+
+        const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
+        updateVelocities(
+            rb.velocity, rb.invMass,
+            otherRb.velocity, otherInvMass,
+            hit.normal, std::min(rb.bounciness, otherRb.bounciness)
+        );
+        if (otherRb.isKinematic)
+            otherRb.velocity = glm::vec3(0);
+
+        tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);
+        rb.collider->updateTransform(tf.getWorldTransform());
     }
 }
 
@@ -123,11 +139,12 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
             std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
             if (!optionalHit)
                 continue;
+
             m_currentUpdateInfo.numCollisions += 1;
             const Hit& hit = *optionalHit;
 
             const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
-            resolveCollision(
+            updateVelocities(
                 rb.velocity, rb.invMass,
                 otherRb.velocity, otherInvMass,
                 hit.normal, std::min(rb.bounciness, otherRb.bounciness)
@@ -166,7 +183,6 @@ void PhysicsSystem::flushDiagnosticsInfo() {
 
     using namespace std::literals::string_literals;
     using namespace std::chrono;
-
     using ms = duration<double, std::milli>;
 
     const auto& i = m_diagnosticsInfo;
@@ -201,4 +217,23 @@ Text& PhysicsSystem::ensureDebugText() {
         .setString("Test")
         .setAlignment({0, 1})
         .setFont(Resources<sf::Font>::get(config::FONT_PATH + "Menlo.ttc"));
+}
+
+void PhysicsSystem::receive(const SceneManager::OnSceneClosed& info) {
+
+    using namespace std::chrono;
+    using ms = duration<double, std::milli>;
+
+    std::ofstream out("output/test.csv");
+    if (!out.is_open())
+        return;
+
+    const auto& i = m_diagnosticsInfo;
+    out << "update time (average), update time (max)\n" <<
+        duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms, " <<
+        duration_cast<ms>(i.updateTimeMax).count() << "ms\n";
+
+    out.close();
+
+    m_diagnosticsInfo = {};
 }

@@ -79,6 +79,9 @@ void Engine::run() {
 
         processWindowEvents();
     }
+
+    m_sceneManager.closeCurrentScene();
+    m_registry.destroyAll();
 }
 
 void Engine::update(float dt) {
