@@ -10,6 +10,9 @@ namespace en {
 
     void SceneManager::update(float dt) {
 
+        if (m_shouldCloseSceneNextFrame)
+            closeCurrentScene();
+
         if (m_openNextUpdateScene)
             setCurrentScene(std::move(m_openNextUpdateScene));
 
@@ -34,6 +37,8 @@ namespace en {
         if (!m_currentScene)
             return;
 
+        m_shouldCloseSceneNextFrame = false;
+
         m_currentScene->close();
         m_engine->getRegistry().destroyAll();
         Receiver<OnSceneClosed>::broadcast({this});
@@ -42,5 +47,10 @@ namespace en {
     void SceneManager::setCurrentSceneNextUpdate(std::unique_ptr<Scene> scene) {
 
         m_openNextUpdateScene = std::move(scene);
+    }
+
+    void SceneManager::setCurrentSceneNextUpdate() {
+
+        m_shouldCloseSceneNextFrame = true;
     }
 }

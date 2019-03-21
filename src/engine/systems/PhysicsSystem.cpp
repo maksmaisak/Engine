@@ -83,7 +83,7 @@ namespace {
     /// A helper for resolving collisions between physical bodies
     /// in a way that obeys conservation of momentum.
     /// Assumes `normal` is normalized.
-    inline void resolveCollision(
+    inline void updateVelocities(
         glm::vec3& aVelocity, float aInverseMass,
         glm::vec3& bVelocity, float bInverseMass,
         const glm::vec3& normal, float bounciness = 1.f
@@ -102,6 +102,21 @@ namespace {
 
         const float bDeltaSpeedAlongNormal = -(1.f + bounciness) * (bSpeedAlongNormal - u);
         bVelocity += normal * bDeltaSpeedAlongNormal;
+    }
+
+    inline void resolveCollision(Rigidbody& rb, Transform& tf, const glm::vec3& movement, Rigidbody& otherRb, const Hit& hit) {
+
+        const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
+        updateVelocities(
+            rb.velocity, rb.invMass,
+            otherRb.velocity, otherInvMass,
+            hit.normal, std::min(rb.bounciness, otherRb.bounciness)
+        );
+        if (otherRb.isKinematic)
+            otherRb.velocity = glm::vec3(0);
+
+        tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);
+        rb.collider->updateTransform(tf.getWorldTransform());
     }
 }
 
@@ -124,11 +139,12 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
             std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
             if (!optionalHit)
                 continue;
+
             m_currentUpdateInfo.numCollisions += 1;
             const Hit& hit = *optionalHit;
 
             const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
-            resolveCollision(
+            updateVelocities(
                 rb.velocity, rb.invMass,
                 otherRb.velocity, otherInvMass,
                 hit.normal, std::min(rb.bounciness, otherRb.bounciness)
@@ -213,7 +229,6 @@ void PhysicsSystem::receive(const SceneManager::OnSceneClosed& info) {
         return;
 
     const auto& i = m_diagnosticsInfo;
-
     out << "update time (average), update time (max)\n" <<
         duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms, " <<
         duration_cast<ms>(i.updateTimeMax).count() << "ms\n";

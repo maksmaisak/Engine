@@ -21,7 +21,7 @@ namespace utils {
         inline operator T() const {return get();}
 
     private:
-        T m_sum;
+        T m_sum = {};
         int m_sampleCount = 0;
     };
 }
