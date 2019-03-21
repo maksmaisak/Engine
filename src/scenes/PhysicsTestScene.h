@@ -45,6 +45,9 @@ private:
     std::default_random_engine m_randomEngine = std::default_random_engine(0);
     std::function<glm::vec3()> m_randomPosition;
 
+    std::vector<std::shared_ptr<en::Material>> m_materials;
+    std::shared_ptr<en::Material> m_staticBodyMaterial;
+
     en::RenderInfo m_floorRenderInfo;
     en::RenderInfo m_sphereRenderInfo;
     en::RenderInfo m_cubeRenderInfo;

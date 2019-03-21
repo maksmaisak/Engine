@@ -5,6 +5,8 @@
 #include "PhysicsTestScene.h"
 #include <memory>
 #include <cmath>
+#include <algorithm>
+#include <array>
 #include "Engine.h"
 #include "Model.h"
 #include "Texture.hpp"
@@ -189,7 +191,12 @@ void PhysicsTestScene::makeSphere(const glm::vec3& position, float radius, bool 
 
     en::Actor actor = getEngine().makeActor();
     actor.add<en::Transform>().move(position).scale(glm::vec3(radius));
-    actor.add<en::RenderInfo>(m_sphereRenderInfo).isBatchingStatic = isStatic;
+
+    std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
+    actor.add<en::RenderInfo>(
+        m_sphereRenderInfo.model,
+        m_materials.at(d(m_randomEngine))
+    ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius)).isKinematic = isStatic;
     //rb.bounciness = 0.5f;
@@ -199,7 +206,12 @@ void PhysicsTestScene::makeCube(const glm::vec3& position, const glm::vec3& half
 
     en::Actor actor = getEngine().makeActor();
     actor.add<en::Transform>().move(position).scale(halfSize);
-    actor.add<en::RenderInfo>(m_cubeRenderInfo).isBatchingStatic = isStatic;
+
+    std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
+    actor.add<en::RenderInfo>(
+        m_cubeRenderInfo.model,
+        m_materials.at(d(m_randomEngine))
+    ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize)).isKinematic = isStatic;
     //rb.bounciness = 0.5f;
@@ -245,4 +257,25 @@ void PhysicsTestScene::cacheRenderInfos() {
     m_sphereRenderInfo = {sphereModel, sphereMaterial};
     m_cubeRenderInfo   = {cubeModel  , cubeMaterial  };
     m_floorRenderInfo  = {cubeModel  , planeMaterial };
+
+    static const std::array<glm::vec3, 3> colors = {
+        glm::vec3(1, 0, 0),
+        glm::vec3(0, 1, 0),
+        glm::vec3(0, 0, 1),
+    };
+
+    std::transform(colors.begin(), colors.end(), std::back_inserter(m_materials), [](const glm::vec3& color) {
+
+        auto material = std::make_shared<en::Material>("pbr");
+        material->setUniformValue("albedoMap", en::Textures::white());
+        material->setUniformValue("metallicSmoothnessMap", en::Textures::white());
+        material->setUniformValue("normalMap", en::Textures::defaultNormalMap());
+        material->setUniformValue("aoMap", en::Textures::white());
+        material->setUniformValue("albedoColor", glm::vec4(color, 1.f));
+        material->setUniformValue("metallicMultiplier", 0.f);
+        material->setUniformValue("smoothnessMultiplier", 0.5f);
+        material->setUniformValue("aoMultiplier", 1.f);
+
+        return material;
+    });
 }
