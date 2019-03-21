@@ -101,7 +101,7 @@ void PhysicsTestScene::open() {
 
     setUpNonBodies();
     setUpBounds();
-    addStaticBodies();
+     addStaticBodies();
     addDynamicBodies();
 }
 
@@ -138,7 +138,7 @@ void PhysicsTestScene::setUpBounds() {
     const glm::vec3 halfSize = m_preset.fieldHalfSize;
     const auto make = [&engine = getEngine(), renderInfo = m_floorRenderInfo](const glm::vec3& center, const glm::vec3& halfSize, bool isVisible = true) {
 
-        auto actor = engine.makeActor();
+        en::Actor actor = engine.makeActor("Wall");
 
         actor.add<en::Transform>().move(center).scale(halfSize);
         actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize)).isKinematic = true;
@@ -174,13 +174,15 @@ void PhysicsTestScene::addStaticBodies() {
 
 void PhysicsTestScene::addDynamicBodies() {
 
-    for (int x = -3; x <= 3; x += 1)
-        for (int z = -3; z <= 3; z += 1)
-            makeCube(glm::vec3(x, 5.f, z));
+    auto randomHalfSize = makeRandomVectorGenerator(glm::vec3(0.5f), glm::vec3(2.f));
+    auto randomRadius = [&e = m_randomEngine](){return std::uniform_real_distribution(0.5f, 2.f)(e);};
 
-    for (int x = -2; x <= 2; x += 1)
-        for (int z = -2; z <= 2; z += 1)
-            makeSphere(glm::vec3(x, 10.f, z));
+    for (int i = 0; i < m_preset.numBodiesDynamic; ++i) {
+        if (m_randomEngine() % 2)
+            makeCube(m_randomPosition(), randomHalfSize());
+        else
+            makeSphere(m_randomPosition(), randomRadius());
+    }
 }
 
 void PhysicsTestScene::makeSphere(const glm::vec3& position, float radius, bool isStatic) {

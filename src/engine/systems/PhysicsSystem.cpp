@@ -12,6 +12,7 @@
 #include "Hit.h"
 #include "Messaging.h"
 #include "Collision.h"
+#include "Name.h"
 
 #include "UIRect.h"
 #include "Text.h"
@@ -102,21 +103,6 @@ namespace {
 
         const float bDeltaSpeedAlongNormal = -(1.f + bounciness) * (bSpeedAlongNormal - u);
         bVelocity += normal * bDeltaSpeedAlongNormal;
-    }
-
-    inline void resolveCollision(Rigidbody& rb, Transform& tf, const glm::vec3& movement, Rigidbody& otherRb, const Hit& hit) {
-
-        const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
-        updateVelocities(
-            rb.velocity, rb.invMass,
-            otherRb.velocity, otherInvMass,
-            hit.normal, std::min(rb.bounciness, otherRb.bounciness)
-        );
-        if (otherRb.isKinematic)
-            otherRb.velocity = glm::vec3(0);
-
-        tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);
-        rb.collider->updateTransform(tf.getWorldTransform());
     }
 }
 
