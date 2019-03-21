@@ -195,7 +195,7 @@ void PhysicsTestScene::makeSphere(const glm::vec3& position, float radius, bool 
     std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
     actor.add<en::RenderInfo>(
         m_sphereRenderInfo.model,
-        m_materials.at(d(m_randomEngine))
+        isStatic ? m_staticBodyMaterial : m_materials.at(d(m_randomEngine))
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius)).isKinematic = isStatic;
@@ -210,7 +210,7 @@ void PhysicsTestScene::makeCube(const glm::vec3& position, const glm::vec3& half
     std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
     actor.add<en::RenderInfo>(
         m_cubeRenderInfo.model,
-        m_materials.at(d(m_randomEngine))
+        isStatic ? m_staticBodyMaterial : m_materials.at(d(m_randomEngine))
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize)).isKinematic = isStatic;
@@ -258,13 +258,16 @@ void PhysicsTestScene::cacheRenderInfos() {
     m_cubeRenderInfo   = {cubeModel  , cubeMaterial  };
     m_floorRenderInfo  = {cubeModel  , planeMaterial };
 
-    static const std::array<glm::vec3, 3> colors = {
+    static const std::array<glm::vec3, 6> colors = {
         glm::vec3(1, 0, 0),
         glm::vec3(0, 1, 0),
         glm::vec3(0, 0, 1),
+        glm::vec3(1, 1, 0),
+        glm::vec3(0, 1, 1),
+        glm::vec3(1, 0, 1)
     };
 
-    std::transform(colors.begin(), colors.end(), std::back_inserter(m_materials), [](const glm::vec3& color) {
+    static auto makeMaterial = [](const glm::vec3& color) {
 
         auto material = std::make_shared<en::Material>("pbr");
         material->setUniformValue("albedoMap", en::Textures::white());
@@ -277,5 +280,8 @@ void PhysicsTestScene::cacheRenderInfos() {
         material->setUniformValue("aoMultiplier", 1.f);
 
         return material;
-    });
+    };
+
+    std::transform(colors.begin(), colors.end(), std::back_inserter(m_materials), makeMaterial);
+    m_staticBodyMaterial = makeMaterial(glm::vec3(0.5f));
 }
