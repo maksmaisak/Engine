@@ -18,12 +18,23 @@
 #include "Sprite.h"
 #include "Text.h"
 
-#include "TestScene.h"
+#include "PhysicsTestScene.h"
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
 
 #include "Model.h"
+
+void openStartLuaScene(en::Engine& engine) {
+
+    en::LuaState& lua = engine.getLuaState();
+    lua_getglobal(lua, "Config");
+    auto popConfig = lua::PopperOnDestruct(lua);
+    auto startScene = lua.tryGetField<std::string>("startScene");
+    if (startScene)
+        engine.getSceneManager().setCurrentScene<en::LuaScene>(lua, *startScene);
+    lua.pop();
+}
 
 int main() {
 
@@ -31,7 +42,6 @@ int main() {
 
     auto engine = std::make_unique<en::Engine>();
     engine->initialize();
-
     {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
@@ -46,19 +56,11 @@ int main() {
         engine->addSystem<en::DestroySystem>();
     }
 
-    en::LuaState& lua = engine->getLuaState();
-    lua_getglobal(lua, "Config");
-    auto popConfig = lua::PopperOnDestruct(lua);
-    auto startScene = lua.tryGetField<std::string>("startScene");
-    if (startScene)
-        engine->getSceneManager().setCurrentScene<en::LuaScene>(engine->getLuaState(), *startScene);
-    lua.pop();
-
-    engine->getSceneManager().setCurrentScene<TestScene>();
+    //openStartLuaScene(*engine);
+    engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 
     engine->run();
-
     return 0;
 }

@@ -82,6 +82,8 @@ namespace en {
         virtual index_type removeInternal(en::Entity entity);
     };
 
+    /// TODO make componentPoolTraits<TComponent> that determines the initial pool capacity and stuff like that.
+    /// Make specializations of that to use non-default values for some component types.
     template<typename TComponent>
     class ComponentPool : public ComponentPoolBase {
 

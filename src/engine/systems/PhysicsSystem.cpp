@@ -2,13 +2,20 @@
 // Created by Maksym Maisak on 20/10/18.
 //
 
-#include <SFML/Graphics.hpp>
 #include "PhysicsSystem.h"
+#include <SFML/Graphics.hpp>
+#include <sstream>
+#include <fstream>
+#include <chrono>
 #include "Transform.h"
 #include "Rigidbody.h"
 #include "Hit.h"
 #include "Messaging.h"
 #include "Collision.h"
+#include "Name.h"
+
+#include "UIRect.h"
+#include "Text.h"
 
 using namespace en;
 
@@ -19,6 +26,9 @@ PhysicsSystem& PhysicsSystem::setGravity(const glm::vec3& gravity) {
 }
 
 void PhysicsSystem::update(float dt) {
+
+    using clock = std::chrono::high_resolution_clock;
+    const auto start = clock::now();
 
     auto entities = m_registry->with<Transform, Rigidbody>();
 
@@ -56,35 +66,42 @@ void PhysicsSystem::update(float dt) {
         }
     }
 
+    const auto time = clock::now() - start;
+    m_currentUpdateInfo.time = time;
+    m_diagnosticsInfo.updateTimeAverage.addSample(time);
+    m_diagnosticsInfo.updateTimeMin = std::min(m_diagnosticsInfo.updateTimeMin, time);
+    m_diagnosticsInfo.updateTimeMax = std::max(m_diagnosticsInfo.updateTimeMax, time);
+
     for (Collision& collision : m_detectedCollisions)
         Receiver<Collision>::broadcast(collision);
     m_detectedCollisions.clear();
+
+    flushDiagnosticsInfo();
 }
 
 namespace {
 
     /// A helper for resolving collisions between physical bodies
-    /// in a way which obeys conservation of momentum.
+    /// in a way that obeys conservation of momentum.
     /// Assumes `normal` is normalized.
-    inline void resolveCollision(
+    inline void updateVelocities(
         glm::vec3& aVelocity, float aInverseMass,
         glm::vec3& bVelocity, float bInverseMass,
-        glm::vec3 normal, float bounciness = 1.f
+        const glm::vec3& normal, float bounciness = 1.f
     ) {
-        float aSpeedAlongNormal = glm::dot(normal, aVelocity);
-        float bSpeedAlongNormal = glm::dot(normal, bVelocity);
-
+        const float aSpeedAlongNormal = glm::dot(normal, aVelocity);
+        const float bSpeedAlongNormal = glm::dot(normal, bVelocity);
         if (aSpeedAlongNormal - bSpeedAlongNormal > 0.f)
             return;
 
-        float u =
+        const float u =
             (aSpeedAlongNormal * bInverseMass + bSpeedAlongNormal * aInverseMass) /
             (aInverseMass + bInverseMass);
 
-        float aDeltaSpeedAlongNormal = -(1.f + bounciness) * (aSpeedAlongNormal - u);
+        const float aDeltaSpeedAlongNormal = -(1.f + bounciness) * (aSpeedAlongNormal - u);
         aVelocity += normal * aDeltaSpeedAlongNormal;
 
-        float bDeltaSpeedAlongNormal = -(1.f + bounciness) * (bSpeedAlongNormal - u);
+        const float bDeltaSpeedAlongNormal = -(1.f + bounciness) * (bSpeedAlongNormal - u);
         bVelocity += normal * bDeltaSpeedAlongNormal;
     }
 }
@@ -104,13 +121,16 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
             if (!otherRb.collider)
                 continue;
 
+            m_currentUpdateInfo.numCollisionChecks += 1;
             std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
             if (!optionalHit)
                 continue;
+
+            m_currentUpdateInfo.numCollisions += 1;
             const Hit& hit = *optionalHit;
 
-            float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
-            resolveCollision(
+            const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
+            updateVelocities(
                 rb.velocity, rb.invMass,
                 otherRb.velocity, otherInvMass,
                 hit.normal, std::min(rb.bounciness, otherRb.bounciness)
@@ -143,4 +163,64 @@ void PhysicsSystem::addGravity(Entity entity, Transform& tf, Rigidbody& rb, floa
 
         rb.velocity += dt * 1.f / (otherRb.invMass * glm::distance2(tf.getWorldPosition(), otherTf.getWorldPosition()));
     }*/
+}
+
+void PhysicsSystem::flushDiagnosticsInfo() {
+
+    using namespace std::literals::string_literals;
+    using namespace std::chrono;
+    using ms = duration<double, std::milli>;
+
+    const auto& i = m_diagnosticsInfo;
+    const auto& u = m_currentUpdateInfo;
+    std::stringstream s;
+    s <<
+        "Physics:\n" <<
+        "update time          : " << duration_cast<ms>(u.time).count() << "ms" << std::endl <<
+        "update time (average): " << duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms" << std::endl <<
+        "update time (max)    : " << duration_cast<ms>(i.updateTimeMax).count() << "ms" << std::endl <<
+        "update time (min)    : " << duration_cast<ms>(i.updateTimeMin).count() << "ms" << std::endl <<
+        "collision checks: " << u.numCollisionChecks << std::endl <<
+        "collisions      : " << u.numCollisions << std::endl;
+    //std::cout << s.str();
+    ensureDebugText().setString(s.str());
+
+    m_currentUpdateInfo = {};
+}
+
+Text& PhysicsSystem::ensureDebugText() {
+
+    if (!m_debugTextActor)
+        m_debugTextActor = m_engine->makeActor("PhysicsSystemDebug");
+
+    if (auto* textPtr = m_debugTextActor.tryGet<Text>())
+        return *textPtr;
+
+    m_debugTextActor.getOrAdd<Transform>();
+    auto& rect = m_debugTextActor.getOrAdd<UIRect>();
+    rect.offsetMin = rect.offsetMax = {30, -30};
+
+    return m_debugTextActor.add<Text>()
+        .setString("Test")
+        .setAlignment({0, 1})
+        .setFont(Resources<sf::Font>::get(config::FONT_PATH + "Menlo.ttc"));
+}
+
+void PhysicsSystem::receive(const SceneManager::OnSceneClosed& info) {
+
+    using namespace std::chrono;
+    using ms = duration<double, std::milli>;
+
+    std::ofstream out("output/test.csv");
+    if (!out.is_open())
+        return;
+
+    const auto& i = m_diagnosticsInfo;
+    out << "update time (average), update time (max)\n" <<
+        duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms, " <<
+        duration_cast<ms>(i.updateTimeMax).count() << "ms\n";
+
+    out.close();
+
+    m_diagnosticsInfo = {};
 }

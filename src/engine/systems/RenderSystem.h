@@ -19,6 +19,7 @@
 #include "SceneManager.h"
 #include "SkyboxRenderer.h"
 #include "DebugHud.hpp"
+#include "Bounds.h"
 
 namespace en {
 
@@ -48,6 +49,8 @@ namespace en {
         Actor getMainCamera();
         void updateDepthMapsDirectionalLights(const std::vector<Entity>& directionalLights);
         void updateDepthMapsPositionalLights (const std::vector<Entity>& pointLights);
+        void updateShadowCastersBounds();
+        utils::Bounds getCameraFrustrumBounds();
 
         void renderUIRect(Entity entity, UIRect& rect);
         glm::vec2 getWindowSize();
@@ -56,6 +59,7 @@ namespace en {
         DepthMaps m_depthMaps;
         std::shared_ptr<ShaderProgram> m_directionalDepthShader;
         std::shared_ptr<ShaderProgram> m_positionalDepthShader;
+        utils::Bounds m_shadowReceiversBounds;
 
         bool m_enableStaticBatching = true;
         std::unordered_map<std::shared_ptr<Material>, Mesh> m_batches;

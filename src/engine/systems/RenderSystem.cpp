@@ -9,6 +9,7 @@
 #include <sstream>
 #include <cmath>
 #include <algorithm>
+#include <limits>
 #include "RenderInfo.h"
 #include "Transform.h"
 #include "Camera.h"
@@ -24,7 +25,6 @@
 
 using namespace en;
 
-
 namespace {
 
     void checkRenderingError(const Actor& actor) {
@@ -35,6 +35,31 @@ namespace {
         auto* namePtr = actor.tryGet<en::Name>();
         std::string name = namePtr ? namePtr->value : "unnamed";
         std::cerr << "Error while rendering " << name << std::endl;
+    }
+
+    void GLAPIENTRY messageCallback(
+        GLenum source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei length,
+        const GLchar* message,
+        const void* userParam
+    ) {
+
+        fprintf(
+            stderr,
+            "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message
+        );
+    }
+
+    void enableDebug() {
+
+        glEnable(GL_DEBUG_OUTPUT);
+        glCheckError();
+        glDebugMessageCallback(messageCallback, 0);
     }
 
     std::shared_ptr<Texture> getDefaultSkybox(LuaState& lua) {
@@ -71,7 +96,8 @@ namespace {
         return Resources<Texture>::get("defaultSkybox", imagePaths);
     }
 
-    void enableDebug();
+    const float MAX_SHADOW_DISTANCE = 300.f;
+    const glm::vec3 SHADOW_CASTERS_BOUNDS_PADDING = {5, 5, 5};
 }
 
 RenderSystem::RenderSystem() :
@@ -130,10 +156,12 @@ void RenderSystem::start() {
 
 namespace {
 
-    glm::mat4 getProjectionMatrix(Engine& engine, Camera& camera) {
+    glm::mat4 getCameraProjectionMatrix(Engine& engine, Camera& camera, std::optional<float> rangeLimit = std::nullopt) {
 
         const auto size = engine.getWindow().getSize();
         const float aspectRatio = (float)size.x / size.y;
+
+        const float farPlaneDistance = std::min(rangeLimit.value_or(camera.farPlaneDistance), camera.farPlaneDistance);
 
         if (camera.isOrthographic) {
 
@@ -145,7 +173,7 @@ namespace {
             return glm::ortho(
                 -halfSize.x, halfSize.x,
                 -halfSize.y, halfSize.y,
-                camera.nearPlaneDistance, camera.farPlaneDistance
+                camera.nearPlaneDistance, farPlaneDistance
             );
         }
 
@@ -153,7 +181,7 @@ namespace {
             glm::radians(camera.fov),
             aspectRatio,
             camera.nearPlaneDistance,
-            camera.farPlaneDistance
+            farPlaneDistance
         );
     }
 }
@@ -167,6 +195,7 @@ void RenderSystem::draw() {
     if (m_enableStaticBatching)
         updateBatches();
 
+    updateShadowCastersBounds();
     updateDepthMaps();
     renderEntities();
     renderSkybox();
@@ -174,20 +203,6 @@ void RenderSystem::draw() {
 
     if (m_enableDebugOutput)
         renderDebug();
-}
-
-namespace {
-
-    bool compareRenderInfo(const RenderInfo& a, const RenderInfo& b) {
-
-        if (a.isBatchingStatic < b.isBatchingStatic) return true;
-        if (a.isBatchingStatic > b.isBatchingStatic) return false;
-
-        if (a.material < b.material) return true;
-        if (a.material > b.material) return false;
-
-        return a.model < b.model;
-    }
 }
 
 void RenderSystem::updateBatches() {
@@ -203,7 +218,7 @@ void RenderSystem::updateBatches() {
 
         auto it = m_batches.find(renderInfo.material);
         if (it == m_batches.end()) {
-            std::tie(it, std::ignore) = m_batches.emplace(std::make_pair(renderInfo.material, Mesh()));
+            std::tie(it, std::ignore) = m_batches.emplace(std::make_pair(renderInfo.material, Mesh{}));
         }
 
         const auto& worldMatrix = m_registry->get<Transform>(e).getWorldTransform();
@@ -247,8 +262,8 @@ void RenderSystem::renderEntities() {
     if (!mainCamera)
         return;
 
-    glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
-    glm::mat4 matrixProjection = getProjectionMatrix(*m_engine, mainCamera.get<Camera>());
+    const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
+    const glm::mat4 matrixProjection = getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>());
 
     // Draw batches
     for (const auto& [material, mesh] : m_batches) {
@@ -259,7 +274,7 @@ void RenderSystem::renderEntities() {
     Material* previousMaterial = nullptr;
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
-        auto& renderInfo = m_registry->get<RenderInfo>(e);
+        const auto& renderInfo = m_registry->get<RenderInfo>(e);
         if (!renderInfo.isEnabled || !renderInfo.material || !renderInfo.model)
             continue;
 
@@ -291,7 +306,7 @@ void RenderSystem::renderSkybox() {
     if (!mainCamera)
         return;
 
-    auto* scene = m_engine->getSceneManager().getCurrentScene();
+    Scene* scene = m_engine->getSceneManager().getCurrentScene();
     if (!scene)
         return;
 
@@ -321,22 +336,25 @@ namespace {
 
     void updateUIRect(Engine& engine, EntityRegistry& registry, Entity e, const glm::vec2& parentSize, const glm::vec2& parentPivot, float scaleFactor) {
 
-        auto& rect = registry.get<UIRect>(e);
+        auto* rect = registry.tryGet<UIRect>(e);
+        if (!rect)
+            return;
+
         auto* tf = registry.tryGet<Transform>(e);
         if (!tf)
             return;
 
-        const glm::vec2 parentMinToLocalMin = parentSize * rect.anchorMin + rect.offsetMin * scaleFactor;
-        const glm::vec2 parentMinToLocalMax = parentSize * rect.anchorMax + rect.offsetMax * scaleFactor;
-        rect.computedSize = parentMinToLocalMax - parentMinToLocalMin;
+        const glm::vec2 parentMinToLocalMin = parentSize * rect->anchorMin + rect->offsetMin * scaleFactor;
+        const glm::vec2 parentMinToLocalMax = parentSize * rect->anchorMax + rect->offsetMax * scaleFactor;
+        rect->computedSize = parentMinToLocalMax - parentMinToLocalMin;
 
-        const glm::vec2 parentMinToLocalPivot = glm::lerp(parentMinToLocalMin, parentMinToLocalMax, rect.pivot);
+        const glm::vec2 parentMinToLocalPivot = glm::lerp(parentMinToLocalMin, parentMinToLocalMax, rect->pivot);
         const glm::vec2 parentPivotToParentMin = -parentSize * parentPivot;
         const glm::vec2 parentPivotToLocalPivot = parentPivotToParentMin + parentMinToLocalPivot;
         tf->setLocalPosition(glm::vec3(parentPivotToLocalPivot, tf->getLocalPosition().z));
 
         for (Entity child : tf->getChildren())
-            updateUIRect(engine, registry, child, rect.computedSize, rect.pivot, scaleFactor);
+            updateUIRect(engine, registry, child, rect->computedSize, rect->pivot, scaleFactor);
     }
 }
 
@@ -425,23 +443,102 @@ void RenderSystem::renderDebug() {
 
 Actor RenderSystem::getMainCamera() {
 
-    Entity entity = m_registry->with<Transform, Camera>().tryGetOne();
+    const Entity entity = m_registry->with<Transform, Camera>().tryGetOne();
     return m_engine->actor(entity);
+}
+
+utils::Bounds RenderSystem::getCameraFrustrumBounds() {
+
+    const Actor mainCamera = getMainCamera();
+    if (!mainCamera) // Even though this function shouldn't get called at all if there's no camera.
+        return {glm::vec3(-100.f), glm::vec3(100.f)};
+
+    const glm::mat4 viewToWorld = mainCamera.get<Transform>().getWorldTransform();
+    const glm::mat4 clipToView  = glm::inverse(getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>(), MAX_SHADOW_DISTANCE));
+    const glm::mat4 clipToWorld = viewToWorld * clipToView;
+
+    const std::array<glm::vec4, 8> corners = {
+        clipToWorld * glm::vec4(-1, -1, -1, 1),
+        clipToWorld * glm::vec4(-1, -1,  1, 1),
+        clipToWorld * glm::vec4(-1,  1, -1, 1),
+        clipToWorld * glm::vec4(-1,  1,  1, 1),
+        clipToWorld * glm::vec4( 1, -1, -1, 1),
+        clipToWorld * glm::vec4( 1, -1,  1, 1),
+        clipToWorld * glm::vec4( 1,  1, -1, 1),
+        clipToWorld * glm::vec4( 1,  1,  1, 1)
+    };
+
+    utils::Bounds bounds = {
+        glm::vec3(std::numeric_limits<float>::max()),
+        glm::vec3(std::numeric_limits<float>::min())
+    };
+    for (const glm::vec4& corner : corners) {
+        const glm::vec3 cornerWorldspace = corner / corner.w;
+        bounds.min = glm::min(bounds.min, cornerWorldspace);
+        bounds.max = glm::max(bounds.max, cornerWorldspace);
+    }
+    return bounds;
+}
+
+void RenderSystem::updateShadowCastersBounds() {
+
+    const utils::Bounds constrainingBounds = getCameraFrustrumBounds();
+
+    utils::Bounds bounds = {
+        glm::vec3(std::numeric_limits<float>::max()),
+        glm::vec3(std::numeric_limits<float>::min())
+    };
+    for (Entity e : m_registry->with<RenderInfo, Transform>()) {
+
+        const auto& renderInfo = m_registry->get<RenderInfo>(e);
+        if (!renderInfo.isEnabled || !renderInfo.model || !renderInfo.material)
+            continue;
+
+        const glm::vec3 position = m_registry->get<Transform>(e).getWorldPosition();
+        if (glm::clamp(position, constrainingBounds.min, constrainingBounds.max) != position)
+            continue;
+
+        bounds.min = glm::min(bounds.min, position);
+        bounds.max = glm::max(bounds.max, position);
+    }
+
+    m_shadowReceiversBounds = bounds;
 }
 
 namespace {
 
-    glm::mat4 getDirectionalLightspaceTransform(const Light& light, const Transform& lightTransform) {
+    glm::mat4 getDirectionalLightspaceTransform(const Light& light, const Transform& lightTransform, const utils::Bounds& shadowReceiversBounds) {
 
-        glm::mat4 lightProjectionMatrix = glm::ortho(
-            -20.f, 20.f,
-            -20.f, 20.f,
-            light.nearPlaneDistance, light.farPlaneDistance
+        const auto& min = shadowReceiversBounds.min - SHADOW_CASTERS_BOUNDS_PADDING;
+        const auto& max = shadowReceiversBounds.max + SHADOW_CASTERS_BOUNDS_PADDING;
+
+        const glm::mat4 matrixLightView = glm::lookAt({0, 0, 0}, lightTransform.getForward(), {0, 1, 0});
+        const std::array<glm::vec3, 8> corners = {
+            matrixLightView * glm::vec4(min.x, min.y, min.z, 1.f),
+            matrixLightView * glm::vec4(min.x, min.y, max.z, 1.f),
+            matrixLightView * glm::vec4(min.x, max.y, min.z, 1.f),
+            matrixLightView * glm::vec4(min.x, max.y, max.z, 1.f),
+            matrixLightView * glm::vec4(max.x, min.y, min.z, 1.f),
+            matrixLightView * glm::vec4(max.x, min.y, max.z, 1.f),
+            matrixLightView * glm::vec4(max.x, max.y, min.z, 1.f),
+            matrixLightView * glm::vec4(max.x, max.y, max.z, 1.f)
+        };
+        utils::Bounds transformedBounds = {
+            glm::vec3(std::numeric_limits<float>::max()),
+            glm::vec3(std::numeric_limits<float>::min())
+        };
+        for (const glm::vec3& corner : corners) {
+            transformedBounds.min = glm::min(transformedBounds.min, corner);
+            transformedBounds.max = glm::max(transformedBounds.max, corner);
+        }
+
+        const glm::mat4 lightProjectionMatrix = glm::ortho(
+            transformedBounds.min.x, transformedBounds.max.x,
+            transformedBounds.min.y, transformedBounds.max.y,
+            light.nearPlaneDistance, std::min(transformedBounds.max.z - transformedBounds.min.z, MAX_SHADOW_DISTANCE)
         );
 
-        glm::mat4 lightViewMatrix = glm::lookAt(-lightTransform.getForward() * 10, {0, 0, 0}, {0, 1, 0});
-
-        return lightProjectionMatrix * lightViewMatrix;
+        return lightProjectionMatrix * glm::translate(glm::vec3(0, 0, -transformedBounds.max.z)) * matrixLightView;
     }
 }
 
@@ -460,7 +557,7 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
 
         auto& light = m_registry->get<Light>(e);
         auto& tf = m_registry->get<Transform>(e);
-        light.matrixPV = getDirectionalLightspaceTransform(light, tf);
+        light.matrixPV = getDirectionalLightspaceTransform(light, tf, m_shadowReceiversBounds);
         m_directionalDepthShader->setUniformValue("matrixPV[" + std::to_string(i) + "]", light.matrixPV);
 
         i += 1;
@@ -490,7 +587,7 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
 
 namespace {
 
-std::tuple<float, glm::vec3, std::array<glm::mat4, 6>> getPointLightUniforms(const DepthMaps& depthMaps, const Light& light, const Transform& lightTransform) {
+    std::tuple<float, glm::vec3, std::array<glm::mat4, 6>> getPointLightUniforms(const DepthMaps& depthMaps, const Light& light, const Transform& lightTransform) {
 
         float nearPlaneDistance = light.nearPlaneDistance;
         float farPlaneDistance  = light.farPlaneDistance;
@@ -593,33 +690,4 @@ float RenderSystem::getUIScaleFactor() {
 void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
 
     m_batches.clear();
-}
-
-namespace {
-
-    void GLAPIENTRY
-    messageCallback(
-        GLenum source,
-        GLenum type,
-        GLuint id,
-        GLenum severity,
-        GLsizei length,
-        const GLchar* message,
-        const void* userParam
-    ) {
-
-        fprintf(
-            stderr,
-            "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-            type, severity, message
-        );
-    }
-
-    void enableDebug() {
-
-        glEnable(GL_DEBUG_OUTPUT);
-        glCheckError();
-        glDebugMessageCallback(messageCallback, 0);
-    }
 }

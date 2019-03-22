@@ -99,7 +99,7 @@ std::optional<Hit> en::collisionDetection::sphereVsAABB(SphereCollider& a, AABBC
         return std::nullopt;
 
     const float distance = glm::sqrt(distanceSqr);
-    const glm::vec3 normal = delta / distance;
+    const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
     return Hit{normal, 1.f, normal * (a.radius - distance)};
 }
 
