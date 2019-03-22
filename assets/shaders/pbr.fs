@@ -88,8 +88,8 @@ vec3 CalculateSpotLightContribution (int i, vec3 N, vec3 V, vec3 albedo, float m
 
 vec3 GetNormal();
 vec3 CookTorranceBRDF(vec3 N, vec3 V, vec3 L, float NdotL, vec3 albedo, float metallic, float roughness);
-float CalculateDirectionalShadowMultiplier(int i, float biasMultiplier);
-float CalculatePointShadowMultiplier(int i, vec3 fromLight, float distance, float biasMultiplier);
+float CalculateDirectionalShadowMultiplier(int i, float cosTheta);
+float CalculatePointShadowMultiplier(int i, vec3 fromLight, float distance, float cosTheta);
 vec3 CalculateAmbientLighting(vec3 N, vec3 V, float NdotV, vec3 albedo, float metallic, float roughness, float ao);
 
 float Pow5(float t) {
@@ -160,7 +160,7 @@ vec3 CalculateDirectionalLightContribution(int i, vec3 N, vec3 V, vec3 albedo, f
     float NdotL = max(dot(N, L), 0.0);
     vec3 brdf = CookTorranceBRDF(N, V, L, NdotL, albedo, metallic, roughness);
 
-    float shadowMultiplier = CalculateDirectionalShadowMultiplier(i, 1 - NdotL);
+    float shadowMultiplier = CalculateDirectionalShadowMultiplier(i, NdotL);
 
     vec3 ambient = light.colorAmbient * albedo * ao;
 
@@ -179,7 +179,7 @@ vec3 CalculatePointLightContribution(int i, vec3 N, vec3 V, vec3 albedo, float m
     float NdotL = max(dot(N, L), 0.0);
     vec3 brdf = CookTorranceBRDF(N, V, L, NdotL, albedo, metallic, roughness);
 
-    float shadowMultiplier =  CalculatePointShadowMultiplier(i, -delta, distance, 1 - NdotL);
+    float shadowMultiplier = CalculatePointShadowMultiplier(i, -delta, distance, NdotL);
     vec3 ambient = light.colorAmbient * albedo * ao;
     return ambient + brdf * light.color * NdotL * attenuation * shadowMultiplier;
 }
@@ -197,9 +197,8 @@ vec3 CalculateSpotLightContribution(int i, vec3 N, vec3 V, vec3 albedo, float me
     float NdotL = max(dot(N, L), 0.0);
     vec3 brdf = CookTorranceBRDF(N, V, L, NdotL, albedo, metallic, roughness);
 
-    float shadowMultiplier =  CalculatePointShadowMultiplier(i, -delta, distance, 1 - NdotL);
     vec3 ambient = light.colorAmbient * albedo * ao;
-    return ambient + brdf * light.color * NdotL * attenuation * shadowMultiplier;
+    return ambient + brdf * light.color * NdotL * attenuation;
 }
 
 float DistributionGGX(float NdotH, float roughness) {
@@ -274,7 +273,7 @@ vec3 CalculateAmbientLighting(vec3 N, vec3 V, float NdotV, vec3 albedo, float me
     return (kD * diffuse + kS * specular) * ao;
 }
 
-float CalculateDirectionalShadowMultiplier(int i, float biasMultiplier) {
+float CalculateDirectionalShadowMultiplier(int i, float cosTheta) {
 
     vec4 lightspacePosition = directionalLightspacePosition[i];
     vec3 projected = (lightspacePosition.xyz / lightspacePosition.w) * 0.5 + 0.5;
@@ -282,7 +281,7 @@ float CalculateDirectionalShadowMultiplier(int i, float biasMultiplier) {
     if (currentDepth > 1.f)
         return 1;
 
-    float bias = max(0.005 * biasMultiplier, 0.001);
+    float bias = clamp(0.005 * tan(acos(cosTheta)), 0, 0.01);
 
     float shadow = 0.0;
     vec3 texelSize = 1.0 / textureSize(directionalDepthMaps, 0);
@@ -304,10 +303,10 @@ const vec3 sampleOffsetDirections[20] = vec3[]
    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
 
-float CalculatePointShadowMultiplier(int i, vec3 fromLight, float distance, float biasMultiplier) {
+float CalculatePointShadowMultiplier(int i, vec3 fromLight, float distance, float cosTheta) {
 
     float shadow = 0.0;
-    float bias = max(0.004 * biasMultiplier, 0.002);
+    float bias = max(0.004 * (1 - cosTheta), 0.002);
     int numSamples = 1;
     float depth = distance / pointLights[i].farPlaneDistance - bias;
     float viewDistance = length(viewPosition - worldPosition);
