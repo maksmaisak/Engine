@@ -305,13 +305,13 @@ const vec3 sampleOffsetDirections[20] = vec3[]
 
 float CalculatePointShadowMultiplier(int i, vec3 fromLight, float distance, float cosTheta) {
 
-    float shadow = 0.0;
-    float bias = max(0.004 * (1 - cosTheta), 0.002);
-    int numSamples = 1;
+    float bias = clamp(0.004 * tan(acos(cosTheta)), 0, 0.002);
     float depth = distance / pointLights[i].farPlaneDistance - bias;
-    float viewDistance = length(viewPosition - worldPosition);
-    float diskRadius = (1.0 + (viewDistance / pointLights[i].farPlaneDistance)) / 25.0;
 
+    //float shadow = 0.0;
+    //int numSamples = 1;
+    //float viewDistance = length(viewPosition - worldPosition);
+    //float diskRadius = (1.0 + (viewDistance / pointLights[i].farPlaneDistance)) / 25.0;
     //for (int j = 0; j < numSamples; ++j)
     //    shadow += texture(depthCubeMaps, vec4(fromLight + sampleOffsetDirections[j] * diskRadius, i), depth);
     //shadow /= float(numSamples);
