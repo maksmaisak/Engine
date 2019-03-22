@@ -9,6 +9,7 @@
 #include <sstream>
 #include <cmath>
 #include <algorithm>
+#include <limits>
 #include "RenderInfo.h"
 #include "Transform.h"
 #include "Camera.h"
@@ -23,7 +24,6 @@
 #include "UIRect.h"
 
 using namespace en;
-
 
 namespace {
 
@@ -167,6 +167,7 @@ void RenderSystem::draw() {
     if (m_enableStaticBatching)
         updateBatches();
 
+    updateShadowReceiversBounds();
     updateDepthMaps();
     renderEntities();
     renderSkybox();
@@ -429,19 +430,81 @@ Actor RenderSystem::getMainCamera() {
     return m_engine->actor(entity);
 }
 
+void RenderSystem::updateShadowReceiversBounds() {
+
+    const auto start = std::chrono::high_resolution_clock::now();
+
+    const utils::Bounds constrainingBounds = {glm::vec3(-100.f), glm::vec3(100.f)};
+
+    utils::Bounds bounds = {
+        glm::vec3(std::numeric_limits<float>::max()),
+        glm::vec3(std::numeric_limits<float>::min())
+    };
+
+    for (Entity e : m_registry->with<RenderInfo, Transform>()) {
+
+        const auto& renderInfo = m_registry->get<RenderInfo>(e);
+        if (!renderInfo.isEnabled || !renderInfo.model || !renderInfo.material)
+            continue;
+
+        const glm::vec3 position = m_registry->get<Transform>(e).getWorldPosition();
+
+//        if (glm::any(glm::greaterThan(position, glm::vec3(100.f)) || glm::lessThan(position, glm::vec3(-100.f)))) {
+//            std::cout << "test" << std::endl;
+//        }
+
+        const glm::vec3 constrainedPosition = glm::clamp(position, constrainingBounds.min, constrainingBounds.max);
+        bounds.min = glm::min(bounds.min, constrainedPosition);
+        bounds.max = glm::max(bounds.max, constrainedPosition);
+    }
+
+    const auto end = std::chrono::high_resolution_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - start).count() << "ms\n";
+
+    m_shadowReceiversBounds = bounds;
+}
+
 namespace {
 
-    glm::mat4 getDirectionalLightspaceTransform(const Light& light, const Transform& lightTransform) {
+    glm::mat4 getDirectionalLightspaceTransform(const Light& light, const Transform& lightTransform, const utils::Bounds& shadowReceiversBounds) {
 
-        glm::mat4 lightProjectionMatrix = glm::ortho(
-            -20.f, 20.f,
-            -20.f, 20.f,
-            light.nearPlaneDistance, light.farPlaneDistance
+        const auto& min = shadowReceiversBounds.min;
+        const auto& max = shadowReceiversBounds.max;
+
+//        const glm::mat4 lightProjectionMatrix = glm::ortho(
+//            shadowReceiversBounds.min.x - 2.f, shadowReceiversBounds.max.x + 2.f,
+//            shadowReceiversBounds.min.z - 2.f, shadowReceiversBounds.max.z + 2.f,
+//            light.nearPlaneDistance, light.farPlaneDistance
+//        );
+
+        const glm::mat4 lightViewMatrix = glm::lookAt({0, 0, 0}, lightTransform.getForward(), {0, 1, 0});
+
+        const std::array<glm::vec3, 8> corners = {
+            lightViewMatrix * glm::vec4(min.x, min.y, min.z, 1.f),
+            lightViewMatrix * glm::vec4(min.x, min.y, max.z, 1.f),
+            lightViewMatrix * glm::vec4(min.x, max.y, min.z, 1.f),
+            lightViewMatrix * glm::vec4(min.x, max.y, max.z, 1.f),
+            lightViewMatrix * glm::vec4(max.x, min.y, min.z, 1.f),
+            lightViewMatrix * glm::vec4(max.x, min.y, max.z, 1.f),
+            lightViewMatrix * glm::vec4(max.x, max.y, min.z, 1.f),
+            lightViewMatrix * glm::vec4(max.x, max.y, max.z, 1.f)
+        };
+        utils::Bounds transformedBounds = {
+            glm::vec3(std::numeric_limits<float>::max()),
+            glm::vec3(std::numeric_limits<float>::min())
+        };
+        for (const glm::vec3& corner : corners) {
+            transformedBounds.min = glm::min(transformedBounds.min, corner);
+            transformedBounds.max = glm::max(transformedBounds.max, corner);
+        }
+
+        const glm::mat4 lightProjectionMatrix = glm::ortho(
+            transformedBounds.min.x - 2.f, transformedBounds.max.x + 2.f,
+            transformedBounds.min.y - 2.f, transformedBounds.max.y + 2.f,
+            0.2f, 400.f
         );
 
-        glm::mat4 lightViewMatrix = glm::lookAt(-lightTransform.getForward() * 10, {0, 0, 0}, {0, 1, 0});
-
-        return lightProjectionMatrix * lightViewMatrix;
+        return lightProjectionMatrix * glm::translate(glm::vec3(0, 0, -transformedBounds.max.z)) * lightViewMatrix;
     }
 }
 
@@ -460,7 +523,7 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
 
         auto& light = m_registry->get<Light>(e);
         auto& tf = m_registry->get<Transform>(e);
-        light.matrixPV = getDirectionalLightspaceTransform(light, tf);
+        light.matrixPV = getDirectionalLightspaceTransform(light, tf, m_shadowReceiversBounds);
         m_directionalDepthShader->setUniformValue("matrixPV[" + std::to_string(i) + "]", light.matrixPV);
 
         i += 1;
