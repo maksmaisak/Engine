@@ -24,7 +24,7 @@ public:
     };
 
     // Clang bug doesn't allow to use {} for the default member initializers
-    PhysicsTestScene(const Preset& preset = {100, 500, glm::vec3(50)});
+    PhysicsTestScene(const Preset& preset = {100, 100, glm::vec3(50)});
     void open() override;
     void update(float dt) override;
 
