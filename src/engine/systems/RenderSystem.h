@@ -50,6 +50,7 @@ namespace en {
         void updateDepthMapsDirectionalLights(const std::vector<Entity>& directionalLights);
         void updateDepthMapsPositionalLights (const std::vector<Entity>& pointLights);
         void updateShadowReceiversBounds();
+        utils::Bounds getCameraFrustrumBounds();
 
         void renderUIRect(Entity entity, UIRect& rect);
         glm::vec2 getWindowSize();

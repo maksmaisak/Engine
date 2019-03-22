@@ -37,6 +37,31 @@ namespace {
         std::cerr << "Error while rendering " << name << std::endl;
     }
 
+    void GLAPIENTRY messageCallback(
+        GLenum source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei length,
+        const GLchar* message,
+        const void* userParam
+    ) {
+
+        fprintf(
+            stderr,
+            "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message
+        );
+    }
+
+    void enableDebug() {
+
+        glEnable(GL_DEBUG_OUTPUT);
+        glCheckError();
+        glDebugMessageCallback(messageCallback, 0);
+    }
+
     std::shared_ptr<Texture> getDefaultSkybox(LuaState& lua) {
 
         lua_getglobal(lua, "Config");
@@ -71,7 +96,7 @@ namespace {
         return Resources<Texture>::get("defaultSkybox", imagePaths);
     }
 
-    void enableDebug();
+    const float MAX_SHADOW_DISTANCE = 300.f;
 }
 
 RenderSystem::RenderSystem() :
@@ -130,10 +155,12 @@ void RenderSystem::start() {
 
 namespace {
 
-    glm::mat4 getProjectionMatrix(Engine& engine, Camera& camera) {
+    glm::mat4 getCameraProjectionMatrix(Engine& engine, Camera& camera, std::optional<float> rangeLimit = std::nullopt) {
 
         const auto size = engine.getWindow().getSize();
         const float aspectRatio = (float)size.x / size.y;
+
+        const float farPlaneDistance = std::min(rangeLimit.value_or(camera.farPlaneDistance), camera.farPlaneDistance);
 
         if (camera.isOrthographic) {
 
@@ -145,7 +172,7 @@ namespace {
             return glm::ortho(
                 -halfSize.x, halfSize.x,
                 -halfSize.y, halfSize.y,
-                camera.nearPlaneDistance, camera.farPlaneDistance
+                camera.nearPlaneDistance, farPlaneDistance
             );
         }
 
@@ -153,7 +180,7 @@ namespace {
             glm::radians(camera.fov),
             aspectRatio,
             camera.nearPlaneDistance,
-            camera.farPlaneDistance
+            farPlaneDistance
         );
     }
 }
@@ -248,8 +275,8 @@ void RenderSystem::renderEntities() {
     if (!mainCamera)
         return;
 
-    glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
-    glm::mat4 matrixProjection = getProjectionMatrix(*m_engine, mainCamera.get<Camera>());
+    const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
+    const glm::mat4 matrixProjection = getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>());
 
     // Draw batches
     for (const auto& [material, mesh] : m_batches) {
@@ -260,7 +287,7 @@ void RenderSystem::renderEntities() {
     Material* previousMaterial = nullptr;
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
-        auto& renderInfo = m_registry->get<RenderInfo>(e);
+        const auto& renderInfo = m_registry->get<RenderInfo>(e);
         if (!renderInfo.isEnabled || !renderInfo.material || !renderInfo.model)
             continue;
 
@@ -292,7 +319,7 @@ void RenderSystem::renderSkybox() {
     if (!mainCamera)
         return;
 
-    auto* scene = m_engine->getSceneManager().getCurrentScene();
+    Scene* scene = m_engine->getSceneManager().getCurrentScene();
     if (!scene)
         return;
 
@@ -426,21 +453,51 @@ void RenderSystem::renderDebug() {
 
 Actor RenderSystem::getMainCamera() {
 
-    Entity entity = m_registry->with<Transform, Camera>().tryGetOne();
+    const Entity entity = m_registry->with<Transform, Camera>().tryGetOne();
     return m_engine->actor(entity);
 }
 
-void RenderSystem::updateShadowReceiversBounds() {
+utils::Bounds RenderSystem::getCameraFrustrumBounds() {
 
-    const auto start = std::chrono::high_resolution_clock::now();
+    const Actor mainCamera = getMainCamera();
+    if (!mainCamera) // Even though this function shouldn't get called at all if there's no camera.
+        return {glm::vec3(-100.f), glm::vec3(100.f)};
 
-    const utils::Bounds constrainingBounds = {glm::vec3(-100.f), glm::vec3(100.f)};
+    const glm::mat4 viewToWorld = mainCamera.get<Transform>().getWorldTransform();
+    const glm::mat4 clipToView  = glm::inverse(getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>(), MAX_SHADOW_DISTANCE));
+    const glm::mat4 clipToWorld = viewToWorld * clipToView;
+
+    const std::array<glm::vec4, 8> corners = {
+        clipToWorld * glm::vec4(-1, -1, -1, 1),
+        clipToWorld * glm::vec4(-1, -1,  1, 1),
+        clipToWorld * glm::vec4(-1,  1, -1, 1),
+        clipToWorld * glm::vec4(-1,  1,  1, 1),
+        clipToWorld * glm::vec4( 1, -1, -1, 1),
+        clipToWorld * glm::vec4( 1, -1,  1, 1),
+        clipToWorld * glm::vec4( 1,  1, -1, 1),
+        clipToWorld * glm::vec4( 1,  1,  1, 1)
+    };
 
     utils::Bounds bounds = {
         glm::vec3(std::numeric_limits<float>::max()),
         glm::vec3(std::numeric_limits<float>::min())
     };
+    for (const glm::vec4& corner : corners) {
+        const glm::vec3 cornerWorldspace = corner / corner.w;
+        bounds.min = glm::min(bounds.min, cornerWorldspace);
+        bounds.max = glm::max(bounds.max, cornerWorldspace);
+    }
+    return bounds;
+}
 
+void RenderSystem::updateShadowReceiversBounds() {
+
+    const utils::Bounds constrainingBounds = getCameraFrustrumBounds();
+
+    utils::Bounds bounds = {
+        glm::vec3(std::numeric_limits<float>::max()),
+        glm::vec3(std::numeric_limits<float>::min())
+    };
     for (Entity e : m_registry->with<RenderInfo, Transform>()) {
 
         const auto& renderInfo = m_registry->get<RenderInfo>(e);
@@ -448,18 +505,12 @@ void RenderSystem::updateShadowReceiversBounds() {
             continue;
 
         const glm::vec3 position = m_registry->get<Transform>(e).getWorldPosition();
+        if (glm::clamp(position, constrainingBounds.min, constrainingBounds.max) != position)
+            continue;
 
-//        if (glm::any(glm::greaterThan(position, glm::vec3(100.f)) || glm::lessThan(position, glm::vec3(-100.f)))) {
-//            std::cout << "test" << std::endl;
-//        }
-
-        const glm::vec3 constrainedPosition = glm::clamp(position, constrainingBounds.min, constrainingBounds.max);
-        bounds.min = glm::min(bounds.min, constrainedPosition);
-        bounds.max = glm::max(bounds.max, constrainedPosition);
+        bounds.min = glm::min(bounds.min, position);
+        bounds.max = glm::max(bounds.max, position);
     }
-
-    const auto end = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - start).count() << "ms\n";
 
     m_shadowReceiversBounds = bounds;
 }
@@ -471,23 +522,17 @@ namespace {
         const auto& min = shadowReceiversBounds.min;
         const auto& max = shadowReceiversBounds.max;
 
-//        const glm::mat4 lightProjectionMatrix = glm::ortho(
-//            shadowReceiversBounds.min.x - 2.f, shadowReceiversBounds.max.x + 2.f,
-//            shadowReceiversBounds.min.z - 2.f, shadowReceiversBounds.max.z + 2.f,
-//            light.nearPlaneDistance, light.farPlaneDistance
-//        );
-
-        const glm::mat4 lightViewMatrix = glm::lookAt({0, 0, 0}, lightTransform.getForward(), {0, 1, 0});
+        const glm::mat4 matrixLightView = glm::lookAt({0, 0, 0}, lightTransform.getForward(), {0, 1, 0});
 
         const std::array<glm::vec3, 8> corners = {
-            lightViewMatrix * glm::vec4(min.x, min.y, min.z, 1.f),
-            lightViewMatrix * glm::vec4(min.x, min.y, max.z, 1.f),
-            lightViewMatrix * glm::vec4(min.x, max.y, min.z, 1.f),
-            lightViewMatrix * glm::vec4(min.x, max.y, max.z, 1.f),
-            lightViewMatrix * glm::vec4(max.x, min.y, min.z, 1.f),
-            lightViewMatrix * glm::vec4(max.x, min.y, max.z, 1.f),
-            lightViewMatrix * glm::vec4(max.x, max.y, min.z, 1.f),
-            lightViewMatrix * glm::vec4(max.x, max.y, max.z, 1.f)
+            matrixLightView * glm::vec4(min.x, min.y, min.z, 1.f),
+            matrixLightView * glm::vec4(min.x, min.y, max.z, 1.f),
+            matrixLightView * glm::vec4(min.x, max.y, min.z, 1.f),
+            matrixLightView * glm::vec4(min.x, max.y, max.z, 1.f),
+            matrixLightView * glm::vec4(max.x, min.y, min.z, 1.f),
+            matrixLightView * glm::vec4(max.x, min.y, max.z, 1.f),
+            matrixLightView * glm::vec4(max.x, max.y, min.z, 1.f),
+            matrixLightView * glm::vec4(max.x, max.y, max.z, 1.f)
         };
         utils::Bounds transformedBounds = {
             glm::vec3(std::numeric_limits<float>::max()),
@@ -501,10 +546,10 @@ namespace {
         const glm::mat4 lightProjectionMatrix = glm::ortho(
             transformedBounds.min.x - 2.f, transformedBounds.max.x + 2.f,
             transformedBounds.min.y - 2.f, transformedBounds.max.y + 2.f,
-            0.2f, 400.f
+            light.nearPlaneDistance, MAX_SHADOW_DISTANCE
         );
 
-        return lightProjectionMatrix * glm::translate(glm::vec3(0, 0, -transformedBounds.max.z)) * lightViewMatrix;
+        return lightProjectionMatrix * glm::translate(glm::vec3(0, 0, -transformedBounds.max.z)) * matrixLightView;
     }
 }
 
@@ -553,7 +598,7 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
 
 namespace {
 
-std::tuple<float, glm::vec3, std::array<glm::mat4, 6>> getPointLightUniforms(const DepthMaps& depthMaps, const Light& light, const Transform& lightTransform) {
+    std::tuple<float, glm::vec3, std::array<glm::mat4, 6>> getPointLightUniforms(const DepthMaps& depthMaps, const Light& light, const Transform& lightTransform) {
 
         float nearPlaneDistance = light.nearPlaneDistance;
         float farPlaneDistance  = light.farPlaneDistance;
@@ -656,33 +701,4 @@ float RenderSystem::getUIScaleFactor() {
 void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
 
     m_batches.clear();
-}
-
-namespace {
-
-    void GLAPIENTRY
-    messageCallback(
-        GLenum source,
-        GLenum type,
-        GLuint id,
-        GLenum severity,
-        GLsizei length,
-        const GLchar* message,
-        const void* userParam
-    ) {
-
-        fprintf(
-            stderr,
-            "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-            type, severity, message
-        );
-    }
-
-    void enableDebug() {
-
-        glEnable(GL_DEBUG_OUTPUT);
-        glCheckError();
-        glDebugMessageCallback(messageCallback, 0);
-    }
 }
