@@ -31,6 +31,9 @@ namespace en {
         template<typename TComponent, typename... Args>
         TComponent& add(Args&&... args);
 
+        template<typename TComponent, typename... Args>
+        TComponent& getOrAdd(Args&&... args) {return m_registry->getOrAdd<TComponent>(m_entity);}
+
         template<typename TComponent>
         inline TComponent& get() const {return m_registry->get<TComponent>(m_entity);}
 

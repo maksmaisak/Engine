@@ -36,14 +36,17 @@ namespace en {
 
         en::Entity findByName(const std::string& name) const;
 
+        template<class TComponent, typename... Args>
+        inline TComponent& add(Entity entity, Args&&... args);
+
+        template<class TComponent, typename... Args>
+        inline TComponent& getOrAdd(Entity entity, Args&&... args);
+
         template<class TComponent>
         inline TComponent& get(Entity entity) const;
 
         template<class TComponent>
         inline TComponent* tryGet(Entity entity) const;
-
-        template<class TComponent, typename... Args>
-        inline TComponent& add(Entity entity, Args&& ... args);
 
         template<class TComponent>
         inline bool remove(Entity entity);
@@ -65,6 +68,30 @@ namespace en {
         inline ComponentPool<TComponent>& getPool(bool mustBePresentAlready = false) const;
     };
 
+    template<class TComponent, typename... Args>
+    inline TComponent& EntityRegistry::add(Entity entity, Args&& ... args) {
+
+        ComponentPool<TComponent>& pool = getPool<TComponent>();
+
+        auto [index, componentReference] = pool.insert(entity, std::forward<Args>(args)...);
+        Receiver<ComponentAdded<TComponent>>::broadcast({entity, componentReference});
+
+        return componentReference;
+    }
+
+    template<class TComponent, typename... Args>
+    TComponent& EntityRegistry::getOrAdd(Entity entity, Args&& ... args) {
+
+        ComponentPool<TComponent>& pool = getPool<TComponent>();
+        if (TComponent* ptr = pool.tryGet(entity))
+            return *ptr;
+
+        auto [index, componentReference] = pool.insert(entity, std::forward<Args>(args)...);
+        Receiver<ComponentAdded<TComponent>>::broadcast({entity, componentReference});
+
+        return componentReference;
+    }
+
     template<class TComponent>
     inline TComponent& EntityRegistry::get(const en::Entity entity) const {
 
@@ -77,17 +104,6 @@ namespace en {
 
         ComponentPool<TComponent>& pool = getPool<TComponent>();
         return pool.tryGet(entity);
-    }
-
-    template<class TComponent, typename... Args>
-    inline TComponent& EntityRegistry::add(Entity entity, Args&& ... args) {
-
-        ComponentPool<TComponent>& pool = getPool<TComponent>();
-
-        auto [index, componentReference] = pool.insert(entity, std::forward<Args>(args)...);
-        Receiver<ComponentAdded<TComponent>>::broadcast({entity, componentReference});
-
-        return componentReference;
     }
 
     template<typename... TComponent>

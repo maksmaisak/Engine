@@ -97,6 +97,7 @@ namespace {
     }
 
     const float MAX_SHADOW_DISTANCE = 300.f;
+    const glm::vec3 SHADOW_CASTERS_BOUNDS_PADDING = {5, 5, 5};
 }
 
 RenderSystem::RenderSystem() :
@@ -194,7 +195,7 @@ void RenderSystem::draw() {
     if (m_enableStaticBatching)
         updateBatches();
 
-    updateShadowReceiversBounds();
+    updateShadowCastersBounds();
     updateDepthMaps();
     renderEntities();
     renderSkybox();
@@ -202,20 +203,6 @@ void RenderSystem::draw() {
 
     if (m_enableDebugOutput)
         renderDebug();
-}
-
-namespace {
-
-    bool compareRenderInfo(const RenderInfo& a, const RenderInfo& b) {
-
-        if (a.isBatchingStatic < b.isBatchingStatic) return true;
-        if (a.isBatchingStatic > b.isBatchingStatic) return false;
-
-        if (a.material < b.material) return true;
-        if (a.material > b.material) return false;
-
-        return a.model < b.model;
-    }
 }
 
 void RenderSystem::updateBatches() {
@@ -231,7 +218,7 @@ void RenderSystem::updateBatches() {
 
         auto it = m_batches.find(renderInfo.material);
         if (it == m_batches.end()) {
-            std::tie(it, std::ignore) = m_batches.emplace(std::make_pair(renderInfo.material, Mesh()));
+            std::tie(it, std::ignore) = m_batches.emplace(std::make_pair(renderInfo.material, Mesh{}));
         }
 
         const auto& worldMatrix = m_registry->get<Transform>(e).getWorldTransform();
@@ -349,22 +336,25 @@ namespace {
 
     void updateUIRect(Engine& engine, EntityRegistry& registry, Entity e, const glm::vec2& parentSize, const glm::vec2& parentPivot, float scaleFactor) {
 
-        auto& rect = registry.get<UIRect>(e);
+        auto* rect = registry.tryGet<UIRect>(e);
+        if (!rect)
+            return;
+
         auto* tf = registry.tryGet<Transform>(e);
         if (!tf)
             return;
 
-        const glm::vec2 parentMinToLocalMin = parentSize * rect.anchorMin + rect.offsetMin * scaleFactor;
-        const glm::vec2 parentMinToLocalMax = parentSize * rect.anchorMax + rect.offsetMax * scaleFactor;
-        rect.computedSize = parentMinToLocalMax - parentMinToLocalMin;
+        const glm::vec2 parentMinToLocalMin = parentSize * rect->anchorMin + rect->offsetMin * scaleFactor;
+        const glm::vec2 parentMinToLocalMax = parentSize * rect->anchorMax + rect->offsetMax * scaleFactor;
+        rect->computedSize = parentMinToLocalMax - parentMinToLocalMin;
 
-        const glm::vec2 parentMinToLocalPivot = glm::lerp(parentMinToLocalMin, parentMinToLocalMax, rect.pivot);
+        const glm::vec2 parentMinToLocalPivot = glm::lerp(parentMinToLocalMin, parentMinToLocalMax, rect->pivot);
         const glm::vec2 parentPivotToParentMin = -parentSize * parentPivot;
         const glm::vec2 parentPivotToLocalPivot = parentPivotToParentMin + parentMinToLocalPivot;
         tf->setLocalPosition(glm::vec3(parentPivotToLocalPivot, tf->getLocalPosition().z));
 
         for (Entity child : tf->getChildren())
-            updateUIRect(engine, registry, child, rect.computedSize, rect.pivot, scaleFactor);
+            updateUIRect(engine, registry, child, rect->computedSize, rect->pivot, scaleFactor);
     }
 }
 
@@ -490,7 +480,7 @@ utils::Bounds RenderSystem::getCameraFrustrumBounds() {
     return bounds;
 }
 
-void RenderSystem::updateShadowReceiversBounds() {
+void RenderSystem::updateShadowCastersBounds() {
 
     const utils::Bounds constrainingBounds = getCameraFrustrumBounds();
 
@@ -519,11 +509,10 @@ namespace {
 
     glm::mat4 getDirectionalLightspaceTransform(const Light& light, const Transform& lightTransform, const utils::Bounds& shadowReceiversBounds) {
 
-        const auto& min = shadowReceiversBounds.min;
-        const auto& max = shadowReceiversBounds.max;
+        const auto& min = shadowReceiversBounds.min - SHADOW_CASTERS_BOUNDS_PADDING;
+        const auto& max = shadowReceiversBounds.max + SHADOW_CASTERS_BOUNDS_PADDING;
 
         const glm::mat4 matrixLightView = glm::lookAt({0, 0, 0}, lightTransform.getForward(), {0, 1, 0});
-
         const std::array<glm::vec3, 8> corners = {
             matrixLightView * glm::vec4(min.x, min.y, min.z, 1.f),
             matrixLightView * glm::vec4(min.x, min.y, max.z, 1.f),
@@ -544,9 +533,9 @@ namespace {
         }
 
         const glm::mat4 lightProjectionMatrix = glm::ortho(
-            transformedBounds.min.x - 2.f, transformedBounds.max.x + 2.f,
-            transformedBounds.min.y - 2.f, transformedBounds.max.y + 2.f,
-            light.nearPlaneDistance, MAX_SHADOW_DISTANCE
+            transformedBounds.min.x, transformedBounds.max.x,
+            transformedBounds.min.y, transformedBounds.max.y,
+            light.nearPlaneDistance, std::min(transformedBounds.max.z - transformedBounds.min.z, MAX_SHADOW_DISTANCE)
         );
 
         return lightProjectionMatrix * glm::translate(glm::vec3(0, 0, -transformedBounds.max.z)) * matrixLightView;

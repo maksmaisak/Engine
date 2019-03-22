@@ -190,13 +190,14 @@ void PhysicsSystem::flushDiagnosticsInfo() {
 
 Text& PhysicsSystem::ensureDebugText() {
 
-    if (m_debugTextActor)
-        return m_debugTextActor.get<Text>();
+    if (!m_debugTextActor)
+        m_debugTextActor = m_engine->makeActor("PhysicsSystemDebug");
 
-    m_debugTextActor = m_engine->makeActor("PhysicsSystemDebug");
-    m_debugTextActor.add<Transform>();
+    if (auto* textPtr = m_debugTextActor.tryGet<Text>())
+        return *textPtr;
 
-    auto& rect = m_debugTextActor.add<UIRect>();
+    m_debugTextActor.getOrAdd<Transform>();
+    auto& rect = m_debugTextActor.getOrAdd<UIRect>();
     rect.offsetMin = rect.offsetMax = {30, -30};
 
     return m_debugTextActor.add<Text>()

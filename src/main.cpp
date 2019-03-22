@@ -57,8 +57,8 @@ int main() {
     }
 
     //openStartLuaScene(*engine);
-    engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
-    //engine->getSceneManager().setCurrentScene<LightingScene>();
+    //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
+    engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 
     engine->run();
