@@ -7,6 +7,7 @@
 #include <cmath>
 #include <algorithm>
 #include <array>
+#include <utility>
 #include "Engine.h"
 #include "Model.h"
 #include "Texture.hpp"
@@ -91,10 +92,12 @@ namespace {
 
 PhysicsTestScene::PhysicsTestScene(const Preset& preset) :
     m_preset(preset),
+    m_cubeModel(en::Models::get(config::MODEL_PATH + "cube_flat.obj")),
+    m_sphereModel(en::Models::get(config::MODEL_PATH + "sphere_smooth.obj")),
     m_randomPosition(makeRandomVectorGeneratorCenterHalfSize({0, preset.fieldHalfSize.y, 0}, preset.fieldHalfSize))
 {
     m_renderSettings.ambientColor = glm::vec3(1.010478, 1.854524, 2.270603) * 0.5f;
-    cacheRenderInfos();
+    cacheMaterials();
 }
 
 void PhysicsTestScene::open() {
@@ -138,7 +141,7 @@ void PhysicsTestScene::setUpBounds() {
 
     const glm::vec3 center   = {0, m_preset.fieldHalfSize.y, 0};
     const glm::vec3 halfSize = m_preset.fieldHalfSize;
-    const auto make = [&engine = getEngine(), renderInfo = m_floorRenderInfo](const glm::vec3& center, const glm::vec3& halfSize, bool isVisible = true) {
+    const auto make = [&engine = getEngine(), &model = m_cubeModel, &material = m_floorMaterial](const glm::vec3& center, const glm::vec3& halfSize, bool isVisible = true) {
 
         en::Actor actor = engine.makeActor("Wall");
 
@@ -146,7 +149,7 @@ void PhysicsTestScene::setUpBounds() {
         actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize)).isKinematic = true;
 
         if (isVisible)
-            actor.add<en::RenderInfo>(renderInfo).isBatchingStatic = true;
+            actor.add<en::RenderInfo>(model, material).isBatchingStatic = true;
 
         return actor;
     };
@@ -165,9 +168,12 @@ void PhysicsTestScene::addStaticBodies() {
 
     const auto randomHalfSize = makeRandomVectorGenerator(glm::vec3(0.5f), glm::vec3(2.f));
     const auto randomRadius = [&e = m_randomEngine](){return std::uniform_real_distribution(0.5f, 2.f)(e);};
+    const auto randomBool = [&e = m_randomEngine]() {
+        return std::uniform_int_distribution(0, 1)(e) == 1;
+    };
 
     for (int i = 0; i < m_preset.numBodiesStatic; ++i) {
-        if (m_randomEngine() % 2)
+        if (randomBool())
             makeCube(m_randomPosition(), randomHalfSize(), true);
         else
             makeSphere(m_randomPosition(), randomRadius(), true);
@@ -176,11 +182,14 @@ void PhysicsTestScene::addStaticBodies() {
 
 void PhysicsTestScene::addDynamicBodies() {
 
-    auto randomHalfSize = makeRandomVectorGenerator(glm::vec3(0.5f), glm::vec3(2.f));
-    auto randomRadius = [&e = m_randomEngine](){return std::uniform_real_distribution(0.5f, 2.f)(e);};
+    const auto randomHalfSize = makeRandomVectorGenerator(glm::vec3(0.5f), glm::vec3(2.f));
+    const auto randomRadius = [&e = m_randomEngine](){return std::uniform_real_distribution(0.5f, 2.f)(e);};
+    const auto randomBool = [&e = m_randomEngine]() {
+        return std::uniform_int_distribution(0, 1)(e) == 1;
+    };
 
     for (int i = 0; i < m_preset.numBodiesDynamic; ++i) {
-        if (m_randomEngine() % 2)
+        if (randomBool())
             makeCube(m_randomPosition(), randomHalfSize());
         else
             makeSphere(m_randomPosition(), randomRadius());
@@ -194,11 +203,16 @@ void PhysicsTestScene::makeSphere(const glm::vec3& position, float radius, bool 
 
     std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
     actor.add<en::RenderInfo>(
-        m_sphereRenderInfo.model,
+        m_sphereModel,
         isStatic ? m_staticBodyMaterial : m_materials.at(d(m_randomEngine))
     ).isBatchingStatic = isStatic;
 
-    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius)).isKinematic = isStatic;
+    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius));
+    rb.isKinematic = isStatic;
+    if (!rb.isKinematic) {
+        std::uniform_real_distribution<float> d(-1.f, 1.f);
+        rb.velocity = {d(m_randomEngine), d(m_randomEngine), d(m_randomEngine)};
+    }
     //rb.bounciness = 0.5f;
 }
 
@@ -209,54 +223,20 @@ void PhysicsTestScene::makeCube(const glm::vec3& position, const glm::vec3& half
 
     std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
     actor.add<en::RenderInfo>(
-        m_cubeRenderInfo.model,
+        m_cubeModel,
         isStatic ? m_staticBodyMaterial : m_materials.at(d(m_randomEngine))
     ).isBatchingStatic = isStatic;
 
-    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize)).isKinematic = isStatic;
+    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize));
+    rb.isKinematic = isStatic;
+    if (!rb.isKinematic) {
+        std::uniform_real_distribution<float> d(-10.f, 10.f);
+        rb.velocity = {d(m_randomEngine), d(m_randomEngine), d(m_randomEngine)};
+    }
     //rb.bounciness = 0.5f;
 }
 
-void PhysicsTestScene::cacheRenderInfos() {
-
-    // models
-    auto cubeModel   = en::Models::get(config::MODEL_PATH + "cube_flat.obj");
-    auto sphereModel = en::Models::get(config::MODEL_PATH + "sphere_smooth.obj");
-
-    // materials
-    auto sphereMaterial = std::make_shared<en::Material>("pbr");
-    sphereMaterial->setUniformValue("albedoMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/albedo.png"));
-    sphereMaterial->setUniformValue("metallicSmoothnessMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/metallic_smoothness.psd", GL_RGBA));
-    sphereMaterial->setUniformValue("normalMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/normal.png", GL_RGBA));
-    sphereMaterial->setUniformValue("aoMap", en::Textures::white());
-    sphereMaterial->setUniformValue("albedoColor"         , glm::vec4(1));
-    sphereMaterial->setUniformValue("metallicMultiplier"  , 1.f);
-    sphereMaterial->setUniformValue("smoothnessMultiplier", 1.f);
-    sphereMaterial->setUniformValue("aoMultiplier"        , 1.f);
-
-    auto cubeMaterial = std::make_shared<en::Material>("pbr");
-    cubeMaterial->setUniformValue("albedoMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/albedo.png"));
-    cubeMaterial->setUniformValue("metallicSmoothnessMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/metallic_smoothness.psd", GL_RGBA));
-    cubeMaterial->setUniformValue("normalMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/normal.png", GL_RGBA));
-    cubeMaterial->setUniformValue("aoMap", en::Textures::white());
-    cubeMaterial->setUniformValue("albedoColor"         , glm::vec4(1));
-    cubeMaterial->setUniformValue("metallicMultiplier"  , 1.f);
-    cubeMaterial->setUniformValue("smoothnessMultiplier", 1.f);
-    cubeMaterial->setUniformValue("aoMultiplier"        , 1.f);
-
-    auto planeMaterial = std::make_shared<en::Material>("pbr");
-    planeMaterial->setUniformValue("albedoMap", en::Textures::white());
-    planeMaterial->setUniformValue("metallicSmoothnessMap", en::Textures::white());
-    planeMaterial->setUniformValue("normalMap", en::Textures::defaultNormalMap());
-    planeMaterial->setUniformValue("aoMap", en::Textures::white());
-    planeMaterial->setUniformValue("albedoColor", glm::vec4(1));
-    planeMaterial->setUniformValue("metallicMultiplier", 0.f);
-    planeMaterial->setUniformValue("smoothnessMultiplier", 0.5f);
-    planeMaterial->setUniformValue("aoMultiplier", 1.f);
-
-    m_sphereRenderInfo = {sphereModel, sphereMaterial};
-    m_cubeRenderInfo   = {cubeModel  , cubeMaterial  };
-    m_floorRenderInfo  = {cubeModel  , planeMaterial };
+void PhysicsTestScene::cacheMaterials() {
 
     static const std::array<glm::vec3, 6> colors = {
         glm::vec3(1, 0, 0),
@@ -270,12 +250,12 @@ void PhysicsTestScene::cacheRenderInfos() {
     static auto makeMaterial = [](const glm::vec3& color) {
 
         auto material = std::make_shared<en::Material>("pbr");
-        material->setUniformValue("albedoMap", en::Textures::white());
+        material->setUniformValue("albedoMap"            , en::Textures::white());
         material->setUniformValue("metallicSmoothnessMap", en::Textures::white());
-        material->setUniformValue("normalMap", en::Textures::defaultNormalMap());
-        material->setUniformValue("aoMap", en::Textures::white());
+        material->setUniformValue("normalMap"            , en::Textures::defaultNormalMap());
+        material->setUniformValue("aoMap"                , en::Textures::white());
         material->setUniformValue("albedoColor", glm::vec4(color, 1.f));
-        material->setUniformValue("metallicMultiplier", 0.f);
+        material->setUniformValue("metallicMultiplier"  , 0.f);
         material->setUniformValue("smoothnessMultiplier", 0.5f);
         material->setUniformValue("aoMultiplier", 1.f);
 
@@ -284,4 +264,5 @@ void PhysicsTestScene::cacheRenderInfos() {
 
     std::transform(colors.begin(), colors.end(), std::back_inserter(m_materials), makeMaterial);
     m_staticBodyMaterial = makeMaterial(glm::vec3(0.5f));
+    m_floorMaterial      = makeMaterial(glm::vec3(1.0f));
 }
