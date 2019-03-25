@@ -14,7 +14,7 @@ endmacro()
 
 cmake_minimum_required(VERSION 3.12)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-project(Saxion_Y2Q2_Rendering)
+project(Engine)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,9 +26,9 @@ header_directories(INCLUDES)
 include_directories(${INCLUDES})
 
 if(WIN32)
-	add_executable(Saxion_Y2Q2_Rendering WIN32 ${SOURCES})
+	add_executable(Engine WIN32 ${SOURCES})
 else()
-	add_executable(Saxion_Y2Q2_Rendering ${SOURCES})
+	add_executable(Engine ${SOURCES})
 endif()
 
 find_package(OpenGL REQUIRED)
@@ -69,4 +69,4 @@ else()
 	set(ASSIMPLIB assimp)
 endif()
 
-target_link_libraries(Saxion_Y2Q2_Rendering ${LUALIB} glm ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${SFMLLIB} ${FREETYPELIB} ${ASSIMPLIB})
+target_link_libraries(Engine ${LUALIB} glm ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${SFMLLIB} ${FREETYPELIB} ${ASSIMPLIB})

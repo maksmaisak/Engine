@@ -62,7 +62,10 @@ namespace en {
         Actor findByName(const std::string& name) const;
 
         template<typename TSystem, typename... Args>
-        TSystem& addSystem(Args&& ... args);
+        TSystem& addSystem(Args&&... args);
+
+        template<typename TSystem, typename... Args>
+        std::unique_ptr<TSystem> makeSystem(Args&&... args);
 
         /// Makes sure a system to handle a given behavior type is in place.
         template<typename TBehavior>
@@ -108,6 +111,13 @@ namespace en {
     inline BehaviorsSystem& Engine::addSystem<BehaviorsSystem>() {
         auto& system = m_systems.addSystem<BehaviorsSystem>();
         m_behaviors = &system;
+        return system;
+    }
+
+    template<typename TSystem, typename... Args>
+    std::unique_ptr<TSystem> Engine::makeSystem(Args&&... args) {
+        auto system = std::make_unique<TSystem>(std::forward<Args>(args)...);
+        system->init(*this);
         return system;
     }
 

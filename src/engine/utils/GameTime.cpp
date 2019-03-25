@@ -4,8 +4,21 @@
 
 #include "GameTime.h"
 
-const sf::Clock GameTime::m_clock;
+using namespace std::chrono;
 
-sf::Time GameTime::now() {
-    return m_clock.getElapsedTime();
+const GameTime::timePoint GameTime::m_start = std::chrono::high_resolution_clock::now();
+
+GameTime::duration GameTime::now() {
+
+    return std::chrono::high_resolution_clock::now() - m_start;
+}
+
+sf::Time GameTime::nowSFTime() {
+
+    return sf::microseconds(duration_cast<std::chrono::duration<sf::Uint64, std::micro>>(now()).count());
+}
+
+float GameTime::nowAsSeconds() {
+
+    return duration_cast<std::chrono::duration<float>>(now()).count();
 }

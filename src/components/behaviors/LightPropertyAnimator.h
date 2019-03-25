@@ -20,7 +20,7 @@ public:
 
 private:
     en::Light m_initialLight;
-    sf::Time m_startTime;
+    GameTime::duration m_startTime;
 };
 
 #endif //SAXION_Y2Q2_RENDERING_LIGHTPROPERTYANIMATOR_H

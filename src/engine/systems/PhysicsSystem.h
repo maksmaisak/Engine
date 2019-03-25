@@ -24,7 +24,7 @@ namespace en {
     struct Collision;
     class Text;
 
-    class PhysicsSystem : public System, Receiver<SceneManager::OnSceneClosed> {
+    class PhysicsSystem : public System {
 
     public:
 
@@ -44,15 +44,15 @@ namespace en {
 
         void update(float dt) override;
         PhysicsSystem& setGravity(const glm::vec3& gravity);
+        const DiagnosticsInfo& getDiagnosticsInfo() const;
+        DiagnosticsInfo resetDiagnosticsInfo();
 
     private:
-
-        void receive(const SceneManager::OnSceneClosed& info) override;
 
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities);
         void addGravity(Entity entity, Transform& tf, Rigidbody& rb, float dt);
 
-        void flushDiagnosticsInfo();
+        void flushCurrentUpdateInfo();
         Text& ensureDebugText();
 
         glm::vec3 m_gravity;
