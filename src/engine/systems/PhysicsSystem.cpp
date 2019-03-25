@@ -5,7 +5,6 @@
 #include "PhysicsSystem.h"
 #include <SFML/Graphics.hpp>
 #include <sstream>
-#include <fstream>
 #include <chrono>
 #include <locale>
 #include "Transform.h"
@@ -77,7 +76,7 @@ void PhysicsSystem::update(float dt) {
         Receiver<Collision>::broadcast(collision);
     m_detectedCollisions.clear();
 
-    flushDiagnosticsInfo();
+    flushCurrentUpdateInfo();
 }
 
 namespace {
@@ -166,7 +165,7 @@ void PhysicsSystem::addGravity(Entity entity, Transform& tf, Rigidbody& rb, floa
     }*/
 }
 
-void PhysicsSystem::flushDiagnosticsInfo() {
+void PhysicsSystem::flushCurrentUpdateInfo() {
 
     using namespace std::literals::string_literals;
     using namespace std::chrono;
@@ -208,24 +207,13 @@ Text& PhysicsSystem::ensureDebugText() {
         .setFont(Resources<sf::Font>::get(config::FONT_PATH + "Menlo.ttc"));
 }
 
-void PhysicsSystem::receive(const SceneManager::OnSceneClosed& info) {
+const PhysicsSystem::DiagnosticsInfo& PhysicsSystem::getDiagnosticsInfo() const {
+    return m_diagnosticsInfo;
+}
 
-    using namespace std::chrono;
-    using ms = duration<double, std::milli>;
+PhysicsSystem::DiagnosticsInfo PhysicsSystem::resetDiagnosticsInfo() {
 
-    std::ofstream out("output/test.csv");
-    if (!out.is_open())
-        return;
-
-    // Ensure dot separator for floats.
-    out.imbue(std::locale::classic());
-
-    const auto& i = m_diagnosticsInfo;
-    out << "update time (average), update time (max)\n" <<
-        duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms, " <<
-        duration_cast<ms>(i.updateTimeMax).count() << "ms\n";
-
-    out.close();
-
+    auto copy = m_diagnosticsInfo;
     m_diagnosticsInfo = {};
+    return copy;
 }

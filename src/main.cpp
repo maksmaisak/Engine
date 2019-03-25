@@ -48,7 +48,7 @@ int main() {
         engine->addSystem<en::RenderSystem>();
 
         engine->addSystem<en::PhysicsTestingSystem>();
-        engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
+        //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
 
         engine->addSystem<en::UIEventSystem>();
         engine->addSystem<en::BehaviorsSystem>();

@@ -102,8 +102,6 @@ PhysicsTestScene::PhysicsTestScene(const Preset& preset) :
 
 void PhysicsTestScene::open() {
 
-    en::Engine& engine = getEngine();
-
     setUpNonBodies();
     setUpBounds();
     addStaticBodies();
@@ -183,8 +181,8 @@ void PhysicsTestScene::addStaticBodies() {
 void PhysicsTestScene::addDynamicBodies() {
 
     const auto randomHalfSize = makeRandomVectorGenerator(glm::vec3(0.5f), glm::vec3(2.f));
-    const auto randomRadius = [&e = m_randomEngine](){return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool = [&e = m_randomEngine]() {
+    const auto randomRadius = [&e = m_randomEngine]() {return std::uniform_real_distribution(0.5f, 2.f)(e);};
+    const auto randomBool   = [&e = m_randomEngine]() {
         return std::uniform_int_distribution(0, 1)(e) == 1;
     };
 
@@ -201,10 +199,10 @@ void PhysicsTestScene::makeSphere(const glm::vec3& position, float radius, bool 
     en::Actor actor = getEngine().makeActor();
     actor.add<en::Transform>().move(position).scale(glm::vec3(radius));
 
-    std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
+    std::uniform_int_distribution<std::size_t> materialIndexDistribution(0, m_materials.size() - 1);
     actor.add<en::RenderInfo>(
         m_sphereModel,
-        isStatic ? m_staticBodyMaterial : m_materials.at(d(m_randomEngine))
+        isStatic ? m_staticBodyMaterial : m_materials.at(materialIndexDistribution(m_randomEngine))
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius));
@@ -221,10 +219,10 @@ void PhysicsTestScene::makeCube(const glm::vec3& position, const glm::vec3& half
     en::Actor actor = getEngine().makeActor();
     actor.add<en::Transform>().move(position).scale(halfSize);
 
-    std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
+    std::uniform_int_distribution<std::size_t> materialIndexDistribution(0, m_materials.size() - 1);
     actor.add<en::RenderInfo>(
         m_cubeModel,
-        isStatic ? m_staticBodyMaterial : m_materials.at(d(m_randomEngine))
+        isStatic ? m_staticBodyMaterial : m_materials.at(materialIndexDistribution(m_randomEngine))
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize));
