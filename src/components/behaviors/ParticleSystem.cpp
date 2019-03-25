@@ -87,7 +87,7 @@ ParticleSystem::ParticleIndex ParticleSystem::emitParticle() {
 
     particle.transformMatrix = m_actor.get<en::Transform>().getWorldTransform();
     particle.transformMatrix = glm::translate(particle.transformMatrix, glm::sphericalRand(m_settings.emissionRadius));
-    particle.timeToDestroy = GameTime::now() + m_settings.particleLifetime;
+    particle.timeToDestroy = GameTime::nowSFTime() + m_settings.particleLifetime;
 
     particle.velocity = m_settings.startVelocity + glm::sphericalRand(m_settings.startVelocityRandomness);
 
@@ -98,7 +98,7 @@ void ParticleSystem::updateParticle(ParticleIndex i, float dt) {
 
     Particle& particle = m_particles.at(i);
 
-    if (GameTime::now() >= particle.timeToDestroy) {
+    if (GameTime::nowSFTime() >= particle.timeToDestroy) {
         destroyParticle(i);
         return;
     }

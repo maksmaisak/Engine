@@ -106,7 +106,7 @@ void PhysicsTestScene::open() {
 
     setUpNonBodies();
     setUpBounds();
-     addStaticBodies();
+    addStaticBodies();
     addDynamicBodies();
 }
 
@@ -133,7 +133,7 @@ void PhysicsTestScene::setUpNonBodies() {
     cameraOrbitBehavior.setTarget(center);
 
     en::Actor directionalLight = engine.makeActor("DirectionalLight");
-    directionalLight.add<en::Transform>().rotate(45.f, {1, 0, 0});
+    directionalLight.add<en::Transform>().rotate(45.f, {1, 0, 0}).rotate(20.f, {0, 1, 0});
     directionalLight.add<en::Light>(en::Light::Kind::DIRECTIONAL);
 }
 

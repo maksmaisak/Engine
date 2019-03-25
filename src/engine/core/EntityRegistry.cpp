@@ -57,7 +57,7 @@ namespace en {
     void EntityRegistry::destroyAll() {
 
         for (Entity e : m_entities) Receiver<EntityWillBeDestroyed>::broadcast({e});
-        m_entities.clear();
+        m_entities.removeAll();
 
         for (const auto& poolPtr : m_componentPools) {
             if (poolPtr) {

@@ -43,13 +43,15 @@ namespace en {
         template<typename TComponent>
         inline bool remove() {return m_registry->remove<TComponent>(m_entity);}
 
+        inline bool isValid() const {return m_engine && !isNullEntity(m_entity) && m_registry->isAlive(m_entity);}
+
         void destroy();
 
         inline Engine& getEngine() const {return *m_engine;}
         std::string getName() const;
 
         inline operator Entity() const {return m_entity;}
-        inline operator bool() const {return m_engine && !isNullEntity(m_entity) && m_registry->isAlive(m_entity);}
+        inline operator bool() const {return isValid();}
 
     private:
         Engine* m_engine = nullptr;

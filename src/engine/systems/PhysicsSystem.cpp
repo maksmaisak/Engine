@@ -7,6 +7,7 @@
 #include <sstream>
 #include <fstream>
 #include <chrono>
+#include <locale>
 #include "Transform.h"
 #include "Rigidbody.h"
 #include "Hit.h"
@@ -190,15 +191,16 @@ void PhysicsSystem::flushDiagnosticsInfo() {
 
 Text& PhysicsSystem::ensureDebugText() {
 
-    if (!m_debugTextActor)
+    if (!m_debugTextActor.isValid()) {
         m_debugTextActor = m_engine->makeActor("PhysicsSystemDebug");
-
-    if (auto* textPtr = m_debugTextActor.tryGet<Text>())
-        return *textPtr;
+    }
 
     m_debugTextActor.getOrAdd<Transform>();
     auto& rect = m_debugTextActor.getOrAdd<UIRect>();
     rect.offsetMin = rect.offsetMax = {30, -30};
+
+    if (auto* textPtr = m_debugTextActor.tryGet<Text>())
+        return *textPtr;
 
     return m_debugTextActor.add<Text>()
         .setString("Test")
@@ -214,6 +216,9 @@ void PhysicsSystem::receive(const SceneManager::OnSceneClosed& info) {
     std::ofstream out("output/test.csv");
     if (!out.is_open())
         return;
+
+    // Ensure dot separator for floats.
+    out.imbue(std::locale::classic());
 
     const auto& i = m_diagnosticsInfo;
     out << "update time (average), update time (max)\n" <<

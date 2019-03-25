@@ -257,7 +257,7 @@ void Engine::initializeLua() {
         lua_pushcclosure(lua, &makeActorFromLua, 1);
         lua_setfield(lua, -2, "makeActor");
 
-        lua.setField("getTime", [](){return GameTime::now().asSeconds();});
+        lua.setField("getTime", [](){return GameTime::nowAsSeconds();});
 
         lua.push(this);
         lua_pushcclosure(lua, &loadScene, 1);

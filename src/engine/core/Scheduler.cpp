@@ -9,7 +9,7 @@
 
 void Scheduler::update(float dt) {
 
-    while (!m_scheduled.empty() && m_scheduled.top().time <= GameTime::now()) {
+    while (!m_scheduled.empty() && m_scheduled.top().time <= GameTime::nowSFTime()) {
 
         m_scheduled.top().func();
         m_scheduled.pop();
@@ -18,7 +18,7 @@ void Scheduler::update(float dt) {
 
 void Scheduler::delay(sf::Time timeDelay, const Scheduler::func_t& func) {
 
-    schedule(GameTime::now() + timeDelay, func);
+    schedule(GameTime::nowSFTime() + timeDelay, func);
 }
 
 void Scheduler::schedule(sf::Time time, const Scheduler::func_t& func) {

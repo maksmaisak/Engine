@@ -2,7 +2,7 @@
 -- engine
 width  = 1920
 height = 1080
-windowTitle = "Sealed"
+windowTitle = "Engine"
 fullscreen = false
 framerateCap = 240
 vsync = false
