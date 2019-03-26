@@ -94,6 +94,7 @@ Actor PhysicsTestSceneBase::makeSphere(const glm::vec3& position, float radius, 
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius));
+    rb.invMass = 1.f / (4.f / 3.f * glm::pi<float>() * radius * radius * radius);
     rb.isKinematic = isStatic;
     if (!rb.isKinematic) {
         std::uniform_real_distribution<float> d(-1.f, 1.f);
@@ -116,6 +117,7 @@ Actor PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3&
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<Rigidbody>(std::make_unique<AABBCollider>(halfSize));
+    rb.invMass = 1.f / (8.f * halfSize.x * halfSize.y * halfSize.z);
     rb.isKinematic = isStatic;
     if (!rb.isKinematic) {
         std::uniform_real_distribution<float> d(-10.f, 10.f);

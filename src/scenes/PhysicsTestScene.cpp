@@ -78,7 +78,7 @@ PhysicsTestScene::PhysicsTestScene(const Preset& preset) : m_preset(preset) {}
 void PhysicsTestScene::open() {
 
     setUpNonBodies(m_preset.fieldHalfSize);
-    setUpBounds(m_preset.fieldHalfSize);
+    setUpBounds   (m_preset.fieldHalfSize);
     addStaticBodies();
     addDynamicBodies();
 }
@@ -91,8 +91,8 @@ void PhysicsTestScene::update(float dt) {
 
 void PhysicsTestScene::addStaticBodies() {
 
-    const auto randomRadius = [&e = m_randomEngine](){return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool   = [&e = m_randomEngine](){return std::uniform_int_distribution (0, 1)(e) == 1;};
+    const auto randomRadius = [&e = m_randomEngine]() -> float {return std::uniform_real_distribution(0.5f, 2.f)(e);};
+    const auto randomBool   = [&e = m_randomEngine]() -> bool  {return std::uniform_int_distribution (0, 1)(e) == 1;};
 
     for (int i = 0; i < m_preset.numBodiesStatic; ++i) {
 
@@ -107,8 +107,8 @@ void PhysicsTestScene::addStaticBodies() {
 
 void PhysicsTestScene::addDynamicBodies() {
 
-    const auto randomRadius = [&e = m_randomEngine]() {return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool   = [&e = m_randomEngine]() {return std::uniform_int_distribution (0, 1)(e) == 1;};
+    const auto randomRadius = [&e = m_randomEngine]() -> float {return std::uniform_real_distribution(0.5f, 2.f)(e);};
+    const auto randomBool   = [&e = m_randomEngine]() -> bool  {return std::uniform_int_distribution (0, 1)(e) == 1;};
 
     for (int i = 0; i < m_preset.numBodiesDynamic; ++i) {
 
