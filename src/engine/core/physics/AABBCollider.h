@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_AABBCOLLIDER_H
-#define SAXION_Y2Q2_RENDERING_AABBCOLLIDER_H
+#ifndef ENGINE_AABBCOLLIDER_H
+#define ENGINE_AABBCOLLIDER_H
 
 #include "Collider.h"
 
@@ -24,4 +24,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_AABBCOLLIDER_H
+#endif //ENGINE_AABBCOLLIDER_H

@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-04.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_EASE_H
-#define SAXION_Y2Q2_RENDERING_EASE_H
+#ifndef ENGINE_EASE_H
+#define ENGINE_EASE_H
 
 #include <functional>
 
@@ -41,4 +41,4 @@ namespace ease {
     float fluctuate(float t);
 }
 
-#endif //SAXION_Y2Q2_RENDERING_EASE_H
+#endif //ENGINE_EASE_H

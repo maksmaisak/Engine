@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_HIT_H
-#define SAXION_Y2Q2_RENDERING_HIT_H
+#ifndef ENGINE_HIT_H
+#define ENGINE_HIT_H
 
 #include "glm.hpp"
 
@@ -22,4 +22,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_HIT_H
+#endif //ENGINE_HIT_H

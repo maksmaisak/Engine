@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_COLLIDER_H
-#define SAXION_Y2Q2_RENDERING_COLLIDER_H
+#ifndef ENGINE_COLLIDER_H
+#define ENGINE_COLLIDER_H
 
 #include <optional>
 #include "glm.hpp"
@@ -27,4 +27,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_COLLIDER_H
+#endif //ENGINE_COLLIDER_H

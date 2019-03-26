@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-20.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_AVERAGE_H
-#define SAXION_Y2Q2_RENDERING_AVERAGE_H
+#ifndef ENGINE_AVERAGE_H
+#define ENGINE_AVERAGE_H
 
 namespace utils {
 
@@ -26,4 +26,4 @@ namespace utils {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_AVERAGE_H
+#endif //ENGINE_AVERAGE_H

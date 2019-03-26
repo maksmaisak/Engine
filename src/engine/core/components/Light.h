@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 24/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_LIGHT_H
-#define SAXION_Y2Q2_RENDERING_LIGHT_H
+#ifndef ENGINE_LIGHT_H
+#define ENGINE_LIGHT_H
 
 #include "ComponentsToLua.h"
 #include "glm.hpp"
@@ -62,4 +62,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_LIGHT_H
+#endif //ENGINE_LIGHT_H

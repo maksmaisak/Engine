@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-15.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_VERTEX_H
-#define SAXION_Y2Q2_RENDERING_VERTEX_H
+#ifndef ENGINE_VERTEX_H
+#define ENGINE_VERTEX_H
 
 #include "glm.hpp"
 
@@ -15,4 +15,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_VERTEX_H
+#endif //ENGINE_VERTEX_H

@@ -13,10 +13,10 @@ namespace en {
 
     using namespace std::literals::chrono_literals;
 
-    class PhysicsTestingSystem : public System {
+    class PhysicsStressTestingSystem : public System {
 
     public:
-        PhysicsTestingSystem();
+        PhysicsStressTestingSystem();
         void start() override;
         void update(float dt) override;
 

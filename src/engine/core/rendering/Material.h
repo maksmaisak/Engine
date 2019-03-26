@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-09.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_MATERIAL_H
-#define SAXION_Y2Q2_RENDERING_MATERIAL_H
+#ifndef ENGINE_MATERIAL_H
+#define ENGINE_MATERIAL_H
 
 #include <memory>
 #include <string>
@@ -240,4 +240,4 @@ namespace en {
     }
 }
 
-#endif //SAXION_Y2Q2_RENDERING_MATERIAL_H
+#endif //ENGINE_MATERIAL_H

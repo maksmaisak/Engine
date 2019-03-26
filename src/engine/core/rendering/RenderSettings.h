@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-11.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_RENDERSETTINGS_H
-#define SAXION_Y2Q2_RENDERING_RENDERSETTINGS_H
+#ifndef ENGINE_RENDERSETTINGS_H
+#define ENGINE_RENDERSETTINGS_H
 
 #include <memory>
 #include "config.hpp"
@@ -20,4 +20,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_RENDERSETTINGS_H
+#endif //ENGINE_RENDERSETTINGS_H

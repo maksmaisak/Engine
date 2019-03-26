@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-01.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_EXCEPTION_H
-#define SAXION_Y2Q2_RENDERING_EXCEPTION_H
+#ifndef ENGINE_EXCEPTION_H
+#define ENGINE_EXCEPTION_H
 
 #include <exception>
 
@@ -21,4 +21,4 @@ namespace utils {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_EXCEPTION_H
+#endif //ENGINE_EXCEPTION_H

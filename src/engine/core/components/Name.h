@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 1/1/19.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_NAME_H
-#define SAXION_Y2Q2_RENDERING_NAME_H
+#ifndef ENGINE_NAME_H
+#define ENGINE_NAME_H
 
 #include <string>
 #include "ComponentsToLua.h"
@@ -22,4 +22,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_NAME_H
+#endif //ENGINE_NAME_H

@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 27/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_SCENEMANAGER_H
-#define SAXION_Y2Q2_RENDERING_SCENEMANAGER_H
+#ifndef ENGINE_SCENEMANAGER_H
+#define ENGINE_SCENEMANAGER_H
 
 #include <vector>
 #include <cassert>
@@ -49,4 +49,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_SCENEMANAGER_H
+#endif //ENGINE_SCENEMANAGER_H

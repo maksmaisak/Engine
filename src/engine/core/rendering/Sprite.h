@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-13.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_SPRITE_H
-#define SAXION_Y2Q2_RENDERING_SPRITE_H
+#ifndef ENGINE_SPRITE_H
+#define ENGINE_SPRITE_H
 
 #include <memory>
 #include "Material.h"
@@ -22,4 +22,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_SPRITE_H
+#endif //ENGINE_SPRITE_H

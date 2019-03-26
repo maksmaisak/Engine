@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_SPHERECOLLIDER_H
-#define SAXION_Y2Q2_RENDERING_SPHERECOLLIDER_H
+#ifndef ENGINE_SPHERECOLLIDER_H
+#define ENGINE_SPHERECOLLIDER_H
 
 #include "Collider.h"
 #include "CollisionDetection.h"
@@ -25,4 +25,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_SPHERECOLLIDER_H
+#endif //ENGINE_SPHERECOLLIDER_H

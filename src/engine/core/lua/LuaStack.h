@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 29/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_LUASTACK_H
-#define SAXION_Y2Q2_RENDERING_LUASTACK_H
+#ifndef ENGINE_LUASTACK_H
+#define ENGINE_LUASTACK_H
 
 #include <type_traits>
 #include <lua.hpp>
@@ -346,4 +346,4 @@ namespace lua {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_LUASTACK_H
+#endif //ENGINE_LUASTACK_H

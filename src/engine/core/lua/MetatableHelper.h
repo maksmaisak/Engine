@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 3/1/19.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_METATABLE_HELPER_H
-#define SAXION_Y2Q2_RENDERING_METATABLE_HELPER_H
+#ifndef ENGINE_METATABLE_HELPER_H
+#define ENGINE_METATABLE_HELPER_H
 
 #include "LuaState.h"
 #include "LuaStack.h"
@@ -275,4 +275,4 @@ namespace lua {
     }
 }
 
-#endif //SAXION_Y2Q2_RENDERING_METATABLE_HELPER_H
+#endif //ENGINE_METATABLE_HELPER_H

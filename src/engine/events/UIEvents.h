@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-14.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_UIEVENTS_H
-#define SAXION_Y2Q2_RENDERING_UIEVENTS_H
+#ifndef ENGINE_UIEVENTS_H
+#define ENGINE_UIEVENTS_H
 
 namespace en {
 
@@ -24,4 +24,4 @@ namespace en {
     struct MouseUp    : MouseButtonEvent {};
 }
 
-#endif //SAXION_Y2Q2_RENDERING_UIEVENTS_H
+#endif //ENGINE_UIEVENTS_H

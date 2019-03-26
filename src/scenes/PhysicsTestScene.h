@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 27/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_PHYSICSTESTSCENE_H
-#define SAXION_Y2Q2_RENDERING_PHYSICSTESTSCENE_H
+#ifndef ENGINE_PHYSICSTESTSCENE_H
+#define ENGINE_PHYSICSTESTSCENE_H
 
 #include <vector>
 #include <memory>
@@ -53,4 +53,4 @@ private:
 };
 
 
-#endif //SAXION_Y2Q2_RENDERING_PHYSICSTESTSCENE_H
+#endif //ENGINE_PHYSICSTESTSCENE_H

@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_COLLISIONDETECTION_H
-#define SAXION_Y2Q2_RENDERING_COLLISIONDETECTION_H
+#ifndef ENGINE_COLLISIONDETECTION_H
+#define ENGINE_COLLISIONDETECTION_H
 
 #include <optional>
 #include "glm.hpp"
@@ -23,4 +23,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_COLLISIONDETECTION_H
+#endif //ENGINE_COLLISIONDETECTION_H

@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-13.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_SKYBOXRENDERER_H
-#define SAXION_Y2Q2_RENDERING_SKYBOXRENDERER_H
+#ifndef ENGINE_SKYBOXRENDERER_H
+#define ENGINE_SKYBOXRENDERER_H
 
 #include <memory>
 #include <GL/glew.h>
@@ -31,4 +31,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_SKYBOXRENDERER_H
+#endif //ENGINE_SKYBOXRENDERER_H

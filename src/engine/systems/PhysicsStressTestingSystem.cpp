@@ -2,7 +2,7 @@
 // Created by Maksym Maisak on 2019-03-25.
 //
 
-#include "PhysicsTestingSystem.h"
+#include "PhysicsStressTestingSystem.h"
 #include <vector>
 #include <chrono>
 #include <ctime>
@@ -40,15 +40,15 @@ namespace {
     }
 }
 
-PhysicsTestingSystem::PhysicsTestingSystem() : m_outputFilepath(generateOutputFilepath()) {}
+PhysicsStressTestingSystem::PhysicsStressTestingSystem() : m_outputFilepath(generateOutputFilepath()) {}
 
-void PhysicsTestingSystem::start() {
+void PhysicsStressTestingSystem::start() {
 
     writeDiagnosticsHeader();
     startNextTest();
 }
 
-void PhysicsTestingSystem::update(float dt) {
+void PhysicsStressTestingSystem::update(float dt) {
 
     if (m_physicsSystem)
         m_physicsSystem->update(dt);
@@ -67,7 +67,7 @@ void PhysicsTestingSystem::update(float dt) {
     }
 }
 
-void PhysicsTestingSystem::startNextTest() {
+void PhysicsStressTestingSystem::startNextTest() {
 
     const auto& preset = testPresets[m_nextTestIndex++];
     m_engine->getSceneManager().setCurrentSceneNextUpdate<PhysicsTestScene>(preset);
@@ -79,7 +79,7 @@ void PhysicsTestingSystem::startNextTest() {
     m_timeForNextScene = GameTime::now() + m_testDuration;
 }
 
-void PhysicsTestingSystem::writeDiagnosticsHeader() {
+void PhysicsStressTestingSystem::writeDiagnosticsHeader() {
 
     std::ofstream out(m_outputFilepath, std::ios_base::app);
     if (!out.is_open())
@@ -89,7 +89,7 @@ void PhysicsTestingSystem::writeDiagnosticsHeader() {
     out.close();
 }
 
-void PhysicsTestingSystem::outputDiagnosticsData() {
+void PhysicsStressTestingSystem::outputDiagnosticsData() {
 
     if (!m_physicsSystem)
         return;

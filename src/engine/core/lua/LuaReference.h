@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-31.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_LUAREFERENCE_H
-#define SAXION_Y2Q2_RENDERING_LUAREFERENCE_H
+#ifndef ENGINE_LUAREFERENCE_H
+#define ENGINE_LUAREFERENCE_H
 
 #include <lua.hpp>
 
@@ -40,4 +40,4 @@ namespace lua {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_LUAREFERENCE_H
+#endif //ENGINE_LUAREFERENCE_H

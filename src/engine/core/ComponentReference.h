@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-29.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_COMPONENTREFERENCE_H
-#define SAXION_Y2Q2_RENDERING_COMPONENTREFERENCE_H
+#ifndef ENGINE_COMPONENTREFERENCE_H
+#define ENGINE_COMPONENTREFERENCE_H
 
 #include "EntityRegistry.h"
 #include "MetatableHelper.h"
@@ -91,4 +91,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_COMPONENTREFERENCE_H
+#endif //ENGINE_COMPONENTREFERENCE_H

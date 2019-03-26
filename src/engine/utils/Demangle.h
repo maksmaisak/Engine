@@ -3,8 +3,8 @@
 // Adapted from sol2
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_DEMANGLE_H
-#define SAXION_Y2Q2_RENDERING_DEMANGLE_H
+#ifndef ENGINE_DEMANGLE_H
+#define ENGINE_DEMANGLE_H
 
 #include <array>
 
@@ -94,4 +94,4 @@ namespace utils {
     }
 }
 
-#endif //SAXION_Y2Q2_RENDERING_DEMANGLE_H
+#endif //ENGINE_DEMANGLE_H
