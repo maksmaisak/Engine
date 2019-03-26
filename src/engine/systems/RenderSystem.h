@@ -8,7 +8,8 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
-#include <GL/glew.h>
+#include <SFML/Window.hpp>
+#include "glm.hpp"
 #include "Entity.h"
 #include "System.h"
 #include "Engine.h"
@@ -29,7 +30,7 @@ namespace en {
     class DebugHud;
 	struct UIRect;
 
-    class RenderSystem : public System, Receiver<SceneManager::OnSceneClosed> {
+    class RenderSystem : public System, Receiver<SceneManager::OnSceneClosed, sf::Event> {
 
     public:
         RenderSystem();
@@ -37,7 +38,8 @@ namespace en {
         void draw() override;
 
     private:
-        void receive(const SceneManager::OnSceneClosed& info) override;
+        void receive(const SceneManager::OnSceneClosed&) override;
+        void receive(const sf::Event&) override;
 
         void updateBatches();
         void updateDepthMaps();

@@ -400,17 +400,9 @@ void Engine::processWindowEvents() {
     while (m_window.pollEvent(event)) {
 
         switch (event.type) {
-
             case sf::Event::Closed:
                 m_shouldExit = true;
                 break;
-
-            case sf::Event::Resized:
-                // TODO move this to the render system
-                // Unconstrained match viewport scaling
-                glViewport(0, 0, event.size.width, event.size.height);
-                break;
-
             default:
                 break;
         }

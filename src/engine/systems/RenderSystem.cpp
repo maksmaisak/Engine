@@ -10,6 +10,7 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
+#include <GL/glew.h>
 #include "RenderInfo.h"
 #include "Transform.h"
 #include "Camera.h"
@@ -681,11 +682,20 @@ glm::vec2 RenderSystem::getWindowSize() {
 
 float RenderSystem::getUIScaleFactor() {
 
-    const glm::vec2 windowSize = getWindowSize();
-    return std::sqrt((windowSize.x / m_referenceResolution.x) * (windowSize.y / m_referenceResolution.y));
+    const glm::vec2 scale = getWindowSize() / m_referenceResolution;
+    return std::sqrt(scale.x * scale.y);
 }
 
 void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
 
     m_batches.clear();
+}
+
+void RenderSystem::receive(const sf::Event& event) {
+
+    if (event.type != sf::Event::EventType::Resized)
+        return;
+
+    // Unconstrained match viewport scaling
+    glViewport(0, 0, event.size.width, event.size.height);
 }

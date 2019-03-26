@@ -20,7 +20,7 @@ namespace {
         {100 , 100},
         {200 , 200},
         {400 , 200},
-        {400 , 400}
+        //{400 , 400}
         //{1000, 1000}
     };
 
@@ -29,7 +29,7 @@ namespace {
         std::stringstream s;
         s << "output/test_";
 
-        std::time_t t = std::time(nullptr);
+        const std::time_t t = std::time(nullptr);
         char dateTimeStr[100];
         if (std::strftime(dateTimeStr, sizeof(dateTimeStr), "%Y_%m_%d_%H_%M_%S", std::localtime(&t)))
             s << dateTimeStr;
@@ -105,14 +105,13 @@ void PhysicsTestingSystem::outputDiagnosticsData() {
 
     // Ensure dot separator for floats.
     out.imbue(std::locale::classic());
-
     out <<
         m_nextTestIndex << ',' <<
         testPresets[m_nextTestIndex - 1].numBodiesStatic  << ',' <<
         testPresets[m_nextTestIndex - 1].numBodiesDynamic << ',' <<
-        duration_cast<ms>(info.updateTimeMin).count() << "ms," <<
+        duration_cast<ms>(info.updateTimeMin          ).count() << "ms," <<
         duration_cast<ms>(info.updateTimeAverage.get()).count() << "ms," <<
-        duration_cast<ms>(info.updateTimeMax).count() << "ms\n";
+        duration_cast<ms>(info.updateTimeMax          ).count() << "ms\n";
 
     out.close();
 }

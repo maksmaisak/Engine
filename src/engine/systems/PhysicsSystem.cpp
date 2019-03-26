@@ -53,7 +53,7 @@ void PhysicsSystem::update(float dt) {
         if (rb.useGravity)
             addGravity(entity, tf, rb, dt);
 
-        constexpr int maxNumSteps = 10;
+        constexpr int maxNumSteps = 3;
         float timeToMove = dt;
         for (int i = 0; i < maxNumSteps; ++i) {
 
