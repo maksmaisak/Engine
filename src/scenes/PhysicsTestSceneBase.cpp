@@ -82,7 +82,7 @@ void PhysicsTestSceneBase::setUpBounds(const glm::vec3& halfSize) {
     make(center + glm::vec3(0, 0, +halfSize.z), {halfSize.x, halfSize.y, 1}, false);
 }
 
-void PhysicsTestSceneBase::makeSphere(const glm::vec3& position, float radius, bool isStatic) {
+Actor PhysicsTestSceneBase::makeSphere(const glm::vec3& position, float radius, bool isStatic) {
 
     Actor actor = getEngine().makeActor();
     actor.add<Transform>().move(position).scale(glm::vec3(radius));
@@ -100,9 +100,11 @@ void PhysicsTestSceneBase::makeSphere(const glm::vec3& position, float radius, b
         rb.velocity = {d(m_randomEngine), d(m_randomEngine), d(m_randomEngine)};
     }
     //rb.bounciness = 0.5f;
+
+    return actor;
 }
 
-void PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
+Actor PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
 
     Actor actor = getEngine().makeActor();
     actor.add<Transform>().move(position).scale(halfSize);
@@ -120,6 +122,8 @@ void PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3& 
         rb.velocity = {d(m_randomEngine), d(m_randomEngine), d(m_randomEngine)};
     }
     //rb.bounciness = 0.5f;
+
+    return actor;
 }
 
 void PhysicsTestSceneBase::cacheMaterials() {

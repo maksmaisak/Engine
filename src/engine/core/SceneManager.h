@@ -28,7 +28,9 @@ namespace en {
         void setCurrentScene(std::unique_ptr<Scene> scene);
         void setCurrentSceneNextUpdate(std::unique_ptr<Scene> scene);
         void closeCurrentScene();
-        void setCurrentSceneNextUpdate();
+        void closeCurrentSceneNextUpdate();
+        void restartCurrentScene();
+        void restartCurrentSceneNextUpdate();
 
         template<typename TScene, typename... Args>
         inline void setCurrentScene(Args&&... args) {
@@ -42,10 +44,13 @@ namespace en {
 
     private:
 
+        void close(Scene& scene);
+
         Engine* m_engine = nullptr;
         std::unique_ptr<Scene> m_currentScene;
         std::unique_ptr<Scene> m_openNextUpdateScene;
-        bool m_shouldCloseSceneNextFrame = false;
+        bool m_shouldCloseSceneNextUpdate   = false;
+        bool m_shouldRestartSceneNextUpdate = false;
     };
 }
 

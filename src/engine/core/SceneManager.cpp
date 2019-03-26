@@ -6,51 +6,66 @@
 #include "Engine.h"
 #include "Receiver.h"
 
-namespace en {
+using namespace en;
 
-    void SceneManager::update(float dt) {
+void SceneManager::update(float dt) {
 
-        if (m_shouldCloseSceneNextFrame)
-            closeCurrentScene();
-
-        if (m_openNextUpdateScene)
-            setCurrentScene(std::move(m_openNextUpdateScene));
-
-        if (m_currentScene)
-            m_currentScene->update(dt);
-    }
-
-    void SceneManager::setCurrentScene(std::unique_ptr<en::Scene> scene) {
-
+    if (m_shouldCloseSceneNextUpdate)
         closeCurrentScene();
 
-        m_currentScene = std::move(scene);
-        if (m_currentScene) {
-            m_currentScene->setEngine(*m_engine);
-            m_currentScene->open();
-            Receiver<OnSceneOpened>::broadcast({this});
-        }
+    if (m_shouldRestartSceneNextUpdate)
+        restartCurrentScene();
+
+    if (m_openNextUpdateScene)
+        setCurrentScene(std::move(m_openNextUpdateScene));
+
+    if (m_currentScene)
+        m_currentScene->update(dt);
+}
+
+void SceneManager::setCurrentScene(std::unique_ptr<en::Scene> scene) {
+
+    closeCurrentScene();
+
+    m_currentScene = std::move(scene);
+    if (m_currentScene) {
+        m_currentScene->setEngine(*m_engine);
+        m_currentScene->open();
+        Receiver<OnSceneOpened>::broadcast({this});
     }
+}
 
-    void SceneManager::closeCurrentScene() {
+void SceneManager::closeCurrentScene() {
 
-        if (!m_currentScene)
-            return;
+    if (!m_currentScene)
+        return;
 
-        m_shouldCloseSceneNextFrame = false;
+    m_shouldCloseSceneNextUpdate   = false;
+    m_shouldRestartSceneNextUpdate = false;
 
-        m_currentScene->close();
-        m_engine->getRegistry().destroyAll();
-        Receiver<OnSceneClosed>::broadcast({this});
-    }
+    close(*m_currentScene);
+    m_currentScene = nullptr;
+}
 
-    void SceneManager::setCurrentSceneNextUpdate(std::unique_ptr<Scene> scene) {
+void SceneManager::restartCurrentScene() {
 
-        m_openNextUpdateScene = std::move(scene);
-    }
+    if (!m_currentScene)
+        return;
 
-    void SceneManager::setCurrentSceneNextUpdate() {
+    m_shouldCloseSceneNextUpdate   = false;
+    m_shouldRestartSceneNextUpdate = false;
 
-        m_shouldCloseSceneNextFrame = true;
-    }
+    close(*m_currentScene);
+    m_currentScene->open();
+}
+
+void SceneManager::setCurrentSceneNextUpdate(std::unique_ptr<Scene> scene) {m_openNextUpdateScene = std::move(scene);}
+void SceneManager::closeCurrentSceneNextUpdate  () {m_shouldCloseSceneNextUpdate   = true;}
+void SceneManager::restartCurrentSceneNextUpdate() {m_shouldRestartSceneNextUpdate = true;}
+
+void SceneManager::close(Scene& scene) {
+
+    scene.close();
+    m_engine->getRegistry().destroyAll();
+    Receiver<OnSceneClosed>::broadcast({this});
 }

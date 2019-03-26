@@ -20,6 +20,7 @@
 
 #include "PhysicsTestScene.h"
 #include "PhysicsStressTestingSystem.h"
+#include "CollisionDetectionTestScene.h"
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
@@ -47,8 +48,8 @@ int main() {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
 
-        engine->addSystem<en::PhysicsStressTestingSystem>();
-        //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
+        //engine->addSystem<en::PhysicsStressTestingSystem>();
+        engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
 
         engine->addSystem<en::UIEventSystem>();
         engine->addSystem<en::BehaviorsSystem>();
@@ -60,6 +61,7 @@ int main() {
 
     //openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
+    engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 

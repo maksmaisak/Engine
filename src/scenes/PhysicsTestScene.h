@@ -5,14 +5,6 @@
 #ifndef ENGINE_PHYSICSTESTSCENE_H
 #define ENGINE_PHYSICSTESTSCENE_H
 
-#include <vector>
-#include <memory>
-#include <random>
-#include "Model.h"
-#include "RenderInfo.h"
-#include "Rigidbody.h"
-#include "Engine.h"
-#include "Scene.h"
 #include "PhysicsTestSceneBase.h"
 
 class PhysicsTestScene : public en::PhysicsTestSceneBase {
