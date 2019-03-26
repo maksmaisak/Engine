@@ -116,3 +116,28 @@ std::optional<Hit> en::collisionDetection::AABBVsSphere(AABBCollider& a, SphereC
     const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
     return Hit{normal, 1.f, normal * (b.radius - distance)};
 }
+
+std::optional<Hit> en::collisionDetection::sphereVsOBB(SphereCollider& a, OBBCollider& b, const glm::vec3& movement) {
+
+    return std::optional<Hit>();
+}
+
+std::optional<Hit> en::collisionDetection::AABBVsOBB(AABBCollider& a, OBBCollider& b, const glm::vec3& movement) {
+
+    return std::optional<Hit>();
+}
+
+std::optional<Hit> en::collisionDetection::OBBVsSphere(OBBCollider& a, SphereCollider& b, const glm::vec3& movement) {
+
+    return std::optional<Hit>();
+}
+
+std::optional<Hit> en::collisionDetection::OBBVsAABB(OBBCollider& a, AABBCollider& b, const glm::vec3& movement) {
+
+    return std::optional<Hit>();
+}
+
+std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& a, OBBCollider& b, const glm::vec3& movement) {
+
+    return std::optional<Hit>();
+}

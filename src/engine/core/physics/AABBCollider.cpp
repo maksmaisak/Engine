@@ -23,3 +23,7 @@ std::optional<Hit> AABBCollider::collide(AABBCollider& other, const glm::vec3& m
 std::optional<Hit> AABBCollider::collide(SphereCollider& other, const glm::vec3& movement) {
     return collisionDetection::sphereVsAABB(other, *this, movement);
 }
+
+std::optional<Hit> AABBCollider::collide(OBBCollider& other, const glm::vec3& movement) {
+    return collisionDetection::OBBVsAABB(other, *this, movement);
+}

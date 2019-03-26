@@ -17,6 +17,7 @@
 #include "UIRect.h"
 #include "Sprite.h"
 #include "Text.h"
+#include "Model.h"
 
 #include "PhysicsTestScene.h"
 #include "PhysicsStressTestingSystem.h"
@@ -24,8 +25,6 @@
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
-
-#include "Model.h"
 
 void openStartLuaScene(en::Engine& engine) {
 

@@ -14,6 +14,7 @@ namespace en {
 
     struct SphereCollider;
     struct AABBCollider;
+    struct OBBCollider;
 
     struct Collider {
 
@@ -23,7 +24,8 @@ namespace en {
         // Base case when the other is indeterminate
         virtual std::optional<Hit> collide(Collider& other, const glm::vec3& movement) = 0;
         virtual std::optional<Hit> collide(SphereCollider& other, const glm::vec3& movement) = 0;
-        virtual std::optional<Hit> collide(AABBCollider& other, const glm::vec3& movement) = 0;
+        virtual std::optional<Hit> collide(AABBCollider&   other, const glm::vec3& movement) = 0;
+        virtual std::optional<Hit> collide(OBBCollider&    other, const glm::vec3& movement) = 0;
     };
 }
 
