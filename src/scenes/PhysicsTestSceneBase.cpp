@@ -152,3 +152,16 @@ void PhysicsTestSceneBase::cacheMaterials() {
     m_staticBodyMaterial = makeMaterial(glm::vec3(0.5f));
     m_floorMaterial      = makeMaterial(glm::vec3(1.0f));
 }
+
+glm::vec3 PhysicsTestSceneBase::getRandomVectorMinMax(const glm::vec3& min, const glm::vec3& max) {
+
+    std::uniform_real_distribution<float> x(min.x, max.x);
+    std::uniform_real_distribution<float> y(min.y, max.y);
+    std::uniform_real_distribution<float> z(min.z, max.z);
+    return {x(m_randomEngine), y(m_randomEngine), z(m_randomEngine)};
+}
+
+glm::vec3 PhysicsTestSceneBase::getRandomVectorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize) {
+
+    return getRandomVectorMinMax(center - halfSize, center + halfSize);
+}

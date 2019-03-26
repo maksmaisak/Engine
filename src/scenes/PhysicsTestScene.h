@@ -34,7 +34,6 @@ private:
     void addDynamicBodies();
 
     Preset m_preset;
-    std::function<glm::vec3()> m_randomPosition;
 };
 
 

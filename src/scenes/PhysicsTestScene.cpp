@@ -52,7 +52,7 @@ namespace {
                 auto& tf = actor.add<en::Transform>();
 
                 // from (-1, -1) to (1, 1) inclusive
-                glm::vec2 positionNormalized = {
+                const glm::vec2 positionNormalized = {
                     ((float) x / (numSpheresPerSide - 1) - 0.5f) * 2.f,
                     ((float) y / (numSpheresPerSide - 1) - 0.5f) * 2.f
                 };
@@ -71,29 +71,9 @@ namespace {
             }
         }
     }
-
-    std::function<glm::vec3()> makeRandomVectorGenerator(const glm::vec3& min, const glm::vec3& max) {
-
-        std::uniform_real_distribution<float> x(min.x, max.x);
-        std::uniform_real_distribution<float> y(min.y, max.y);
-        std::uniform_real_distribution<float> z(min.z, max.z);
-
-        // `mutable` because the call operator of the distributions is non-const, so captured objects mustn't be const
-        return [e = std::default_random_engine(0), x, y, z]() mutable -> glm::vec3 {
-            return {x(e), y(e), z(e)};
-        };
-    }
-
-    std::function<glm::vec3()> makeRandomVectorGeneratorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize) {
-
-        return makeRandomVectorGenerator(center - halfSize, center + halfSize);
-    }
 }
 
-PhysicsTestScene::PhysicsTestScene(const Preset& preset) :
-    m_preset(preset),
-    m_randomPosition(makeRandomVectorGeneratorCenterHalfSize({0, preset.fieldHalfSize.y, 0}, preset.fieldHalfSize))
-{}
+PhysicsTestScene::PhysicsTestScene(const Preset& preset) : m_preset(preset) {}
 
 void PhysicsTestScene::open() {
 
@@ -111,32 +91,32 @@ void PhysicsTestScene::update(float dt) {
 
 void PhysicsTestScene::addStaticBodies() {
 
-    const auto randomHalfSize = makeRandomVectorGenerator(glm::vec3(0.5f), glm::vec3(2.f));
     const auto randomRadius = [&e = m_randomEngine](){return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool = [&e = m_randomEngine]() {
-        return std::uniform_int_distribution(0, 1)(e) == 1;
-    };
+    const auto randomBool   = [&e = m_randomEngine](){return std::uniform_int_distribution (0, 1)(e) == 1;};
 
     for (int i = 0; i < m_preset.numBodiesStatic; ++i) {
+
+        const glm::vec3& position = getRandomVectorCenterHalfSize({0, m_preset.fieldHalfSize.y, 0}, m_preset.fieldHalfSize);
+
         if (randomBool())
-            makeCube(m_randomPosition(), randomHalfSize(), true);
+            makeCube(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), true);
         else
-            makeSphere(m_randomPosition(), randomRadius(), true);
+            makeSphere(position, randomRadius(), true);
     }
 }
 
 void PhysicsTestScene::addDynamicBodies() {
 
-    const auto randomHalfSize = makeRandomVectorGenerator(glm::vec3(0.5f), glm::vec3(2.f));
     const auto randomRadius = [&e = m_randomEngine]() {return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool   = [&e = m_randomEngine]() {
-        return std::uniform_int_distribution(0, 1)(e) == 1;
-    };
+    const auto randomBool   = [&e = m_randomEngine]() {return std::uniform_int_distribution (0, 1)(e) == 1;};
 
     for (int i = 0; i < m_preset.numBodiesDynamic; ++i) {
+
+        const glm::vec3& position = getRandomVectorCenterHalfSize({0, m_preset.fieldHalfSize.y, 0}, m_preset.fieldHalfSize);
+
         if (randomBool())
-            makeCube(m_randomPosition(), randomHalfSize());
+            makeCube(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)));
         else
-            makeSphere(m_randomPosition(), randomRadius());
+            makeSphere(position, randomRadius());
     }
 }

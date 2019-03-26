@@ -28,6 +28,8 @@ namespace en {
         void makeSphere(const glm::vec3& position, float radius = 0.2f, bool isStatic = false);
         void makeCube  (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(0.4f), bool isStatic = false);
 
+        glm::vec3 getRandomVectorMinMax(const glm::vec3& min, const glm::vec3& max);
+        glm::vec3 getRandomVectorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize);
         std::default_random_engine m_randomEngine = std::default_random_engine(0);
 
     private:
