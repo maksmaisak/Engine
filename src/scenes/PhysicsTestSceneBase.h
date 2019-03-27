@@ -16,6 +16,7 @@
 
 namespace en {
 
+    // TODO make this used by the test scenes instead of be their base class. Composition over inheritance.
     class PhysicsTestSceneBase : public en::Scene {
 
     public:
@@ -25,8 +26,9 @@ namespace en {
         void setUpNonBodies(const glm::vec3& halfSize);
         void setUpBounds   (const glm::vec3& halfSize);
 
-        Actor makeSphere(const glm::vec3& position, float radius = 0.2f, bool isStatic = false);
-        Actor makeCube  (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(0.4f), bool isStatic = false);
+        Actor makeSphere(const glm::vec3& position, float radius = 1.f, bool isStatic = false);
+        Actor makeAABB  (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(1.f), bool isStatic = false);
+        Actor makeCube  (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(1.f), bool isStatic = false);
 
         glm::vec3 getRandomVectorMinMax(const glm::vec3& min, const glm::vec3& max);
         glm::vec3 getRandomVectorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize);
@@ -34,12 +36,13 @@ namespace en {
 
     private:
         void cacheMaterials();
+        std::shared_ptr<Material> getRandomBodyMaterial();
 
-        std::shared_ptr<en::Model> m_sphereModel;
-        std::shared_ptr<en::Model> m_cubeModel;
-        std::vector<std::shared_ptr<en::Material>> m_materials;
-        std::shared_ptr<en::Material> m_staticBodyMaterial;
-        std::shared_ptr<en::Material> m_floorMaterial;
+        std::shared_ptr<Model> m_sphereModel;
+        std::shared_ptr<Model> m_cubeModel;
+        std::vector<std::shared_ptr<Material>> m_materials;
+        std::shared_ptr<Material> m_staticBodyMaterial;
+        std::shared_ptr<Material> m_floorMaterial;
     };
 }
 

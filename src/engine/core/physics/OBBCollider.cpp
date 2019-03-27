@@ -7,6 +7,8 @@
 
 using namespace en;
 
+OBBCollider::OBBCollider(const glm::vec3& halfSize) : halfSize(halfSize) {}
+
 void OBBCollider::updateTransform(const glm::mat4& transform) {
 
     center   = transform[3];

@@ -12,9 +12,21 @@ void CollisionDetectionTestScene::open() {
     setUpNonBodies(halfSize);
     setUpBounds   (halfSize);
 
-    makeSphere({0.2f, 10.f, 0.f}, 1.f).get<Rigidbody>().velocity = {0, 0, 0};
-    //makeSphere({0.f , 1.5f, 0.f}, 1.f).get<Rigidbody>().velocity = {0, 0, 0};
-    makeCube  ({-1.1f , 1.5f, 0.f}, glm::vec3(1.f)).get<Rigidbody>().velocity = {0, 0, 0};
+    makeSphere({ 0.2f, 10.f, 0.f}).get<Rigidbody>().velocity = {0, 0, 0};
+    Actor cube = makeCube({-1.1f, 2.f, 0.f});
+    cube.get<Transform>().rotate(glm::radians(45.f), {0, 0, 1});
+    {
+        auto& rb = cube.get<Rigidbody>();
+        rb.velocity = {0, 0, 0};
+        rb.useGravity = false;
+    }
+
+    makeSphere({ 0.2f, 10.f, -3.f}).get<Rigidbody>().velocity = {0, 0, 0};
+    {
+        auto& rb = makeAABB({-1.1f, 2.f, -3.f}).get<Rigidbody>();
+        rb.velocity = {0, 0, 0};
+        rb.useGravity = false;
+    }
 }
 
 void CollisionDetectionTestScene::update(float dt) {

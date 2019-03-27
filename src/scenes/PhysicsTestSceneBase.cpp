@@ -19,6 +19,7 @@
 #include "Light.h"
 #include "SphereCollider.h"
 #include "AABBCollider.h"
+#include "OBBCollider.h"
 
 #include "CameraOrbitBehavior.h"
 #include "RotatingBehavior.hpp"
@@ -87,13 +88,12 @@ Actor PhysicsTestSceneBase::makeSphere(const glm::vec3& position, float radius, 
     Actor actor = getEngine().makeActor();
     actor.add<Transform>().move(position).scale(glm::vec3(radius));
 
-    std::uniform_int_distribution<std::size_t> materialIndexDistribution(0, m_materials.size() - 1);
     actor.add<RenderInfo>(
         m_sphereModel,
-        isStatic ? m_staticBodyMaterial : m_materials.at(materialIndexDistribution(m_randomEngine))
+        isStatic ? m_staticBodyMaterial : getRandomBodyMaterial()
     ).isBatchingStatic = isStatic;
 
-    auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius));
+    auto& rb = actor.add<Rigidbody>(std::make_unique<SphereCollider>(radius));
     rb.invMass = 1.f / (4.f / 3.f * glm::pi<float>() * radius * radius * radius);
     rb.isKinematic = isStatic;
     if (!rb.isKinematic) {
@@ -105,15 +105,14 @@ Actor PhysicsTestSceneBase::makeSphere(const glm::vec3& position, float radius, 
     return actor;
 }
 
-Actor PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
+Actor PhysicsTestSceneBase::makeAABB(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
 
     Actor actor = getEngine().makeActor();
     actor.add<Transform>().move(position).scale(halfSize);
 
-    std::uniform_int_distribution<std::size_t> materialIndexDistribution(0, m_materials.size() - 1);
     actor.add<RenderInfo>(
         m_cubeModel,
-        isStatic ? m_staticBodyMaterial : m_materials.at(materialIndexDistribution(m_randomEngine))
+        isStatic ? m_staticBodyMaterial : getRandomBodyMaterial()
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<Rigidbody>(std::make_unique<AABBCollider>(halfSize));
@@ -127,6 +126,27 @@ Actor PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3&
 
     return actor;
 }
+
+Actor PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
+
+    Actor actor = getEngine().makeActor();
+    actor.add<Transform>().move(position).scale(halfSize);
+
+    actor.add<RenderInfo>(
+        m_cubeModel,
+        isStatic ? m_staticBodyMaterial : getRandomBodyMaterial()
+    ).isBatchingStatic = isStatic;
+
+    auto& rb = actor.add<Rigidbody>(std::make_unique<OBBCollider>(halfSize));
+    rb.invMass = 1.f / (8.f * halfSize.x * halfSize.y * halfSize.z);
+    rb.isKinematic = isStatic;
+    if (!rb.isKinematic) {
+        std::uniform_real_distribution<float> d(-10.f, 10.f);
+        rb.velocity = {d(m_randomEngine), d(m_randomEngine), d(m_randomEngine)};
+    }
+    //rb.bounciness = 0.5f;
+
+    return actor;}
 
 void PhysicsTestSceneBase::cacheMaterials() {
 
@@ -170,4 +190,10 @@ glm::vec3 PhysicsTestSceneBase::getRandomVectorMinMax(const glm::vec3& min, cons
 glm::vec3 PhysicsTestSceneBase::getRandomVectorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize) {
 
     return getRandomVectorMinMax(center - halfSize, center + halfSize);
+}
+
+std::shared_ptr<Material> PhysicsTestSceneBase::getRandomBodyMaterial() {
+
+    std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
+    return m_materials[d(m_randomEngine)];
 }

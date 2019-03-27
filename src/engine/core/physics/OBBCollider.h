@@ -15,6 +15,8 @@ namespace en {
         glm::vec3 halfSize;
         glm::mat3 rotation;
 
+        OBBCollider(const glm::vec3& halfSize);
+
         void updateTransform(const glm::mat4& transform) override;
 
         std::optional<Hit> collide(Collider& other, const glm::vec3& movement) override;

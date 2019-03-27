@@ -99,7 +99,7 @@ void PhysicsTestScene::addStaticBodies() {
         const glm::vec3& position = getRandomVectorCenterHalfSize({0, m_preset.fieldHalfSize.y, 0}, m_preset.fieldHalfSize);
 
         if (randomBool())
-            makeCube(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), true);
+            makeAABB(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), true);
         else
             makeSphere(position, randomRadius(), true);
     }
@@ -115,7 +115,7 @@ void PhysicsTestScene::addDynamicBodies() {
         const glm::vec3& position = getRandomVectorCenterHalfSize({0, m_preset.fieldHalfSize.y, 0}, m_preset.fieldHalfSize);
 
         if (randomBool())
-            makeCube(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)));
+            makeAABB(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)));
         else
             makeSphere(position, randomRadius());
     }
