@@ -61,6 +61,20 @@ namespace {
         const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
         return Hit{normal, 1.f, normal * (radius - distance)};
     }
+
+    inline std::optional<Hit> AABBVsSphereInternal(const glm::vec3& boxCenter, const glm::vec3& boxHalfSize, const glm::vec3& spherePosition, float radius, const glm::vec3& movement) {
+
+        const glm::vec3 aabbPosition = boxCenter + movement;
+        const glm::vec3 closestPoint = glm::clamp(spherePosition, aabbPosition - boxHalfSize, aabbPosition + boxHalfSize);
+        const glm::vec3 delta = closestPoint - spherePosition;
+        const float distanceSqr = glm::length2(delta);
+        if (distanceSqr > radius * radius)
+            return std::nullopt;
+
+        const float distance = glm::sqrt(distanceSqr);
+        const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
+        return Hit{normal, 1.f, normal * (radius - distance)};
+    }
 }
 
 std::optional<Hit> en::collisionDetection::sphereVsSphere(SphereCollider& a, SphereCollider& b, const glm::vec3& movement) {
@@ -105,22 +119,11 @@ std::optional<Hit> en::collisionDetection::AABBVsAABB(AABBCollider& a, AABBColli
 }
 
 std::optional<Hit> en::collisionDetection::sphereVsAABB(SphereCollider& a, AABBCollider& b, const glm::vec3& movement) {
-
     return sphereVsAABBInternal(a.position, a.radius, b.center, b.halfSize, movement);
 }
 
 std::optional<Hit> en::collisionDetection::AABBVsSphere(AABBCollider& a, SphereCollider& b, const glm::vec3& movement) {
-
-    const glm::vec3 aabbPosition = a.center + movement;
-    const glm::vec3 closestPoint = glm::clamp(b.position, aabbPosition - a.halfSize, aabbPosition + a.halfSize);
-    const glm::vec3 delta = closestPoint - b.position;
-    const float distanceSqr = glm::length2(delta);
-    if (distanceSqr > b.radius * b.radius)
-        return std::nullopt;
-
-    const float distance = glm::sqrt(distanceSqr);
-    const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
-    return Hit{normal, 1.f, normal * (b.radius - distance)};
+    return AABBVsSphereInternal(a.center, a.halfSize, b.position, b.radius, movement);
 }
 
 std::optional<Hit> en::collisionDetection::sphereVsOBB(SphereCollider& a, OBBCollider& b, const glm::vec3& movement) {
@@ -138,12 +141,22 @@ std::optional<Hit> en::collisionDetection::sphereVsOBB(SphereCollider& a, OBBCol
     return hit;
 }
 
-std::optional<Hit> en::collisionDetection::AABBVsOBB(AABBCollider& a, OBBCollider& b, const glm::vec3& movement) {
+std::optional<Hit> en::collisionDetection::OBBVsSphere(OBBCollider& a, SphereCollider& b, const glm::vec3& movement) {
 
-    return std::optional<Hit>();
+    const glm::mat3 inverseRotation = glm::transpose(a.rotation);
+    const glm::vec3& spherePosition = inverseRotation * (b.position - a.center) + a.center;
+    const glm::vec3& localMovement  = inverseRotation * movement;
+
+    std::optional<Hit> hit = AABBVsSphereInternal(a.center, a.halfSize, spherePosition, b.radius, localMovement);
+    if (!hit)
+        return hit;
+
+    hit->normal              = a.rotation * hit->normal;
+    hit->depenetrationOffset = a.rotation * hit->depenetrationOffset;
+    return hit;
 }
 
-std::optional<Hit> en::collisionDetection::OBBVsSphere(OBBCollider& a, SphereCollider& b, const glm::vec3& movement) {
+std::optional<Hit> en::collisionDetection::AABBVsOBB(AABBCollider& a, OBBCollider& b, const glm::vec3& movement) {
 
     return std::optional<Hit>();
 }
