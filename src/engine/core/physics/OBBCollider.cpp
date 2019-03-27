@@ -12,7 +12,7 @@ OBBCollider::OBBCollider(const glm::vec3& halfSize) : halfSize(halfSize) {}
 void OBBCollider::updateTransform(const glm::mat4& transform) {
 
     center   = transform[3];
-    rotation = glm::mat3(transform);
+    rotation = glm::mat3(glm::extractMatrixRotation(transform));
 }
 
 std::optional<Hit> OBBCollider::collide(Collider& other, const glm::vec3& movement) {return other.collide(*this, movement);}

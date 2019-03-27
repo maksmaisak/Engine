@@ -110,7 +110,7 @@ namespace {
             const glm::vec3 axisA = getAxis(axisIndexA);
             const glm::vec3 axisB = glm::row(b2A, axisIndexB);
             // If the axes are pointing in the same direction, their cross will be zero, so we can't use that as a normal.
-            if (glm::epsilonEqual(glm::abs(glm::dot(axisA, axisB)), 1.f, 0.01f))
+            if (glm::epsilonEqual(glm::abs(glm::dot(axisA, axisB)), 1.f, glm::epsilon<float>()))
                 return true;
 
             // Will be normalized in the end
@@ -224,7 +224,6 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& b, OBBCollider&
 
     glm::vec3 minPenetrationAxis {};
     float minPenetrationDepth = std::numeric_limits<float>::infinity();
-    int minPenetrationAxisIndex = -1;
     const auto updateMinPenetrationAxis = [&minPenetrationAxis, &minPenetrationDepth](const glm::vec3& axis, float penetrationDepth){
 
         if (penetrationDepth > minPenetrationDepth)
@@ -239,7 +238,6 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& b, OBBCollider&
 
         const float ra = a.halfSize[i];
         const float rb = glm::dot(b.halfSize, absB2A[i]);
-
         const float penetrationDepth = ra + rb - glm::abs(delta[i]);
         if (penetrationDepth < 0.f)
             return std::nullopt;
@@ -254,7 +252,6 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& b, OBBCollider&
 
         const float ra = glm::dot(a.halfSize, axis);
         const float rb = b.halfSize[i];
-
         const float penetrationDepth = ra + rb - glm::abs(glm::dot(delta, axis));
         if (penetrationDepth < 0.f)
             return std::nullopt;
@@ -271,7 +268,6 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& b, OBBCollider&
     if (!satOBBAxisTest<2, 0>(a.halfSize, b.halfSize, delta, b2A, absB2A, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
     if (!satOBBAxisTest<2, 1>(a.halfSize, b.halfSize, delta, b2A, absB2A, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
     if (!satOBBAxisTest<2, 2>(a.halfSize, b.halfSize, delta, b2A, absB2A, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
-
 
     const glm::vec3 normal = glm::normalize(a.rotation * minPenetrationAxis);
     return Hit {
