@@ -12,7 +12,7 @@ void CollisionDetectionTestScene::open() {
     setUpNonBodies(halfSize);
     setUpBounds   (halfSize);
 
-    makeSphere({ 0.2f, 10.f, 0.f}).get<Rigidbody>().velocity = {0, 0, 0};
+    makeSphere({0.2f, 10.f, 0.f}).get<Rigidbody>().velocity = {0, 0, 0};
     Actor cube = makeCube({-1.1f, 2.f, 0.f});
     cube.get<Transform>().rotate(glm::radians(45.f), {0, 0, 1});
     {

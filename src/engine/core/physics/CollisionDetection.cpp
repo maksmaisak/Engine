@@ -125,13 +125,15 @@ std::optional<Hit> en::collisionDetection::AABBVsSphere(AABBCollider& a, SphereC
 
 std::optional<Hit> en::collisionDetection::sphereVsOBB(SphereCollider& a, OBBCollider& b, const glm::vec3& movement) {
 
-    const glm::vec3& spherePosition = glm::transpose(b.rotation) * (a.position - b.center) + b.center;
+    const glm::mat3 inverseRotation = glm::transpose(b.rotation);
+    const glm::vec3& spherePosition = inverseRotation * (a.position - b.center) + b.center;
+    const glm::vec3& localMovement  = inverseRotation * movement;
 
-    std::optional<Hit> hit = sphereVsAABBInternal(spherePosition, a.radius, b.center, b.halfSize, movement);
+    std::optional<Hit> hit = sphereVsAABBInternal(spherePosition, a.radius, b.center, b.halfSize, localMovement);
     if (!hit)
         return hit;
 
-    hit->normal = b.rotation * hit->normal;
+    hit->normal              = b.rotation * hit->normal;
     hit->depenetrationOffset = b.rotation * hit->depenetrationOffset;
     return hit;
 }
