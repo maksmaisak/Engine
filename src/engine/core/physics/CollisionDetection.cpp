@@ -86,7 +86,7 @@ namespace {
     template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
     inline glm::mat<C, R, T, Q> absMatrix(const glm::mat<C,R,T,Q>& m) {
 
-        glm::mat<C,R,T,Q> result;
+        glm::mat<C,R,T,Q> result{};
         for (glm::length_t c = 0; c < C; ++c)
             result[c] = glm::abs(m[c]);
         return result;
@@ -105,8 +105,8 @@ namespace {
         constexpr int a2 = axisIndexA == 2 ? 1 : 2;
         constexpr int b1 = axisIndexB == 0 ? 1 : 0;
         constexpr int b2 = axisIndexB == 2 ? 1 : 2;
-        const float rb = bHalfSize[b1] * absA2B[a2][axisIndexB] + bHalfSize[b2] * absA2B[a1][axisIndexB];
-        const float ra = aHalfSize[a1] * absA2B[axisIndexA][b2] + aHalfSize[a2] * absA2B[axisIndexA][b1];
+        const float rb = bHalfSize[b1] * absA2B[b2][axisIndexA] + bHalfSize[b2] * absA2B[b1][axisIndexA];
+        const float ra = aHalfSize[a1] * absA2B[axisIndexB][a2] + aHalfSize[a2] * absA2B[axisIndexB][a1];
 
         constexpr int x1 = (axisIndexB + 2) % 3;
         constexpr int x2 = (axisIndexB + 1) % 3;
@@ -130,9 +130,64 @@ namespace {
         return true;
     }
 
-    inline std::optional<Hit> obbVsAABBInternal() {
+    inline std::optional<Hit> obbVsAABBInternal(const OBBCollider& a, const glm::vec3& bHalfSize, const glm::mat3 a2B, const glm::vec3& initialDelta, const glm::vec3& movement) {
 
-        return std::nullopt;
+        // Add epsilon to prevent a zero vector being recognized as a separating axis
+        const glm::mat3 absA2B = absMatrix(a2B) + glm::epsilon<float>();
+        const glm::vec3 delta = initialDelta + movement;
+
+        glm::vec3 minPenetrationAxis {};
+        float minPenetrationDepth = std::numeric_limits<float>::infinity();
+        const auto updateMinPenetrationAxis = [&minPenetrationAxis, &minPenetrationDepth](const glm::vec3& axis, float penetrationDepth){
+
+            if (penetrationDepth > minPenetrationDepth)
+                return;
+
+            minPenetrationAxis = axis;
+            minPenetrationDepth = penetrationDepth;
+        };
+
+        // The axes of B
+        for (int i = 0; i < 3; ++i) {
+
+            const float rb = bHalfSize[i];
+            const float ra = glm::dot(a.halfSize, absA2B[i]);
+            const float penetrationDepth = ra + rb - glm::abs(delta[i]);
+            if (penetrationDepth < 0.f)
+                return std::nullopt;
+
+            updateMinPenetrationAxis(getAxis(i), penetrationDepth);
+        }
+
+        // The axes of A
+        for (int i = 0; i < 3; ++i) {
+
+            const glm::vec3 axis = glm::row(absA2B, i);
+
+            const float rb = glm::dot(bHalfSize, axis);
+            const float ra = a.halfSize[i];
+            const float penetrationDepth = ra + rb - glm::abs(glm::dot(delta, axis));
+            if (penetrationDepth < 0.f)
+                return std::nullopt;
+
+            updateMinPenetrationAxis(axis, penetrationDepth);
+        }
+
+        if (!satOBBAxisTest<0, 0>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+        if (!satOBBAxisTest<1, 0>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+        if (!satOBBAxisTest<2, 0>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+
+        if (!satOBBAxisTest<0, 1>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+        if (!satOBBAxisTest<1, 1>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+        if (!satOBBAxisTest<2, 1>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+
+        if (!satOBBAxisTest<0, 2>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+        if (!satOBBAxisTest<1, 2>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+        if (!satOBBAxisTest<2, 2>(a.halfSize, bHalfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+
+        const float directionMultiplier = glm::dot(delta, minPenetrationAxis) < 0.f ? -1.f : 1.f;
+        const glm::vec3 normal = glm::normalize(minPenetrationAxis * directionMultiplier);
+        return Hit {normal, 1.f, normal * minPenetrationDepth};
     }
 }
 
@@ -222,14 +277,9 @@ std::optional<Hit> en::collisionDetection::AABBVsOBB(AABBCollider& a, OBBCollide
 
 std::optional<Hit> en::collisionDetection::OBBVsAABB(OBBCollider& a, AABBCollider& b, const glm::vec3& movement) {
 
-    const glm::vec3 delta = a.center + movement - b.center;
-    const glm::mat3 a2B = a.rotation;
-    // Add epsilon to prevent a zero vector being recognized as a separating axis
-    //const glm::mat3 absA2B = absMatrix(a2B) + glm::epsilon<float>();
+    std::optional<Hit> hit = obbVsAABBInternal(a, b.halfSize, a.rotation, a.center - b.center, movement);
 
-    //return obbVsAABBInternal();
-
-    return std::optional<Hit>();
+    return hit;
 }
 
 std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& a, OBBCollider& b, const glm::vec3& movement) {
@@ -282,17 +332,12 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& a, OBBCollider&
     if (!satOBBAxisTest<2, 0>(a.halfSize, b.halfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
     if (!satOBBAxisTest<0, 1>(a.halfSize, b.halfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
     if (!satOBBAxisTest<1, 1>(a.halfSize, b.halfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
-    if (!satOBBAxisTest<1, 1>(a.halfSize, b.halfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
+    if (!satOBBAxisTest<2, 1>(a.halfSize, b.halfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
     if (!satOBBAxisTest<0, 2>(a.halfSize, b.halfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
     if (!satOBBAxisTest<1, 2>(a.halfSize, b.halfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
     if (!satOBBAxisTest<2, 2>(a.halfSize, b.halfSize, delta, a2B, absA2B, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
 
-    //const glm::vec3 normal = glm::normalize(a.rotation * minPenetrationAxis);
     const float directionMultiplier = glm::dot(delta, minPenetrationAxis) < 0.f ? -1.f : 1.f;
     const glm::vec3 normal = glm::normalize(b.rotation * minPenetrationAxis * directionMultiplier);
-    return Hit {
-        normal,
-        1.f,
-        normal * minPenetrationDepth
-    };
+    return Hit {normal, 1.f, normal * minPenetrationDepth};
 }

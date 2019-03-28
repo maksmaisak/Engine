@@ -16,7 +16,6 @@ void CollisionDetectionTestScene::open() {
     {
         auto& rb = makeAABB({-1.1f, 2.f, -3.f}).get<Rigidbody>();
         rb.velocity = {0, 0, 0};
-        rb.useGravity = false;
     }
 
     makeSphere({0.2f, 10.f, 0.f}).get<Rigidbody>().velocity = {0, 0, 0};
@@ -25,7 +24,6 @@ void CollisionDetectionTestScene::open() {
         cube.get<Transform>().rotate(glm::radians(20.f), {0, 0, 1});
         auto& rb = cube.get<Rigidbody>();
         rb.velocity = {0, 0, 0};
-        rb.useGravity = false;
     }
 
     {
@@ -43,7 +41,6 @@ void CollisionDetectionTestScene::open() {
     {
         Actor cube = makeCube({-1.1f,  2.f, 6.f});
         cube.get<Rigidbody>().velocity = {0, 0, 0};
-        cube.get<Rigidbody>().useGravity = false;
         cube.get<Transform>().rotate(glm::radians(20.f), {0, 0, 1});
     }
 
@@ -55,7 +52,6 @@ void CollisionDetectionTestScene::open() {
     {
         Actor cube = makeCube({-1.1f,  2.f, 9.f});
         cube.get<Rigidbody>().velocity = {0, 0, 0};
-        cube.get<Rigidbody>().useGravity = false;
         cube.get<Transform>()
             .rotate(glm::radians(45.f), {0, 0, 1})
             .rotate(glm::radians(45.f), {1, 0, 0});
