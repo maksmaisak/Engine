@@ -84,7 +84,7 @@ namespace {
     }
 
     // For an OBBvsOBB (or AABBvsOBB) test, does a SAT test on the axis that is the cross product of `axisIndexA`th axis of box A with the `axisIndexB`th axis of box B.
-    // All calculations are performed in the space of the box A
+    // All calculations are performed in the local space of the box A, as if it was an aabb centered at origin.
     template<int axisIndexA, int axisIndexB>
     inline bool satOBBAxisTest(const glm::vec3& aHalfSize, const glm::vec3& bHalfSize, const glm::vec3& delta, const glm::mat3& b2A, const glm::mat3& absB2A, float& minPenetrationDepth, glm::vec3& minPenetrationAxis) {
 
@@ -217,9 +217,9 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& b, OBBCollider&
 
     const glm::mat3 world2A = glm::transpose(a.rotation);
     const glm::mat3 b2A = world2A * b.rotation;
+    // Add epsilon to prevent a zero vector being recognized as a separating axis
     const glm::mat3 absB2A = glm::mat3(glm::abs(b2A[0]), glm::abs(b2A[1]), glm::abs(b2A[2])) + glm::epsilon<float>();
 
-    // Calculations are done in a's coordinate frame. A can then be considered an aabb
     const glm::vec3 delta = world2A * (b.center + movement - a.center);
 
     glm::vec3 minPenetrationAxis {};
@@ -269,7 +269,9 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& b, OBBCollider&
     if (!satOBBAxisTest<2, 1>(a.halfSize, b.halfSize, delta, b2A, absB2A, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
     if (!satOBBAxisTest<2, 2>(a.halfSize, b.halfSize, delta, b2A, absB2A, minPenetrationDepth, minPenetrationAxis)) return std::nullopt;
 
-    const glm::vec3 normal = glm::normalize(a.rotation * minPenetrationAxis);
+    //const glm::vec3 normal = glm::normalize(a.rotation * minPenetrationAxis);
+    const float directionMultiplier = glm::dot(delta, minPenetrationAxis) < 0.f ? -1.f : 1.f;
+    const glm::vec3 normal = glm::normalize(a.rotation * minPenetrationAxis * directionMultiplier);
     return Hit {
         normal,
         1.f,
