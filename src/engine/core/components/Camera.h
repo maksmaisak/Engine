@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 24/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_CAMERA_H
-#define SAXION_Y2Q2_RENDERING_CAMERA_H
+#ifndef ENGINE_CAMERA_H
+#define ENGINE_CAMERA_H
 
 #include "glm.hpp"
 #include "ComponentsToLua.h"
@@ -24,4 +24,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_CAMERA_H
+#endif //ENGINE_CAMERA_H

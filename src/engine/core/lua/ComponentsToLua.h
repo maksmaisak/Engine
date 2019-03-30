@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 31/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_COMPONENTSTOLUA_H
-#define SAXION_Y2Q2_RENDERING_COMPONENTSTOLUA_H
+#ifndef ENGINE_COMPONENTSTOLUA_H
+#define ENGINE_COMPONENTSTOLUA_H
 
 #include <map>
 #include <type_traits>
@@ -160,4 +160,4 @@ namespace en {
     }
 }
 
-#endif //SAXION_Y2Q2_RENDERING_COMPONENTSTOLUA_H
+#endif //ENGINE_COMPONENTSTOLUA_H

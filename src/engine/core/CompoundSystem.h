@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-08.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_COMPOUNDSYSTEM_H
-#define SAXION_Y2Q2_RENDERING_COMPOUNDSYSTEM_H
+#ifndef ENGINE_COMPOUNDSYSTEM_H
+#define ENGINE_COMPOUNDSYSTEM_H
 
 #include <vector>
 #include "System.h"
@@ -41,4 +41,4 @@ namespace en {
 }
 
 
-#endif //SAXION_Y2Q2_RENDERING_COMPOUNDSYSTEM_H
+#endif //ENGINE_COMPOUNDSYSTEM_H

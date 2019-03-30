@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-04.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_TWEEN_H
-#define SAXION_Y2Q2_RENDERING_TWEEN_H
+#ifndef ENGINE_TWEEN_H
+#define ENGINE_TWEEN_H
 
 #include <functional>
 #include <optional>
@@ -49,4 +49,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_TWEEN_H
+#endif //ENGINE_TWEEN_H

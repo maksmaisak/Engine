@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-15.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_MOUSEHELPER_H
-#define SAXION_Y2Q2_RENDERING_MOUSEHELPER_H
+#ifndef ENGINE_MOUSEHELPER_H
+#define ENGINE_MOUSEHELPER_H
 
 #include <SFML/Window.hpp>
 #include "glm.hpp"
@@ -21,4 +21,4 @@ namespace utils {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_MOUSEHELPER_H
+#endif //ENGINE_MOUSEHELPER_H

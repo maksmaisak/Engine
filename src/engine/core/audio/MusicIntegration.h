@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-04.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_MUSICINTEGRATION_H
-#define SAXION_Y2Q2_RENDERING_MUSICINTEGRATION_H
+#ifndef ENGINE_MUSICINTEGRATION_H
+#define ENGINE_MUSICINTEGRATION_H
 
 #include <memory>
 #include <SFML/Audio.hpp>
@@ -29,4 +29,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_MUSICINTEGRATION_H
+#endif //ENGINE_MUSICINTEGRATION_H

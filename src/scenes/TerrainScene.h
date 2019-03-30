@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-16.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_TERRAINSCENE_H
-#define SAXION_Y2Q2_RENDERING_TERRAINSCENE_H
+#ifndef ENGINE_TERRAINSCENE_H
+#define ENGINE_TERRAINSCENE_H
 
 #include "Engine.h"
 #include "Scene.h"
@@ -15,4 +15,4 @@ public:
     void open() override;
 };
 
-#endif //SAXION_Y2Q2_RENDERING_TERRAINSCENE_H
+#endif //ENGINE_TERRAINSCENE_H

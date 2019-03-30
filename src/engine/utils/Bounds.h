@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-22.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_BOUNDS_H
-#define SAXION_Y2Q2_RENDERING_BOUNDS_H
+#ifndef ENGINE_BOUNDS_H
+#define ENGINE_BOUNDS_H
 
 #include "glm.hpp"
 
@@ -15,4 +15,4 @@ namespace utils {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_BOUNDS_H
+#endif //ENGINE_BOUNDS_H

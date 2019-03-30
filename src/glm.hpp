@@ -17,7 +17,7 @@ inline Stream& operator <<(Stream& stream, const glm::vec<L, T, Q>& vec) {
     for (glm::length_t i = 1; i < L; ++i)
     	stream << "," << vec[i];
 
-    stream << ")";
+    return stream << ")";
 }
 
 template<typename Stream, typename T, glm::qualifier Q>

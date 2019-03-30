@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-12.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_KEYBOARDHELPER_H
-#define SAXION_Y2Q2_RENDERING_KEYBOARDHELPER_H
+#ifndef ENGINE_KEYBOARDHELPER_H
+#define ENGINE_KEYBOARDHELPER_H
 
 #include <string>
 #include <SFML/Window.hpp>
@@ -24,4 +24,4 @@ namespace utils {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_KEYBOARDHELPER_H
+#endif //ENGINE_KEYBOARDHELPER_H

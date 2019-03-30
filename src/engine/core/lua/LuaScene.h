@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 30/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_LUASCENE_H
-#define SAXION_Y2Q2_RENDERING_LUASCENE_H
+#ifndef ENGINE_LUASCENE_H
+#define ENGINE_LUASCENE_H
 
 #include "Scene.h"
 #include <string>
@@ -37,4 +37,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_LUASCENE_H
+#endif //ENGINE_LUASCENE_H

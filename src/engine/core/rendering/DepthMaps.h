@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-10.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_DEPTHMAPS_H
-#define SAXION_Y2Q2_RENDERING_DEPTHMAPS_H
+#ifndef ENGINE_DEPTHMAPS_H
+#define ENGINE_DEPTHMAPS_H
 
 #include <GL/glew.h>
 #include "glm.hpp"
@@ -52,4 +52,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_DEPTHMAPS_H
+#endif //ENGINE_DEPTHMAPS_H

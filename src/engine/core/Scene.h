@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 27/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_SCENE_H
-#define SAXION_Y2Q2_RENDERING_SCENE_H
+#ifndef ENGINE_SCENE_H
+#define ENGINE_SCENE_H
 
 #include <cassert>
 #include "RenderSettings.h"
@@ -35,4 +35,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_SCENE_H
+#endif //ENGINE_SCENE_H

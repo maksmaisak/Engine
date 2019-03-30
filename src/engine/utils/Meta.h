@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-17.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_META_H
-#define SAXION_Y2Q2_RENDERING_META_H
+#ifndef ENGINE_META_H
+#define ENGINE_META_H
 
 #include <functional>
 
@@ -108,4 +108,4 @@ namespace utils {
     struct functionTraits<F, true> : functionTraits<typename functionTraits<decltype(&F::operator())>::Signature> {};
 }
 
-#endif //SAXION_Y2Q2_RENDERING_META_H
+#endif //ENGINE_META_H

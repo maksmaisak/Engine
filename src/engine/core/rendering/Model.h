@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-06.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_MODEL_H
-#define SAXION_Y2Q2_RENDERING_MODEL_H
+#ifndef ENGINE_MODEL_H
+#define ENGINE_MODEL_H
 
 #include <memory>
 #include <vector>
@@ -29,4 +29,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_MODEL_H
+#endif //ENGINE_MODEL_H

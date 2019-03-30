@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-03-01.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_SOUND_H
-#define SAXION_Y2Q2_RENDERING_SOUND_H
+#ifndef ENGINE_SOUND_H
+#define ENGINE_SOUND_H
 
 #include <memory>
 #include <SFML/Audio.hpp>
@@ -30,4 +30,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_SOUND_H
+#endif //ENGINE_SOUND_H

@@ -4,8 +4,8 @@
 // Created by Maksym Maisak on 24/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_RENDERINFO_H
-#define SAXION_Y2Q2_RENDERING_RENDERINFO_H
+#ifndef ENGINE_RENDERINFO_H
+#define ENGINE_RENDERINFO_H
 
 #include <memory>
 #include "Model.h"
@@ -30,4 +30,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_RENDERINFO_H
+#endif //ENGINE_RENDERINFO_H

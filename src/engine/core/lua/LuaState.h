@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 29/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_LUASTATE_H
-#define SAXION_Y2Q2_RENDERING_LUASTATE_H
+#ifndef ENGINE_LUASTATE_H
+#define ENGINE_LUASTATE_H
 
 #include <lua.hpp>
 #include <memory>
@@ -123,4 +123,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_LUASTATE_H
+#endif //ENGINE_LUASTATE_H

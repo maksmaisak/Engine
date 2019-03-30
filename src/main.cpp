@@ -17,14 +17,14 @@
 #include "UIRect.h"
 #include "Sprite.h"
 #include "Text.h"
+#include "Model.h"
 
 #include "PhysicsTestScene.h"
-#include "PhysicsTestingSystem.h"
+#include "PhysicsStressTestingSystem.h"
+#include "CollisionDetectionTestScene.h"
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
-
-#include "Model.h"
 
 void openStartLuaScene(en::Engine& engine) {
 
@@ -47,7 +47,7 @@ int main() {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
 
-        engine->addSystem<en::PhysicsTestingSystem>();
+        engine->addSystem<en::PhysicsStressTestingSystem>();
         //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
 
         engine->addSystem<en::UIEventSystem>();
@@ -60,6 +60,7 @@ int main() {
 
     //openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
+    //engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 

@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-09.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_TUPLEUTILS_H
-#define SAXION_Y2Q2_RENDERING_TUPLEUTILS_H
+#ifndef ENGINE_TUPLEUTILS_H
+#define ENGINE_TUPLEUTILS_H
 
 #include <tuple>
 #include <type_traits>
@@ -23,4 +23,4 @@ struct has_type<T, std::tuple<T, Rest...>> : std::true_type {};
 template<typename T, typename Tuple>
 inline constexpr bool has_type_v = has_type<T, Tuple>::value;
 
-#endif //SAXION_Y2Q2_RENDERING_TUPLEUTILS_H
+#endif //ENGINE_TUPLEUTILS_H
