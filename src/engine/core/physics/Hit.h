@@ -15,10 +15,8 @@ namespace en {
 
         float timeOfImpact = 1.f;
 
+        // TODO Replace with a float. It's always along the normal anyway
         glm::vec3 depenetrationOffset;
-
-        //Hit() = default;
-        //inline Hit(const glm::vec3& normal, float timeOfImpact = 1.f) : normal(normal), timeOfImpact(timeOfImpact) {}
     };
 }
 
