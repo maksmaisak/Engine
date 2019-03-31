@@ -1,9 +1,10 @@
 //
-// Created by Maksym Maisak on 2019-03-26.
+// Created by Maksym Maisak on 2019-03-31.
 //
 
-#include "PhysicsTestSceneBase.h"
+#include "PhysicsTestBodyGenerator.h"
 #include <cmath>
+#include <cassert>
 #include <algorithm>
 #include <array>
 #include <utility>
@@ -28,39 +29,46 @@
 
 using namespace en;
 
-PhysicsTestSceneBase::PhysicsTestSceneBase() :
+PhysicsTestBodyGenerator::PhysicsTestBodyGenerator(const glm::vec3& halfSize, const std::default_random_engine& randomEngine) :
+    m_halfSize    (halfSize),
+    m_randomEngine(randomEngine),
     m_cubeModel  (Models::get(config::MODEL_PATH + "cube_flat.obj"    )),
     m_sphereModel(Models::get(config::MODEL_PATH + "sphere_smooth.obj"))
 {
-    m_renderSettings.ambientColor = glm::vec3(1.010478, 1.854524, 2.270603) * 0.5f;
     cacheMaterials();
 }
 
-void PhysicsTestSceneBase::setUpNonBodies(const glm::vec3& halfSize) {
+void PhysicsTestBodyGenerator::setUpNonBodies() {
 
-    en::Engine& engine = getEngine();
+    assert(m_engine);
 
-    en::Actor camera = engine.makeActor("Camera");
+    if (Scene* scene = m_engine->getSceneManager().getCurrentScene()) {
+        scene->getRenderSettings().ambientColor = glm::vec3(0.505239, 0.927262, 1.1353015);
+    }
+
+    en::Actor camera = m_engine->makeActor("Camera");
     camera.add<Camera>();
     camera.add<en::Transform>()
-        .move({0, halfSize.y, 10})
+        .move({0, m_halfSize.y, 10})
         .rotate(90.f, {0,1,0});
 
     // TODO have behaviors work when added via registry too.
-    auto& cameraOrbitBehavior = camera.add<CameraOrbitBehavior>(glm::length(halfSize) * 1.2f, -80.f, 80.f);
-    auto center = engine.makeActor();
-    center.add<en::Transform>().move({0, halfSize.y, 0});
+    auto& cameraOrbitBehavior = camera.add<CameraOrbitBehavior>(glm::length(m_halfSize) * 1.2f, -80.f, 80.f);
+    auto center = m_engine->makeActor();
+    center.add<en::Transform>().move({0, m_halfSize.y, 0});
     cameraOrbitBehavior.setTarget(center);
 
-    en::Actor directionalLight = engine.makeActor("DirectionalLight");
+    en::Actor directionalLight = m_engine->makeActor("DirectionalLight");
     directionalLight.add<en::Transform>().rotate(45.f, {1, 0, 0}).rotate(20.f, {0, 1, 0});
     directionalLight.add<en::Light>(en::Light::Kind::DIRECTIONAL);
 }
 
-void PhysicsTestSceneBase::setUpBounds(const glm::vec3& halfSize) {
+void PhysicsTestBodyGenerator::setUpBounds() {
 
-    const glm::vec3 center = {0, halfSize.y, 0};
-    const auto make = [&engine = getEngine(), &model = m_cubeModel, &material = m_floorMaterial](const glm::vec3& center, const glm::vec3& halfSize, bool isVisible = true) {
+    assert(m_engine);
+
+    const glm::vec3 center = {0, m_halfSize.y, 0};
+    const auto make = [&engine = *m_engine, &model = m_cubeModel, &material = m_floorMaterial](const glm::vec3& center, const glm::vec3& halfSize, bool isVisible = true) {
 
         en::Actor actor = engine.makeActor("Wall");
 
@@ -73,19 +81,21 @@ void PhysicsTestSceneBase::setUpBounds(const glm::vec3& halfSize) {
         return actor;
     };
 
-    make(center + glm::vec3(0, -halfSize.y, 0), {halfSize.x, 1, halfSize.z});
-    make(center + glm::vec3(0, +halfSize.y, 0), {halfSize.x, 1, halfSize.z}, false);
+    make(center + glm::vec3(0, -m_halfSize.y, 0), {m_halfSize.x, 1, m_halfSize.z});
+    make(center + glm::vec3(0, +m_halfSize.y, 0), {m_halfSize.x, 1, m_halfSize.z}, false);
 
-    make(center + glm::vec3(-halfSize.x, 0, 0), {1, halfSize.y, halfSize.z}, false);
-    make(center + glm::vec3(+halfSize.x, 0, 0), {1, halfSize.y, halfSize.z}, false);
+    make(center + glm::vec3(-m_halfSize.x, 0, 0), {1, m_halfSize.y, m_halfSize.z}, false);
+    make(center + glm::vec3(+m_halfSize.x, 0, 0), {1, m_halfSize.y, m_halfSize.z}, false);
 
-    make(center + glm::vec3(0, 0, -halfSize.z), {halfSize.x, halfSize.y, 1}, false);
-    make(center + glm::vec3(0, 0, +halfSize.z), {halfSize.x, halfSize.y, 1}, false);
+    make(center + glm::vec3(0, 0, -m_halfSize.z), {m_halfSize.x, m_halfSize.y, 1}, false);
+    make(center + glm::vec3(0, 0, +m_halfSize.z), {m_halfSize.x, m_halfSize.y, 1}, false);
 }
 
-Actor PhysicsTestSceneBase::makeSphere(const glm::vec3& position, float radius, bool isStatic) {
+Actor PhysicsTestBodyGenerator::makeSphere(const glm::vec3& position, float radius, bool isStatic) {
 
-    Actor actor = getEngine().makeActor();
+    assert(m_engine);
+
+    Actor actor = m_engine->makeActor();
     actor.add<Transform>().move(position).scale(glm::vec3(radius));
 
     actor.add<RenderInfo>(
@@ -105,14 +115,16 @@ Actor PhysicsTestSceneBase::makeSphere(const glm::vec3& position, float radius, 
     return actor;
 }
 
-Actor PhysicsTestSceneBase::makeAABB(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
+Actor PhysicsTestBodyGenerator::makeAABB(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
 
-    Actor actor = getEngine().makeActor();
+    assert(m_engine);
+
+    Actor actor = m_engine->makeActor();
     actor.add<Transform>().move(position).scale(halfSize);
 
     actor.add<RenderInfo>(
         m_cubeModel,
-        isStatic ? m_staticBodyMaterial : getRandomBodyMaterial()
+        isStatic ? m_staticBodyMaterial : m_aabbMaterial
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<Rigidbody>(std::make_unique<AABBCollider>(halfSize));
@@ -127,10 +139,16 @@ Actor PhysicsTestSceneBase::makeAABB(const glm::vec3& position, const glm::vec3&
     return actor;
 }
 
-Actor PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
+Actor PhysicsTestBodyGenerator::makeCube(const glm::vec3& position, const glm::vec3& halfSize, bool isStatic) {
 
-    Actor actor = getEngine().makeActor();
-    actor.add<Transform>().move(position).scale(halfSize);
+    assert(m_engine);
+
+    Actor actor = m_engine->makeActor();
+    auto& tf = actor.add<Transform>()
+        .move(position)
+        .scale(halfSize);
+    if (m_randomizeRotation)
+        tf.rotate(getRandomBodyRotation());
 
     actor.add<RenderInfo>(
         m_cubeModel,
@@ -146,9 +164,23 @@ Actor PhysicsTestSceneBase::makeCube(const glm::vec3& position, const glm::vec3&
     }
     //rb.bounciness = 0.5f;
 
-    return actor;}
+    return actor;
+}
 
-void PhysicsTestSceneBase::cacheMaterials() {
+Actor PhysicsTestBodyGenerator::makeRandomBody(const glm::vec3& position, bool isStatic) {
+
+    switch (std::uniform_int_distribution(0, 2)(m_randomEngine)) {
+        case 0:
+            return makeSphere(position, std::uniform_real_distribution(0.5f, 2.f)(m_randomEngine), isStatic);
+        case 1:
+            return makeAABB(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), isStatic);
+        case 2:
+        default:
+            return makeCube(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), isStatic);
+    }
+}
+
+void PhysicsTestBodyGenerator::cacheMaterials() {
 
     static const std::array<glm::vec3, 6> colors = {
         glm::vec3(1, 0, 0),
@@ -176,10 +208,31 @@ void PhysicsTestSceneBase::cacheMaterials() {
 
     std::transform(colors.begin(), colors.end(), std::back_inserter(m_materials), makeMaterial);
     m_staticBodyMaterial = makeMaterial(glm::vec3(0.5f));
+    m_aabbMaterial       = makeMaterial(glm::vec3(1.0f));
     m_floorMaterial      = makeMaterial(glm::vec3(1.0f));
 }
 
-glm::vec3 PhysicsTestSceneBase::getRandomVectorMinMax(const glm::vec3& min, const glm::vec3& max) {
+glm::vec3 PhysicsTestBodyGenerator::getRandomBodyPosition() {
+
+    return getRandomVectorCenterHalfSize({0, m_halfSize.y, 0}, m_halfSize);
+}
+
+glm::quat PhysicsTestBodyGenerator::getRandomBodyRotation() {
+
+    const float theta = std::uniform_real_distribution(0.f, glm::two_pi<float>())(m_randomEngine);
+    const float phi = std::acos(std::uniform_real_distribution(-1.f, 1.f)(m_randomEngine));
+
+    const float sinPhi = std::sin(phi);
+    const glm::vec3 axis = {
+        sinPhi * std::cos(theta),
+        sinPhi * std::sin(theta),
+        std::cos(phi)
+    };
+    const float angle = std::uniform_real_distribution(glm::two_pi<float>())(m_randomEngine);
+    return glm::angleAxis(angle, axis);
+}
+
+glm::vec3 PhysicsTestBodyGenerator::getRandomVectorMinMax(const glm::vec3& min, const glm::vec3& max) {
 
     std::uniform_real_distribution<float> x(min.x, max.x);
     std::uniform_real_distribution<float> y(min.y, max.y);
@@ -187,13 +240,29 @@ glm::vec3 PhysicsTestSceneBase::getRandomVectorMinMax(const glm::vec3& min, cons
     return {x(m_randomEngine), y(m_randomEngine), z(m_randomEngine)};
 }
 
-glm::vec3 PhysicsTestSceneBase::getRandomVectorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize) {
+glm::vec3 PhysicsTestBodyGenerator::getRandomVectorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize) {
 
     return getRandomVectorMinMax(center - halfSize, center + halfSize);
 }
 
-std::shared_ptr<Material> PhysicsTestSceneBase::getRandomBodyMaterial() {
+std::shared_ptr<Material> PhysicsTestBodyGenerator::getRandomBodyMaterial() {
 
     std::uniform_int_distribution<std::size_t> d(0, m_materials.size() - 1);
     return m_materials[d(m_randomEngine)];
+}
+
+PhysicsTestBodyGenerator& PhysicsTestBodyGenerator::setEngine(Engine& engine) {
+
+    m_engine = &engine;
+    return *this;
+}
+
+std::default_random_engine& PhysicsTestBodyGenerator::getRandomEngine() {
+    return m_randomEngine;
+}
+
+bool PhysicsTestBodyGenerator::getRandomizeRotation() const {return m_randomizeRotation;}
+PhysicsTestBodyGenerator& PhysicsTestBodyGenerator::setRandomizeRotation(bool randomizeRotation) {
+    m_randomizeRotation = randomizeRotation;
+    return *this;
 }

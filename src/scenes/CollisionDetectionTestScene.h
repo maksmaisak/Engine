@@ -5,15 +5,20 @@
 #ifndef ENGINE_COLLISIONDETECTIONTESTSCENE_H
 #define ENGINE_COLLISIONDETECTIONTESTSCENE_H
 
-#include "PhysicsTestSceneBase.h"
+#include "PhysicsTestBodyGenerator.h"
 
 namespace en {
 
-    class CollisionDetectionTestScene : public PhysicsTestSceneBase {
+    class CollisionDetectionTestScene : public Scene {
 
     public:
+        CollisionDetectionTestScene();
+
         void open() override;
         void update(float dt) override;
+
+    private:
+        PhysicsTestBodyGenerator m_bodyGenerator;
     };
 }
 

@@ -31,6 +31,7 @@
 using namespace en;
 
 const sf::Time TimestepFixed = sf::seconds(0.01f);
+const unsigned int MAX_FIXED_UPDATES_PER_FRAME = 3;
 
 Engine::Engine() :
     m_sceneManager(this),
@@ -59,6 +60,7 @@ void Engine::run() {
     while (m_window.isOpen()) {
 
         fixedUpdateLag += fixedUpdateClock.restart();
+        fixedUpdateLag = std::min(fixedUpdateLag, TimestepFixed * static_cast<float>(MAX_FIXED_UPDATES_PER_FRAME));
         while (fixedUpdateLag >= TimestepFixed) {
             update(timestepFixedSeconds);
             fixedUpdateLag -= TimestepFixed;

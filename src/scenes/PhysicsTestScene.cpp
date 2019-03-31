@@ -73,12 +73,18 @@ namespace {
     }
 }
 
-PhysicsTestScene::PhysicsTestScene(const Preset& preset) : m_preset(preset) {}
+PhysicsTestScene::PhysicsTestScene(const Preset& preset) :
+    m_preset(preset),
+    m_bodyGenerator(preset.fieldHalfSize)
+{}
 
 void PhysicsTestScene::open() {
 
-    setUpNonBodies(m_preset.fieldHalfSize);
-    setUpBounds   (m_preset.fieldHalfSize);
+    m_bodyGenerator
+        .setEngine(getEngine())
+        .setRandomizeRotation(true);
+    m_bodyGenerator.setUpNonBodies();
+    m_bodyGenerator.setUpBounds   ();
     addStaticBodies();
     addDynamicBodies();
 }
@@ -91,32 +97,12 @@ void PhysicsTestScene::update(float dt) {
 
 void PhysicsTestScene::addStaticBodies() {
 
-    const auto randomRadius = [&e = m_randomEngine]() -> float {return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool   = [&e = m_randomEngine]() -> bool  {return std::uniform_int_distribution (0, 1)(e) == 1;};
-
-    for (int i = 0; i < m_preset.numBodiesStatic; ++i) {
-
-        const glm::vec3& position = getRandomVectorCenterHalfSize({0, m_preset.fieldHalfSize.y, 0}, m_preset.fieldHalfSize);
-
-        if (randomBool())
-            makeAABB(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), true);
-        else
-            makeSphere(position, randomRadius(), true);
-    }
+    for (int i = 0; i < m_preset.numBodiesStatic; ++i)
+        m_bodyGenerator.makeRandomBody(m_bodyGenerator.getRandomBodyPosition(), true);
 }
 
 void PhysicsTestScene::addDynamicBodies() {
 
-    const auto randomRadius = [&e = m_randomEngine]() -> float {return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool   = [&e = m_randomEngine]() -> bool  {return std::uniform_int_distribution (0, 1)(e) == 1;};
-
-    for (int i = 0; i < m_preset.numBodiesDynamic; ++i) {
-
-        const glm::vec3& position = getRandomVectorCenterHalfSize({0, m_preset.fieldHalfSize.y, 0}, m_preset.fieldHalfSize);
-
-        if (randomBool())
-            makeAABB(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)));
-        else
-            makeSphere(position, randomRadius());
-    }
+    for (int i = 0; i < m_preset.numBodiesDynamic; ++i)
+        m_bodyGenerator.makeRandomBody(m_bodyGenerator.getRandomBodyPosition(), false);
 }

@@ -5,9 +5,9 @@
 #ifndef ENGINE_PHYSICSTESTSCENE_H
 #define ENGINE_PHYSICSTESTSCENE_H
 
-#include "PhysicsTestSceneBase.h"
+#include "PhysicsTestBodyGenerator.h"
 
-class PhysicsTestScene : public en::PhysicsTestSceneBase {
+class PhysicsTestScene : public en::Scene {
 
 public:
     struct Preset {
@@ -26,6 +26,7 @@ private:
     void addDynamicBodies();
 
     Preset m_preset;
+    en::PhysicsTestBodyGenerator m_bodyGenerator;
 };
 
 
