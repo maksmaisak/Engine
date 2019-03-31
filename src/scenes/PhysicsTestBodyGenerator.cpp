@@ -124,7 +124,7 @@ Actor PhysicsTestBodyGenerator::makeAABB(const glm::vec3& position, const glm::v
 
     actor.add<RenderInfo>(
         m_cubeModel,
-        isStatic ? m_staticBodyMaterial : getRandomBodyMaterial()
+        isStatic ? m_staticBodyMaterial : m_aabbMaterial
     ).isBatchingStatic = isStatic;
 
     auto& rb = actor.add<Rigidbody>(std::make_unique<AABBCollider>(halfSize));
@@ -144,7 +144,10 @@ Actor PhysicsTestBodyGenerator::makeCube(const glm::vec3& position, const glm::v
     assert(m_engine);
 
     Actor actor = m_engine->makeActor();
-    actor.add<Transform>().move(position).scale(halfSize);
+    actor.add<Transform>()
+        .move(position)
+        .scale(halfSize)
+        .rotate(getRandomBodyRotation());
 
     actor.add<RenderInfo>(
         m_cubeModel,
@@ -161,6 +164,19 @@ Actor PhysicsTestBodyGenerator::makeCube(const glm::vec3& position, const glm::v
     //rb.bounciness = 0.5f;
 
     return actor;
+}
+
+Actor PhysicsTestBodyGenerator::makeRandomBody(const glm::vec3& position, bool isStatic) {
+
+    switch (std::uniform_int_distribution(0, 2)(m_randomEngine)) {
+        case 0:
+            return makeSphere(position, std::uniform_real_distribution(0.5f, 2.f)(m_randomEngine), isStatic);
+        case 1:
+            return makeAABB(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), isStatic);
+        case 2:
+        default:
+            return makeCube(position, getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), isStatic);
+    }
 }
 
 void PhysicsTestBodyGenerator::cacheMaterials() {
@@ -191,7 +207,28 @@ void PhysicsTestBodyGenerator::cacheMaterials() {
 
     std::transform(colors.begin(), colors.end(), std::back_inserter(m_materials), makeMaterial);
     m_staticBodyMaterial = makeMaterial(glm::vec3(0.5f));
+    m_aabbMaterial       = makeMaterial(glm::vec3(1.0f));
     m_floorMaterial      = makeMaterial(glm::vec3(1.0f));
+}
+
+glm::vec3 PhysicsTestBodyGenerator::getRandomBodyPosition() {
+
+    return getRandomVectorCenterHalfSize({0, m_halfSize.y, 0}, m_halfSize);
+}
+
+glm::quat PhysicsTestBodyGenerator::getRandomBodyRotation() {
+
+    const float theta = std::uniform_real_distribution(0.f, glm::two_pi<float>())(m_randomEngine);
+    const float phi = std::acos(std::uniform_real_distribution(-1.f, 1.f)(m_randomEngine));
+
+    const float sinPhi = std::sin(phi);
+    const glm::vec3 axis = {
+        sinPhi * std::cos(theta),
+        sinPhi * std::sin(theta),
+        std::cos(phi)
+    };
+    const float angle = std::uniform_real_distribution(glm::two_pi<float>())(m_randomEngine);
+    return glm::angleAxis(angle, axis);
 }
 
 glm::vec3 PhysicsTestBodyGenerator::getRandomVectorMinMax(const glm::vec3& min, const glm::vec3& max) {
@@ -214,11 +251,9 @@ std::shared_ptr<Material> PhysicsTestBodyGenerator::getRandomBodyMaterial() {
 }
 
 void PhysicsTestBodyGenerator::setEngine(Engine& engine) {
-
     m_engine = &engine;
 }
 
 std::default_random_engine& PhysicsTestBodyGenerator::getRandomEngine() {
-
     return m_randomEngine;
 }

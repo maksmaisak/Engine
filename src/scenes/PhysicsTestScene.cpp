@@ -95,32 +95,12 @@ void PhysicsTestScene::update(float dt) {
 
 void PhysicsTestScene::addStaticBodies() {
 
-    const auto randomRadius = [&e = m_bodyGenerator.getRandomEngine()]() -> float {return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool   = [&e = m_bodyGenerator.getRandomEngine()]() -> bool  {return std::uniform_int_distribution (0, 1)(e) == 1;};
-
-    for (int i = 0; i < m_preset.numBodiesStatic; ++i) {
-
-        const glm::vec3& position = m_bodyGenerator.getRandomVectorCenterHalfSize({0, m_preset.fieldHalfSize.y, 0}, m_preset.fieldHalfSize);
-
-        if (randomBool())
-            m_bodyGenerator.makeAABB(position, m_bodyGenerator.getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)), true);
-        else
-            m_bodyGenerator.makeSphere(position, randomRadius(), true);
-    }
+    for (int i = 0; i < m_preset.numBodiesStatic; ++i)
+        m_bodyGenerator.makeRandomBody(m_bodyGenerator.getRandomBodyPosition(), true);
 }
 
 void PhysicsTestScene::addDynamicBodies() {
 
-    const auto randomRadius = [&e = m_bodyGenerator.getRandomEngine()]() -> float {return std::uniform_real_distribution(0.5f, 2.f)(e);};
-    const auto randomBool   = [&e = m_bodyGenerator.getRandomEngine()]() -> bool  {return std::uniform_int_distribution (0, 1)(e) == 1;};
-
-    for (int i = 0; i < m_preset.numBodiesDynamic; ++i) {
-
-        const glm::vec3& position = m_bodyGenerator.getRandomVectorCenterHalfSize({0, m_preset.fieldHalfSize.y, 0}, m_preset.fieldHalfSize);
-
-        if (randomBool())
-            m_bodyGenerator.makeAABB(position, m_bodyGenerator.getRandomVectorMinMax(glm::vec3(0.5f), glm::vec3(2.f)));
-        else
-            m_bodyGenerator.makeSphere(position, randomRadius());
-    }
+    for (int i = 0; i < m_preset.numBodiesDynamic; ++i)
+        m_bodyGenerator.makeRandomBody(m_bodyGenerator.getRandomBodyPosition(), false);
 }

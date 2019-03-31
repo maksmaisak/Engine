@@ -25,11 +25,15 @@ namespace en {
         void setUpNonBodies();
         void setUpBounds   ();
 
-        Actor makeSphere(const glm::vec3& position, float radius = 1.f, bool isStatic = false);
-        Actor makeAABB  (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(1.f), bool isStatic = false);
-        Actor makeCube  (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(1.f), bool isStatic = false);
+        Actor makeSphere    (const glm::vec3& position, float radius = 1.f, bool isStatic = false);
+        Actor makeAABB      (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(1.f), bool isStatic = false);
+        Actor makeCube      (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(1.f), bool isStatic = false);
+        Actor makeRandomBody(const glm::vec3& position, bool isStatic = false);
 
         std::default_random_engine& getRandomEngine();
+        glm::vec3 getRandomBodyPosition();
+        glm::quat getRandomBodyRotation();
+
         glm::vec3 getRandomVectorMinMax(const glm::vec3& min, const glm::vec3& max);
         glm::vec3 getRandomVectorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize);
 
@@ -45,6 +49,7 @@ namespace en {
         std::shared_ptr<Model> m_sphereModel;
         std::shared_ptr<Model> m_cubeModel;
         std::vector<std::shared_ptr<Material>> m_materials;
+        std::shared_ptr<Material> m_aabbMaterial;
         std::shared_ptr<Material> m_staticBodyMaterial;
         std::shared_ptr<Material> m_floorMaterial;
     };

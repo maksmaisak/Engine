@@ -311,7 +311,7 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& a, OBBCollider&
     hit->normal              = b.rotation * hit->normal;
     hit->depenetrationOffset = b.rotation * hit->depenetrationOffset;
 
-    std::cout << hit->normal << " " << glm::length(hit->depenetrationOffset) << std::endl;
+    //std::cout << hit->normal << " " << glm::length(hit->depenetrationOffset) << std::endl;
 
     return hit;
 }
