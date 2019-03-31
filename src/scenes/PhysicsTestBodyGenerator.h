@@ -1,9 +1,9 @@
 //
-// Created by Maksym Maisak on 2019-03-26.
+// Created by Maksym Maisak on 2019-03-31.
 //
 
-#ifndef ENGINE_PHYSICSTESTSCENEBASE_H
-#define ENGINE_PHYSICSTESTSCENEBASE_H
+#ifndef ENGINE_PHYSICSTESTBODYGENERATOR_H
+#define ENGINE_PHYSICSTESTBODYGENERATOR_H
 
 #include <vector>
 #include <memory>
@@ -16,27 +16,31 @@
 
 namespace en {
 
-    // TODO make this used by the test scenes instead of be their base class. Composition over inheritance.
-    class PhysicsTestSceneBase : public en::Scene {
+    class PhysicsTestBodyGenerator {
 
     public:
-        PhysicsTestSceneBase();
+        explicit PhysicsTestBodyGenerator(const glm::vec3& halfSize, const std::default_random_engine& randomEngine = std::default_random_engine(0));
+        void setEngine(Engine& engine);
 
-    protected:
-        void setUpNonBodies(const glm::vec3& halfSize);
-        void setUpBounds   (const glm::vec3& halfSize);
+        void setUpNonBodies();
+        void setUpBounds   ();
 
         Actor makeSphere(const glm::vec3& position, float radius = 1.f, bool isStatic = false);
         Actor makeAABB  (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(1.f), bool isStatic = false);
         Actor makeCube  (const glm::vec3& position, const glm::vec3& halfSize = glm::vec3(1.f), bool isStatic = false);
 
+        std::default_random_engine& getRandomEngine();
         glm::vec3 getRandomVectorMinMax(const glm::vec3& min, const glm::vec3& max);
         glm::vec3 getRandomVectorCenterHalfSize(const glm::vec3& center, const glm::vec3& halfSize);
-        std::default_random_engine m_randomEngine = std::default_random_engine(0);
 
     private:
+
         void cacheMaterials();
         std::shared_ptr<Material> getRandomBodyMaterial();
+
+        glm::vec3 m_halfSize;
+        std::default_random_engine m_randomEngine;
+        Engine* m_engine;
 
         std::shared_ptr<Model> m_sphereModel;
         std::shared_ptr<Model> m_cubeModel;
@@ -46,4 +50,4 @@ namespace en {
     };
 }
 
-#endif //ENGINE_PHYSICSTESTSCENEBASE_H
+#endif //ENGINE_PHYSICSTESTBODYGENERATOR_H
