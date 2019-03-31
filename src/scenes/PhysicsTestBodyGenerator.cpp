@@ -144,10 +144,11 @@ Actor PhysicsTestBodyGenerator::makeCube(const glm::vec3& position, const glm::v
     assert(m_engine);
 
     Actor actor = m_engine->makeActor();
-    actor.add<Transform>()
+    auto& tf = actor.add<Transform>()
         .move(position)
-        .scale(halfSize)
-        .rotate(getRandomBodyRotation());
+        .scale(halfSize);
+    if (m_randomizeRotation)
+        tf.rotate(getRandomBodyRotation());
 
     actor.add<RenderInfo>(
         m_cubeModel,
@@ -250,10 +251,18 @@ std::shared_ptr<Material> PhysicsTestBodyGenerator::getRandomBodyMaterial() {
     return m_materials[d(m_randomEngine)];
 }
 
-void PhysicsTestBodyGenerator::setEngine(Engine& engine) {
+PhysicsTestBodyGenerator& PhysicsTestBodyGenerator::setEngine(Engine& engine) {
+
     m_engine = &engine;
+    return *this;
 }
 
 std::default_random_engine& PhysicsTestBodyGenerator::getRandomEngine() {
     return m_randomEngine;
+}
+
+bool PhysicsTestBodyGenerator::getRandomizeRotation() const {return m_randomizeRotation;}
+PhysicsTestBodyGenerator& PhysicsTestBodyGenerator::setRandomizeRotation(bool randomizeRotation) {
+    m_randomizeRotation = randomizeRotation;
+    return *this;
 }

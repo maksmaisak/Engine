@@ -122,6 +122,8 @@ namespace {
         static_assert(axisIndexA >= 0 && axisIndexA < 3);
         static_assert(axisIndexB >= 0 && axisIndexB < 3);
 
+    #ifndef ENGINE_FAST_OBB_TEST
+
         const glm::vec3 axisA = a2B    [axisIndexA];
         const glm::vec3 axisB = getAxis(axisIndexB);
         // If the axes are pointing in the same direction, their cross will be zero, so we can't use that as a normal.
@@ -133,20 +135,32 @@ namespace {
         const float ra = glm::epsilon<float>() + glm::dot(aHalfSize, glm::abs(glm::transpose(a2B) * axis));
         const float distanceProjected = glm::abs(glm::dot(delta, axis));
 
+        const float penetrationDepth = ra + rb - distanceProjected;
+        if (penetrationDepth < minPenetrationDepth) {
+
+            if (penetrationDepth < 0.f)
+                return false;
+
+            minPenetrationAxis  = axis;
+            minPenetrationDepth = penetrationDepth;
+        }
+
+    #else
+
         // Optimized, but buggy. with axes 0 and 2 in the test scene penetration seems way too low.
         // (During the first box-wall collision)
 
-        // Indices, evaluated at compile time.
-//      constexpr int b1 = axisIndexB == 0 ? 1 : 0;
-//      constexpr int b2 = axisIndexB == 2 ? 1 : 2;
-//      constexpr int a1 = axisIndexA == 0 ? 1 : 0;
-//      constexpr int a2 = axisIndexA == 2 ? 1 : 2;
-//      const float rb = bHalfSize[b1] * absA2B[b2][axisIndexA] + bHalfSize[b2] * absA2B[b1][axisIndexA];
-//      const float ra = aHalfSize[a1] * absA2B[axisIndexB][a2] + aHalfSize[a2] * absA2B[axisIndexB][a1];
+        // Indices evaluated at compile time.
+        constexpr int b1 = axisIndexB == 0 ? 1 : 0;
+        constexpr int b2 = axisIndexB == 2 ? 1 : 2;
+        constexpr int a1 = axisIndexA == 0 ? 1 : 0;
+        constexpr int a2 = axisIndexA == 2 ? 1 : 2;
+        const float rb = bHalfSize[b1] * absA2B[b2][axisIndexA] + bHalfSize[b2] * absA2B[b1][axisIndexA];
+        const float ra = aHalfSize[a1] * absA2B[axisIndexB][a2] + aHalfSize[a2] * absA2B[axisIndexB][a1];
 
-//      constexpr int x1 = (axisIndexB + 2) % 3;
-//      constexpr int x2 = (axisIndexB + 1) % 3;
-//      const float distanceProjected = glm::abs(delta[x1] * a2B[x2][axisIndexA] - delta[x2] * a2B[x1][axisIndexA]);
+        constexpr int x1 = (axisIndexB + 2) % 3;
+        constexpr int x2 = (axisIndexB + 1) % 3;
+        const float distanceProjected = glm::abs(delta[x1] * a2B[x2][axisIndexA] - delta[x2] * a2B[x1][axisIndexA]);
 
         const float penetrationDepth = ra + rb - distanceProjected;
         if (penetrationDepth < minPenetrationDepth) {
@@ -154,16 +168,18 @@ namespace {
             if (penetrationDepth < 0.f)
                 return false;
 
-            //const glm::vec3 axisA = a2B[axisIndexA];
-            //const glm::vec3 axisB = getAxis(axisIndexB);
+            const glm::vec3 axisA = a2B[axisIndexA];
+            const glm::vec3 axisB = getAxis(axisIndexB);
             // If the axes are pointing in the same direction, their cross will be zero, so we can't use that as a normal.
-//          if (glm::epsilonEqual(glm::abs(glm::dot(axisA, axisB)), 1.f, glm::epsilon<float>()))
-//              return true;
+            if (glm::epsilonEqual(glm::abs(glm::dot(axisA, axisB)), 1.f, glm::epsilon<float>()))
+                return true;
 
             // Will be normalized in the end
-            minPenetrationAxis = axis; //glm::cross(axisA, axisB);
+            minPenetrationAxis = glm::cross(axisA, axisB);
             minPenetrationDepth = penetrationDepth;
         }
+
+    #endif
 
         return true;
     }

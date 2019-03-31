@@ -80,7 +80,9 @@ PhysicsTestScene::PhysicsTestScene(const Preset& preset) :
 
 void PhysicsTestScene::open() {
 
-    m_bodyGenerator.setEngine(getEngine());
+    m_bodyGenerator
+        .setEngine(getEngine())
+        .setRandomizeRotation(true);
     m_bodyGenerator.setUpNonBodies();
     m_bodyGenerator.setUpBounds   ();
     addStaticBodies();

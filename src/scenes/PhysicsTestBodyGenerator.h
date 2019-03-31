@@ -20,7 +20,11 @@ namespace en {
 
     public:
         explicit PhysicsTestBodyGenerator(const glm::vec3& halfSize, const std::default_random_engine& randomEngine = std::default_random_engine(0));
-        void setEngine(Engine& engine);
+
+        PhysicsTestBodyGenerator& setEngine(Engine& engine);
+
+        bool getRandomizeRotation() const;
+        PhysicsTestBodyGenerator& setRandomizeRotation(bool randomizeRotation);
 
         void setUpNonBodies();
         void setUpBounds   ();
@@ -42,9 +46,10 @@ namespace en {
         void cacheMaterials();
         std::shared_ptr<Material> getRandomBodyMaterial();
 
-        glm::vec3 m_halfSize;
         std::default_random_engine m_randomEngine;
         Engine* m_engine;
+        glm::vec3 m_halfSize;
+        bool m_randomizeRotation = false;
 
         std::shared_ptr<Model> m_sphereModel;
         std::shared_ptr<Model> m_cubeModel;
