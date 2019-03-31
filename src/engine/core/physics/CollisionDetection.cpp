@@ -330,6 +330,7 @@ std::optional<Hit> en::collisionDetection::OBBVsOBB(OBBCollider& a, OBBCollider&
     if (!hit)
         return hit;
 
+    assert(glm::isOrthogonal(b.rotation, 0.00001f));
     hit->normal              = b.rotation * hit->normal;
     hit->depenetrationOffset = b.rotation * hit->depenetrationOffset;
 

@@ -4,6 +4,7 @@
 
 #include "OBBCollider.h"
 #include "CollisionDetection.h"
+#include <glm/gtx/matrix_decompose.hpp>
 
 using namespace en;
 
@@ -11,8 +12,15 @@ OBBCollider::OBBCollider(const glm::vec3& halfSize) : halfSize(halfSize) {}
 
 void OBBCollider::updateTransform(const glm::mat4& transform) {
 
+    glm::vec3 scale;
+    glm::quat orientation;
+    glm::vec3 translation;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose(transform, scale, orientation, translation, skew, perspective);
+
     center   = transform[3];
-    rotation = glm::mat3(glm::extractMatrixRotation(transform));
+    rotation = glm::mat3(orientation);
 }
 
 std::optional<Hit> OBBCollider::collide(Collider& other, const glm::vec3& movement) {return other.collide(*this, movement);}
