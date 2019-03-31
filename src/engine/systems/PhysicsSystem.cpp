@@ -5,8 +5,8 @@
 #include "PhysicsSystem.h"
 #include <SFML/Graphics.hpp>
 #include <sstream>
-#include <fstream>
 #include <chrono>
+#include <locale>
 #include "Transform.h"
 #include "Rigidbody.h"
 #include "Hit.h"
@@ -53,7 +53,7 @@ void PhysicsSystem::update(float dt) {
         if (rb.useGravity)
             addGravity(entity, tf, rb, dt);
 
-        constexpr int maxNumSteps = 10;
+        constexpr int maxNumSteps = 3;
         float timeToMove = dt;
         for (int i = 0; i < maxNumSteps; ++i) {
 
@@ -76,7 +76,7 @@ void PhysicsSystem::update(float dt) {
         Receiver<Collision>::broadcast(collision);
     m_detectedCollisions.clear();
 
-    flushDiagnosticsInfo();
+    flushCurrentUpdateInfo();
 }
 
 namespace {
@@ -89,6 +89,8 @@ namespace {
         glm::vec3& bVelocity, float bInverseMass,
         const glm::vec3& normal, float bounciness = 1.f
     ) {
+        assert(glm::epsilonEqual(glm::length(normal), 1.f, 0.0001f));
+
         const float aSpeedAlongNormal = glm::dot(normal, aVelocity);
         const float bSpeedAlongNormal = glm::dot(normal, bVelocity);
         if (aSpeedAlongNormal - bSpeedAlongNormal > 0.f)
@@ -165,7 +167,7 @@ void PhysicsSystem::addGravity(Entity entity, Transform& tf, Rigidbody& rb, floa
     }*/
 }
 
-void PhysicsSystem::flushDiagnosticsInfo() {
+void PhysicsSystem::flushCurrentUpdateInfo() {
 
     using namespace std::literals::string_literals;
     using namespace std::chrono;
@@ -190,15 +192,16 @@ void PhysicsSystem::flushDiagnosticsInfo() {
 
 Text& PhysicsSystem::ensureDebugText() {
 
-    if (!m_debugTextActor)
+    if (!m_debugTextActor.isValid()) {
         m_debugTextActor = m_engine->makeActor("PhysicsSystemDebug");
-
-    if (auto* textPtr = m_debugTextActor.tryGet<Text>())
-        return *textPtr;
+    }
 
     m_debugTextActor.getOrAdd<Transform>();
     auto& rect = m_debugTextActor.getOrAdd<UIRect>();
     rect.offsetMin = rect.offsetMax = {30, -30};
+
+    if (auto* textPtr = m_debugTextActor.tryGet<Text>())
+        return *textPtr;
 
     return m_debugTextActor.add<Text>()
         .setString("Test")
@@ -206,21 +209,13 @@ Text& PhysicsSystem::ensureDebugText() {
         .setFont(Resources<sf::Font>::get(config::FONT_PATH + "Menlo.ttc"));
 }
 
-void PhysicsSystem::receive(const SceneManager::OnSceneClosed& info) {
+const PhysicsSystem::DiagnosticsInfo& PhysicsSystem::getDiagnosticsInfo() const {
+    return m_diagnosticsInfo;
+}
 
-    using namespace std::chrono;
-    using ms = duration<double, std::milli>;
+PhysicsSystem::DiagnosticsInfo PhysicsSystem::resetDiagnosticsInfo() {
 
-    std::ofstream out("output/test.csv");
-    if (!out.is_open())
-        return;
-
-    const auto& i = m_diagnosticsInfo;
-    out << "update time (average), update time (max)\n" <<
-        duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms, " <<
-        duration_cast<ms>(i.updateTimeMax).count() << "ms\n";
-
-    out.close();
-
+    auto copy = m_diagnosticsInfo;
     m_diagnosticsInfo = {};
+    return copy;
 }

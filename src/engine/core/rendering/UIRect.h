@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-14.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_UIRECT_H
-#define SAXION_Y2Q2_RENDERING_UIRECT_H
+#ifndef ENGINE_UIRECT_H
+#define ENGINE_UIRECT_H
 
 #include "glm.hpp"
 #include "ComponentsToLua.h"
@@ -36,4 +36,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_UIRECT_H
+#endif //ENGINE_UIRECT_H

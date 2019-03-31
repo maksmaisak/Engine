@@ -31,6 +31,7 @@
 using namespace en;
 
 const sf::Time TimestepFixed = sf::seconds(0.01f);
+const unsigned int MAX_FIXED_UPDATES_PER_FRAME = 3;
 
 Engine::Engine() :
     m_sceneManager(this),
@@ -59,6 +60,7 @@ void Engine::run() {
     while (m_window.isOpen()) {
 
         fixedUpdateLag += fixedUpdateClock.restart();
+        fixedUpdateLag = std::min(fixedUpdateLag, TimestepFixed * static_cast<float>(MAX_FIXED_UPDATES_PER_FRAME));
         while (fixedUpdateLag >= TimestepFixed) {
             update(timestepFixedSeconds);
             fixedUpdateLag -= TimestepFixed;
@@ -257,7 +259,7 @@ void Engine::initializeLua() {
         lua_pushcclosure(lua, &makeActorFromLua, 1);
         lua_setfield(lua, -2, "makeActor");
 
-        lua.setField("getTime", [](){return GameTime::now().asSeconds();});
+        lua.setField("getTime", [](){return GameTime::nowAsSeconds();});
 
         lua.push(this);
         lua_pushcclosure(lua, &loadScene, 1);
@@ -400,17 +402,9 @@ void Engine::processWindowEvents() {
     while (m_window.pollEvent(event)) {
 
         switch (event.type) {
-
             case sf::Event::Closed:
                 m_shouldExit = true;
                 break;
-
-            case sf::Event::Resized:
-                // TODO move this to the render system
-                // Unconstrained match viewport scaling
-                glViewport(0, 0, event.size.width, event.size.height);
-                break;
-
             default:
                 break;
         }

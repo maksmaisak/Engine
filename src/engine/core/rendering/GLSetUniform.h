@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-09.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_GLSETUNIFORM_H
-#define SAXION_Y2Q2_RENDERING_GLSETUNIFORM_H
+#ifndef ENGINE_GLSETUNIFORM_H
+#define ENGINE_GLSETUNIFORM_H
 
 #include "glm.hpp"
 #include <GL/glew.h>
@@ -57,4 +57,4 @@ namespace gl {
     }
 }
 
-#endif //SAXION_Y2Q2_RENDERING_GLSETUNIFORM_H
+#endif //ENGINE_GLSETUNIFORM_H

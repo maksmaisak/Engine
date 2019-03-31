@@ -3,13 +3,13 @@
 
 #include "Engine.h"
 #include "Actor.h"
-#include "systems/TransformHierarchySystem.h"
-#include "systems/DestroySystem.h"
-#include "systems/DestroyByTimerSystem.h"
-#include "systems/RenderSystem.h"
-#include "systems/PhysicsSystem.h"
-#include "systems/UIEventSystem.h"
-#include "systems/TweenSystem.h"
+#include "TransformHierarchySystem.h"
+#include "DestroySystem.h"
+#include "DestroyByTimerSystem.h"
+#include "RenderSystem.h"
+#include "PhysicsSystem.h"
+#include "UIEventSystem.h"
+#include "TweenSystem.h"
 
 #include "RenderInfo.h"
 #include "Camera.h"
@@ -17,13 +17,14 @@
 #include "UIRect.h"
 #include "Sprite.h"
 #include "Text.h"
+#include "Model.h"
 
 #include "PhysicsTestScene.h"
+#include "PhysicsStressTestingSystem.h"
+#include "CollisionDetectionTestScene.h"
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
-
-#include "Model.h"
 
 void openStartLuaScene(en::Engine& engine) {
 
@@ -46,7 +47,8 @@ int main() {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
 
-        engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
+        engine->addSystem<en::PhysicsStressTestingSystem>();
+        //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
 
         engine->addSystem<en::UIEventSystem>();
         engine->addSystem<en::BehaviorsSystem>();
@@ -57,7 +59,8 @@ int main() {
     }
 
     //openStartLuaScene(*engine);
-    engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
+    //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
+    //engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 

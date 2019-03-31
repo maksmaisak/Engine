@@ -8,9 +8,8 @@
 
 void en::DestroySystem::update(float dt) {
 
-    auto view = m_registry->with<Destroy>();
-    auto entitiesToDestroy = std::vector<Entity>(view.begin(), view.end());
-    for (Entity e : entitiesToDestroy) {
+    const auto entities = m_registry->with<Destroy>();
+    const auto entitiesToDestroy = std::vector<Entity>(entities.begin(), entities.end());
+    for (Entity e : entitiesToDestroy)
         m_registry->destroy(e);
-    }
 }

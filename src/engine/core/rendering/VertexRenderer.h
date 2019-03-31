@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-13.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_VERTEXRENDERER_H
-#define SAXION_Y2Q2_RENDERING_VERTEXRENDERER_H
+#ifndef ENGINE_VERTEXRENDERER_H
+#define ENGINE_VERTEXRENDERER_H
 
 #include <GL/glew.h>
 #include "glm.hpp"
@@ -30,4 +30,4 @@ namespace en {
 }
 
 
-#endif //SAXION_Y2Q2_RENDERING_VERTEXRENDERER_H
+#endif //ENGINE_VERTEXRENDERER_H

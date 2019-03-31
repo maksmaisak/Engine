@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-10.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_LIGHTINGSCENE_H
-#define SAXION_Y2Q2_RENDERING_LIGHTINGSCENE_H
+#ifndef ENGINE_LIGHTINGSCENE_H
+#define ENGINE_LIGHTINGSCENE_H
 
 #include "Engine.h"
 #include "Scene.h"
@@ -16,4 +16,4 @@ public:
 };
 
 
-#endif //SAXION_Y2Q2_RENDERING_LIGHTINGSCENE_H
+#endif //ENGINE_LIGHTINGSCENE_H

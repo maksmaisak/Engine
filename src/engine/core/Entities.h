@@ -64,7 +64,8 @@ namespace en {
         bool contains(Entity entity) const;
         Entity add();
         void remove(Entity entity);
-        void clear();
+        void removeAll();
+        void reset();
 
         inline const_iterator cbegin() const {return const_iterator(&m_entities, m_entities.cbegin(), m_entities.cend());}
         inline const_iterator cend()   const {return const_iterator(&m_entities, m_entities.cend()  , m_entities.cend());}

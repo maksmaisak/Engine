@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 19/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_RESOURCES_H
-#define SAXION_Y2Q2_RENDERING_RESOURCES_H
+#ifndef ENGINE_RESOURCES_H
+#define ENGINE_RESOURCES_H
 
 #include "ResourceLoader.h"
 #include <memory>
@@ -114,4 +114,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_RESOURCES_H
+#endif //ENGINE_RESOURCES_H

@@ -16,7 +16,7 @@ void LightPropertyAnimator::update(float dt) {
 
     auto& light = m_actor.get<en::Light>();
 
-    const float time = (GameTime::now() - m_startTime).asSeconds();
+    const float time = std::chrono::duration_cast<std::chrono::duration<float>>(GameTime::now() - m_startTime).count();
     const float sinTime = glm::sin(time);
 
     const auto rotateColor = [&](const glm::vec3& color) {

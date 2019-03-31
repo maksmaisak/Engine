@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-01-31.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_LUABEHAVIOR_H
-#define SAXION_Y2Q2_RENDERING_LUABEHAVIOR_H
+#ifndef ENGINE_LUABEHAVIOR_H
+#define ENGINE_LUABEHAVIOR_H
 
 #include "ComponentsToLua.h"
 #include "LuaState.h"
@@ -54,4 +54,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_LUABEHAVIOR_H
+#endif //ENGINE_LUABEHAVIOR_H

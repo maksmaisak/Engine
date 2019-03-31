@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 22/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_TRANSFORMABLE_H
-#define SAXION_Y2Q2_RENDERING_TRANSFORMABLE_H
+#ifndef ENGINE_TRANSFORMABLE_H
+#define ENGINE_TRANSFORMABLE_H
 
 #include <vector>
 #include "glm.hpp"
@@ -83,4 +83,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_TRANSFORMABLE_H
+#endif //ENGINE_TRANSFORMABLE_H

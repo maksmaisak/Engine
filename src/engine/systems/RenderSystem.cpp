@@ -10,6 +10,7 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
+#include <GL/glew.h>
 #include "RenderInfo.h"
 #include "Transform.h"
 #include "Camera.h"
@@ -122,9 +123,7 @@ void RenderSystem::start() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    //glClearColor(0, 0, 0, 1);
-    const glm::vec3 color = glm::pow(glm::vec3(62.f / 255.f, 84.f / 255.f, 92.f / 255.f), glm::vec3(2.2f));
-    glClearColor(color.x, color.y, color.z, 1.f);
+    glClearColor(0, 0, 0, 1);
 
     // Convert output from fragment shaders from linear to sRGB
     glEnable(GL_FRAMEBUFFER_SRGB);
@@ -683,11 +682,20 @@ glm::vec2 RenderSystem::getWindowSize() {
 
 float RenderSystem::getUIScaleFactor() {
 
-    const glm::vec2 windowSize = getWindowSize();
-    return std::sqrt((windowSize.x / m_referenceResolution.x) * (windowSize.y / m_referenceResolution.y));
+    const glm::vec2 scale = getWindowSize() / m_referenceResolution;
+    return std::sqrt(scale.x * scale.y);
 }
 
 void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
 
     m_batches.clear();
+}
+
+void RenderSystem::receive(const sf::Event& event) {
+
+    if (event.type != sf::Event::EventType::Resized)
+        return;
+
+    // Unconstrained match viewport scaling
+    glViewport(0, 0, event.size.width, event.size.height);
 }

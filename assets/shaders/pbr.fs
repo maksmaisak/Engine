@@ -276,20 +276,20 @@ vec3 CalculateAmbientLighting(vec3 N, vec3 V, float NdotV, vec3 albedo, float me
 float CalculateDirectionalShadowMultiplier(int i, float cosTheta) {
 
     vec4 lightspacePosition = directionalLightspacePosition[i];
-    vec3 projected = (lightspacePosition.xyz / lightspacePosition.w) * 0.5 + 0.5;
+    vec3 projected = (lightspacePosition.xyz / lightspacePosition.w) * 0.5f + 0.5f;
     float currentDepth = projected.z;
     if (currentDepth > 1.f)
         return 1;
 
-    float bias = clamp(0.005 * tan(acos(cosTheta)), 0, 0.01);
+    float bias = clamp(0.005f * tan(acos(cosTheta)), 0.f, 0.01f);
 
-    float shadow = 0.0;
-    vec3 texelSize = 1.0 / textureSize(directionalDepthMaps, 0);
-    vec2 scale = texelSize.xy * (1 + currentDepth * 0.1);
+    float shadow = 0.f;
+    vec3 texelSize = 1.f / textureSize(directionalDepthMaps, 0);
+    vec2 scale = texelSize.xy * (1.f + currentDepth * 0.1f);
     for (float x = -1; x <= 1; x += 1)
         for (float y = -1; y <= 1; y += 1)
             shadow += texture(directionalDepthMaps, vec4(projected.xy + vec2(x, y) * scale, i, currentDepth - bias));
-    shadow /= 9.0;
+    shadow /= 9.f;
 
     return shadow;
 }
@@ -305,7 +305,7 @@ const vec3 sampleOffsetDirections[20] = vec3[]
 
 float CalculatePointShadowMultiplier(int i, vec3 fromLight, float distance, float cosTheta) {
 
-    float bias = clamp(0.004 * tan(acos(cosTheta)), 0, 0.002);
+    float bias = clamp(0.004f * tan(acos(cosTheta)), 0.f, 0.002f);
     float depth = distance / pointLights[i].farPlaneDistance - bias;
 
     //float shadow = 0.0;

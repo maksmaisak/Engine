@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 19/12/18.
 //
 
-#ifndef SAXION_Y2Q2_RENDERING_RESOURCELOADER_H
-#define SAXION_Y2Q2_RENDERING_RESOURCELOADER_H
+#ifndef ENGINE_RESOURCELOADER_H
+#define ENGINE_RESOURCELOADER_H
 
 #include "SFML/Graphics.hpp"
 #include <exception>
@@ -46,4 +46,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q2_RENDERING_RESOURCELOADER_H
+#endif //ENGINE_RESOURCELOADER_H

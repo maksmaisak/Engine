@@ -8,7 +8,7 @@
 namespace en {
     void DestroyByTimerSystem::update(float dt) {
 
-        sf::Time now = GameTime::now();
+        sf::Time now = GameTime::nowSFTime();
 
         for (auto e : m_registry->with<DestroyTimer>()) {
             if (m_registry->get<DestroyTimer>(e).timeToDestroy <= now) {

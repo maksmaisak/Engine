@@ -29,18 +29,28 @@ namespace en {
 
     void Entities::remove(Entity entity) {
 
-        assert(entity != nullEntity);
+        if (!contains(entity))
+            return;
 
         const auto id = getId(entity);
-        assert(id < m_entities.size());
-
         m_entities[id] = m_nextFree;
         m_nextFree = setVersion(entity, getVersion(entity) + 1);
 
         //std::clog << "Removed entity id " << id << " (version " << getVersion(entity) << ") " << std::endl;
     }
 
-    void Entities::clear() {
+    void Entities::removeAll() {
+
+        //std::clog << "Removed all entities" << std::endl;
+
+        for (std::size_t id = 1; id < m_entities.size(); ++id)
+            if (getId(m_entities[id]) == id)
+                remove(m_entities[id]);
+    }
+
+    void Entities::reset() {
+
+        //std::clog << "Reset the Entities collection" << std::endl;
 
         m_entities.clear();
         m_entities.push_back(nullEntity);
