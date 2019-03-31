@@ -89,7 +89,7 @@ namespace {
         glm::vec3& bVelocity, float bInverseMass,
         const glm::vec3& normal, float bounciness = 1.f
     ) {
-        //assert(glm::epsilonEqual(glm::length(normal), 1.f, 0.00000001f));
+        assert(glm::epsilonEqual(glm::length(normal), 1.f, 0.0001f));
 
         const float aSpeedAlongNormal = glm::dot(normal, aVelocity);
         const float bSpeedAlongNormal = glm::dot(normal, bVelocity);

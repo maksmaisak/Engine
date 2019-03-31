@@ -45,7 +45,7 @@ namespace {
         if (t >= 1.f)
             return std::nullopt;
 
-        return Hit {glm::normalize(relativePosition + movement * t), t};
+        return Hit{glm::normalize(relativePosition + movement * t), t};
     }
 
     inline std::optional<Hit> sphereVsAABBInternal(const glm::vec3& spherePosition, float radius, const glm::vec3& boxCenter, const glm::vec3& boxHalfSize, const glm::vec3& movement) {
@@ -57,9 +57,20 @@ namespace {
         if (distanceSqr > radius * radius)
             return std::nullopt;
 
-        const float distance = glm::sqrt(distanceSqr);
-        const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
-        return Hit{normal, 1.f, normal * (radius - distance)};
+        if (distanceSqr > glm::epsilon<float>()) {
+
+            const float distance = glm::sqrt(distanceSqr);
+            const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
+            return Hit{normal, 1.f, normal * (radius - distance)};
+
+        } else {
+
+            // If spherePosition is inside the box
+            const glm::vec3 fromCenter = glm::normalize(spherePosition - boxCenter);
+            const float distanceFromCenter = glm::length(fromCenter);
+            const glm::vec3 normal = fromCenter / (distanceFromCenter + glm::epsilon<float>());
+            return Hit{normal, 1.f, normal * (radius + (glm::dot(boxHalfSize, glm::abs(normal)) - distanceFromCenter))};
+        }
     }
 
     inline std::optional<Hit> AABBVsSphereInternal(const glm::vec3& boxCenter, const glm::vec3& boxHalfSize, const glm::vec3& spherePosition, float radius, const glm::vec3& movement) {
@@ -71,9 +82,20 @@ namespace {
         if (distanceSqr > radius * radius)
             return std::nullopt;
 
-        const float distance = glm::sqrt(distanceSqr);
-        const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
-        return Hit{normal, 1.f, normal * (radius - distance)};
+        if (distanceSqr > glm::epsilon<float>()) {
+
+            const float distance = glm::sqrt(distanceSqr);
+            const glm::vec3 normal = delta / (distance + glm::epsilon<float>());
+            return Hit{normal, 1.f, normal * (radius - distance)};
+
+        } else {
+
+            // If spherePosition is inside the box
+            const glm::vec3 fromCenter = glm::normalize(aabbPosition - spherePosition);
+            const float distanceFromCenter = glm::length(fromCenter);
+            const glm::vec3 normal = fromCenter / (distanceFromCenter + glm::epsilon<float>());
+            return Hit{normal, 1.f, normal * (radius + (glm::dot(boxHalfSize, glm::abs(normal)) - distanceFromCenter))};
+        }
     }
 
     inline glm::vec3 getAxis(glm::length_t i) {
