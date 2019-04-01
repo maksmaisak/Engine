@@ -2,11 +2,9 @@
 // Created by Maksym Maisak on 2019-04-01.
 //
 
-#include "PhysicsSystemFlatGrid.h"
+#include "PhysicsSystemPreCheckCollisions.h"
 #include <SFML/Graphics.hpp>
-#include <sstream>
-#include <chrono>
-#include <locale>
+#include <utility>
 #include "Transform.h"
 #include "Rigidbody.h"
 #include "Hit.h"
@@ -18,7 +16,7 @@
 
 using namespace en;
 
-void PhysicsSystemFlatGrid::update(float dt) {
+void PhysicsSystemPreCheckCollisions::update(float dt) {
 
     using clock = std::chrono::high_resolution_clock;
     const auto start = clock::now();
@@ -70,4 +68,42 @@ void PhysicsSystemFlatGrid::update(float dt) {
     m_detectedCollisions.clear();
 
     flushCurrentUpdateInfo();
+}
+
+std::tuple<bool, float> PhysicsSystemPreCheckCollisions::move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities) {
+
+    const glm::vec3 movement = rb.velocity * dt;
+
+    if (rb.collider) {
+
+        const utils::Bounds boundsA = rb.collider->getBounds();
+
+        for (Entity other : entities) {
+
+            if (entity == other)
+                continue;
+
+            auto& otherRb = m_registry->get<Rigidbody>(other);
+            if (!otherRb.collider)
+                continue;
+
+            const utils::Bounds boundsB = otherRb.collider->getBounds();
+            if (glm::any(glm::lessThan(boundsA.max, boundsB.min)) || glm::any(glm::lessThan(boundsB.max, boundsA.min)))
+                continue;
+
+            m_currentUpdateInfo.numCollisionChecks += 1;
+            std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
+            if (!optionalHit)
+                continue;
+
+            m_currentUpdateInfo.numCollisions += 1;
+            const Hit& hit = *optionalHit;
+            resolve(*optionalHit, tf, rb, otherRb, movement);
+            m_detectedCollisions.emplace_back(hit, entity, other);
+            return {true, dt * (1.f - hit.timeOfImpact)};
+        }
+    }
+
+    tf.move(movement);
+    return {false, 0.f};
 }

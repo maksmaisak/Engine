@@ -10,6 +10,8 @@
 #include <fstream>
 #include "Engine.h"
 #include "PhysicsTestScene.h"
+#include "PhysicsSystem.h"
+#include "PhysicsSystemPreCheckCollisions.h"
 #include "GameTime.h"
 
 using namespace en;

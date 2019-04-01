@@ -49,6 +49,7 @@ namespace en {
     protected:
 
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities);
+        void resolve(const Hit& hit, Transform& tf, Rigidbody& rb, Rigidbody& otherRb, const glm::vec3& movement);
         void addGravity(Entity entity, Transform& tf, Rigidbody& rb, float dt);
         void flushCurrentUpdateInfo();
 

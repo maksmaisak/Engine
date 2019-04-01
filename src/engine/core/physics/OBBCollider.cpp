@@ -23,6 +23,13 @@ void OBBCollider::updateTransform(const glm::mat4& transform) {
     rotation = glm::mat3(orientation);
 }
 
+utils::Bounds OBBCollider::getBounds() {
+
+    const glm::mat3 absRotation = {glm::abs(rotation[0]), glm::abs(rotation[1]), glm::abs(rotation[2])};
+    const glm::vec3 rotatedHalfSize = absRotation * halfSize;
+    return {center - rotatedHalfSize, center + rotatedHalfSize};
+}
+
 std::optional<Hit> OBBCollider::collide(Collider& other, const glm::vec3& movement) {return other.collide(*this, movement);}
 
 std::optional<Hit> OBBCollider::collide(SphereCollider& other, const glm::vec3& movement) {

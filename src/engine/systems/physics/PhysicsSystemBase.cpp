@@ -69,19 +69,7 @@ std::tuple<bool, float> PhysicsSystemBase::move(Entity entity, Transform& tf, Ri
 
             m_currentUpdateInfo.numCollisions += 1;
             const Hit& hit = *optionalHit;
-
-            const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
-            updateVelocities(
-                rb.velocity, rb.invMass,
-                otherRb.velocity, otherInvMass,
-                hit.normal, std::min(rb.bounciness, otherRb.bounciness)
-            );
-            if (otherRb.isKinematic)
-                otherRb.velocity = glm::vec3(0);
-
-            tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);
-            rb.collider->updateTransform(tf.getWorldTransform());
-
+            resolve(hit, tf, rb, otherRb, movement);
             m_detectedCollisions.emplace_back(hit, entity, other);
             return {true, dt * (1.f - hit.timeOfImpact)};
         }
@@ -89,6 +77,22 @@ std::tuple<bool, float> PhysicsSystemBase::move(Entity entity, Transform& tf, Ri
 
     tf.move(movement);
     return {false, 0.f};
+}
+
+
+void PhysicsSystemBase::resolve(const Hit& hit, Transform& tf, Rigidbody& rb, Rigidbody& otherRb, const glm::vec3& movement) {
+
+    const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
+    updateVelocities(
+        rb.velocity, rb.invMass,
+        otherRb.velocity, otherInvMass,
+        hit.normal, std::min(rb.bounciness, otherRb.bounciness)
+    );
+    if (otherRb.isKinematic)
+        otherRb.velocity = glm::vec3(0);
+
+    tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);
+    rb.collider->updateTransform(tf.getWorldTransform());
 }
 
 void PhysicsSystemBase::addGravity(Entity entity, Transform& tf, Rigidbody& rb, float dt) {

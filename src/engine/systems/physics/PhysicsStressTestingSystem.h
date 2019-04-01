@@ -7,7 +7,7 @@
 
 #include "System.h"
 #include <chrono>
-#include "PhysicsSystem.h"
+#include "PhysicsSystemBase.h"
 
 namespace en {
 
@@ -32,7 +32,7 @@ namespace en {
 
         std::string m_outputFilepath;
 
-        std::unique_ptr<PhysicsSystem> m_physicsSystem;
+        std::unique_ptr<PhysicsSystemBase> m_physicsSystem;
     };
 }
 
