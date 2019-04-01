@@ -2,14 +2,14 @@
 // Created by Maksym Maisak on 2019-04-01.
 //
 
-#ifndef ENGINE_PHYSICSSYSTEMPRECHECKCOLLISIONS_H
-#define ENGINE_PHYSICSSYSTEMPRECHECKCOLLISIONS_H
+#ifndef ENGINE_PHYSICSSYSTEMBOUNDINGSPHERENARROWPHASE_H
+#define ENGINE_PHYSICSSYSTEMBOUNDINGSPHERENARROWPHASE_H
 
 #include "PhysicsSystemBase.h"
 
 namespace en {
 
-    class PhysicsSystemPreCheckCollisions : public PhysicsSystemBase {
+    class PhysicsSystemBoundingSphereNarrowphase : public PhysicsSystemBase {
 
     public:
         void update(float dt) override;
@@ -19,4 +19,4 @@ namespace en {
     };
 }
 
-#endif //ENGINE_PHYSICSSYSTEMPRECHECKCOLLISIONS_H
+#endif //ENGINE_PHYSICSSYSTEMBOUNDINGSPHERENARROWPHASE_H

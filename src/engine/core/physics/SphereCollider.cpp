@@ -13,9 +13,12 @@ void SphereCollider::updateTransform(const glm::mat4& transform) {
 }
 
 utils::Bounds SphereCollider::getBounds() {
-
     const glm::vec3 halfSize = glm::vec3(radius);
     return {position - halfSize, position + halfSize};
+}
+
+utils::BoundingSphere SphereCollider::getBoundingSphere() {
+    return {position, radius};
 }
 
 std::optional<Hit> SphereCollider::collide(Collider& other, const glm::vec3& movement) {

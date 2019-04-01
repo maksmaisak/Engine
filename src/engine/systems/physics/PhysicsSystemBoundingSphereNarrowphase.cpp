@@ -2,7 +2,7 @@
 // Created by Maksym Maisak on 2019-04-01.
 //
 
-#include "PhysicsSystemPreCheckCollisions.h"
+#include "PhysicsSystemBoundingSphereNarrowphase.h"
 #include <SFML/Graphics.hpp>
 #include <utility>
 #include "Transform.h"
@@ -16,7 +16,7 @@
 
 using namespace en;
 
-void PhysicsSystemPreCheckCollisions::update(float dt) {
+void PhysicsSystemBoundingSphereNarrowphase::update(float dt) {
 
     using clock = std::chrono::high_resolution_clock;
     const auto start = clock::now();
@@ -70,13 +70,13 @@ void PhysicsSystemPreCheckCollisions::update(float dt) {
     flushCurrentUpdateInfo();
 }
 
-std::tuple<bool, float> PhysicsSystemPreCheckCollisions::move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities) {
+std::tuple<bool, float> PhysicsSystemBoundingSphereNarrowphase::move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities) {
 
     const glm::vec3 movement = rb.velocity * dt;
 
     if (rb.collider) {
 
-        const utils::Bounds boundsA = rb.collider->getBounds();
+        const utils::BoundingSphere sphereA = rb.collider->getBoundingSphere();
 
         for (Entity other : entities) {
 
@@ -87,8 +87,8 @@ std::tuple<bool, float> PhysicsSystemPreCheckCollisions::move(Entity entity, Tra
             if (!otherRb.collider)
                 continue;
 
-            const utils::Bounds boundsB = otherRb.collider->getBounds();
-            if (glm::any(glm::lessThan(boundsA.max, boundsB.min)) || glm::any(glm::lessThan(boundsB.max, boundsA.min)))
+            const utils::BoundingSphere sphereB = otherRb.collider->getBoundingSphere();
+            if (glm::distance2(sphereA.position, sphereB.position) > glm::length2(sphereA.radius + sphereB.radius))
                 continue;
 
             m_currentUpdateInfo.numCollisionChecks += 1;

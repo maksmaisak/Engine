@@ -21,12 +21,13 @@ namespace en {
         void update(float dt) override;
 
     private:
-        void startNextTest();
+        void startTest();
         void writeDiagnosticsHeader();
         void outputDiagnosticsData();
 
         std::chrono::milliseconds m_testDuration = 5s;
-        std::size_t m_nextTestIndex = 0;
+        std::size_t m_currentSystemConfigIndex = 0;
+        std::size_t m_currentTestSceneIndex    = 0;
         std::chrono::high_resolution_clock::duration m_timeForNextScene;
         bool m_isDone = false;
 

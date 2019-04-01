@@ -30,6 +30,10 @@ utils::Bounds OBBCollider::getBounds() {
     return {center - rotatedHalfSize, center + rotatedHalfSize};
 }
 
+utils::BoundingSphere OBBCollider::getBoundingSphere() {
+    return {center, glm::length(halfSize)};
+}
+
 std::optional<Hit> OBBCollider::collide(Collider& other, const glm::vec3& movement) {return other.collide(*this, movement);}
 
 std::optional<Hit> OBBCollider::collide(SphereCollider& other, const glm::vec3& movement) {

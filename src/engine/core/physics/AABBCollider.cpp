@@ -16,6 +16,10 @@ utils::Bounds AABBCollider::getBounds() {
     return {center - halfSize, center + halfSize};
 }
 
+utils::BoundingSphere AABBCollider::getBoundingSphere() {
+    return {center, glm::length(halfSize)};
+}
+
 std::optional<Hit> AABBCollider::collide(Collider& other, const glm::vec3& movement) {
     return other.collide(*this, movement);
 }
