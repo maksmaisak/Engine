@@ -10,17 +10,29 @@
 #include <fstream>
 #include "Engine.h"
 #include "PhysicsTestScene.h"
+#include "PhysicsSystem.h"
+#include "PhysicsSystemBoundingSphereNarrowphase.h"
 #include "GameTime.h"
 
 using namespace en;
 
 namespace {
 
-    const std::vector<PhysicsTestScene::Preset> testPresets = {
+    struct SystemConfig {
+        std::string name;
+        std::function<std::unique_ptr<PhysicsSystemBase>(Engine&)> makeSystem;
+    };
+
+    const std::vector<SystemConfig> systemConfigs {
+        {"No optimizations"          , [](Engine& engine){return engine.makeSystem<PhysicsSystem>();}},
+        {"Bounding sphere pre-checks", [](Engine& engine){return engine.makeSystem<PhysicsSystemBoundingSphereNarrowphase>();}}
+    };
+
+    const std::vector<PhysicsTestScene::Preset> scenePresets {
         {100 , 100},
         {200 , 200},
         {400 , 200},
-        //{400 , 400}
+        {400 , 400},
         //{1000, 1000}
     };
 
@@ -45,7 +57,7 @@ PhysicsStressTestingSystem::PhysicsStressTestingSystem() : m_outputFilepath(gene
 void PhysicsStressTestingSystem::start() {
 
     writeDiagnosticsHeader();
-    startNextTest();
+    startTest();
 }
 
 void PhysicsStressTestingSystem::update(float dt) {
@@ -56,23 +68,31 @@ void PhysicsStressTestingSystem::update(float dt) {
     if (m_isDone)
         return;
 
-    if (GameTime::now() >= m_timeForNextScene) {
+    if (GameTime::now() < m_timeForNextScene)
+        return;
 
-        outputDiagnosticsData();
+    outputDiagnosticsData();
 
-        if (m_nextTestIndex < testPresets.size())
-            startNextTest();
-        else
-            m_isDone = true;
+    m_currentSystemConfigIndex += 1;
+    if (m_currentSystemConfigIndex >= systemConfigs.size()) {
+        m_currentSystemConfigIndex = 0;
+        m_currentTestSceneIndex += 1;
     }
+
+    if (m_currentTestSceneIndex >= scenePresets.size()) {
+        m_isDone = true;
+        return;
+    }
+
+    startTest();
 }
 
-void PhysicsStressTestingSystem::startNextTest() {
+void PhysicsStressTestingSystem::startTest() {
 
-    const auto& preset = testPresets[m_nextTestIndex++];
+    const auto& preset = scenePresets[m_currentTestSceneIndex];
     m_engine->getSceneManager().setCurrentSceneNextUpdate<PhysicsTestScene>(preset);
 
-    m_physicsSystem = m_engine->makeSystem<PhysicsSystem>();
+    m_physicsSystem = systemConfigs[m_currentSystemConfigIndex].makeSystem(*m_engine);//m_engine->makeSystem<PhysicsSystem>();
     m_physicsSystem->setGravity({0, -9.8f, 0});
     m_physicsSystem->start();
 
@@ -85,7 +105,7 @@ void PhysicsStressTestingSystem::writeDiagnosticsHeader() {
     if (!out.is_open())
         return;
 
-    out << "test,static bodies,dynamic bodies,min update time,avg update time,max update time\n";
+    out << "test name,static bodies,dynamic bodies,min update time,avg update time,max update time\n";
     out.close();
 }
 
@@ -106,9 +126,9 @@ void PhysicsStressTestingSystem::outputDiagnosticsData() {
     // Ensure dot separator for floats.
     out.imbue(std::locale::classic());
     out <<
-        m_nextTestIndex << ',' <<
-        testPresets[m_nextTestIndex - 1].numBodiesStatic  << ',' <<
-        testPresets[m_nextTestIndex - 1].numBodiesDynamic << ',' <<
+        systemConfigs[m_currentSystemConfigIndex].name << ',' <<
+        scenePresets[m_currentTestSceneIndex].numBodiesStatic  << ',' <<
+        scenePresets[m_currentTestSceneIndex].numBodiesDynamic << ',' <<
         duration_cast<ms>(info.updateTimeMin          ).count() << "ms," <<
         duration_cast<ms>(info.updateTimeAverage.get()).count() << "ms," <<
         duration_cast<ms>(info.updateTimeMax          ).count() << "ms\n";

@@ -51,6 +51,7 @@ namespace {
     inline std::optional<Hit> sphereVsAABBInternal(const glm::vec3& spherePosition, float radius, const glm::vec3& boxCenter, const glm::vec3& boxHalfSize, const glm::vec3& movement) {
 
         const glm::vec3 movedSpherePosition = spherePosition + movement;
+
         const glm::vec3 closestPoint = glm::clamp(movedSpherePosition, boxCenter - boxHalfSize, boxCenter + boxHalfSize);
         const glm::vec3 delta = movedSpherePosition - closestPoint;
         const float distanceSqr = glm::length2(delta);
@@ -294,9 +295,9 @@ std::optional<Hit> en::collisionDetection::AABBVsSphere(AABBCollider& a, SphereC
 
 std::optional<Hit> en::collisionDetection::sphereVsOBB(SphereCollider& a, OBBCollider& b, const glm::vec3& movement) {
 
-    const glm::mat3 inverseRotation = glm::transpose(b.rotation);
-    const glm::vec3& spherePosition = inverseRotation * (a.position - b.center) + b.center;
-    const glm::vec3& localMovement  = inverseRotation * movement;
+    const glm::mat3 world2B = glm::transpose(b.rotation);
+    const glm::vec3& spherePosition = world2B * (a.position - b.center) + b.center;
+    const glm::vec3& localMovement  = world2B * movement;
 
     std::optional<Hit> hit = sphereVsAABBInternal(spherePosition, a.radius, b.center, b.halfSize, localMovement);
     if (!hit)

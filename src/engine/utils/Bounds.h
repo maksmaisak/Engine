@@ -13,6 +13,11 @@ namespace utils {
         glm::vec3 min;
         glm::vec3 max;
     };
+
+    struct BoundingSphere {
+        glm::vec3 position;
+        float radius = 0.f;
+    };
 }
 
 #endif //ENGINE_BOUNDS_H
