@@ -1,8 +1,8 @@
 //
-// Created by Maksym Maisak on 20/10/18.
+// Created by Maksym Maisak on 2019-04-01.
 //
 
-#include "PhysicsSystem.h"
+#include "PhysicsSystemBase.h"
 #include <SFML/Graphics.hpp>
 #include <sstream>
 #include <chrono>
@@ -13,71 +13,10 @@
 #include "Messaging.h"
 #include "Collision.h"
 #include "Name.h"
-
 #include "UIRect.h"
 #include "Text.h"
 
 using namespace en;
-
-PhysicsSystem& PhysicsSystem::setGravity(const glm::vec3& gravity) {
-
-    m_gravity = gravity;
-    return *this;
-}
-
-void PhysicsSystem::update(float dt) {
-
-    using clock = std::chrono::high_resolution_clock;
-    const auto start = clock::now();
-
-    auto entities = m_registry->with<Transform, Rigidbody>();
-
-    for (Entity entity : entities) {
-
-        auto& rb = m_registry->get<Rigidbody>(entity);
-        if (!rb.collider)
-            continue;
-
-        const auto& tf = m_registry->get<Transform>(entity);
-        rb.collider->updateTransform(tf.getWorldTransform());
-    }
-
-    for (Entity entity : entities) {
-
-        auto& rb = m_registry->get<Rigidbody>(entity);
-        if (rb.isKinematic)
-            continue;
-
-        auto& tf = m_registry->get<Transform>(entity);
-
-        if (rb.useGravity)
-            addGravity(entity, tf, rb, dt);
-
-        constexpr int maxNumSteps = 3;
-        float timeToMove = dt;
-        for (int i = 0; i < maxNumSteps; ++i) {
-
-            bool didCollide;
-            std::tie(didCollide, timeToMove) = move(entity, tf, rb, timeToMove, entities);
-            if (didCollide)
-                continue;
-
-            break;
-        }
-    }
-
-    const auto time = clock::now() - start;
-    m_currentUpdateInfo.time = time;
-    m_diagnosticsInfo.updateTimeAverage.addSample(time);
-    m_diagnosticsInfo.updateTimeMin = std::min(m_diagnosticsInfo.updateTimeMin, time);
-    m_diagnosticsInfo.updateTimeMax = std::max(m_diagnosticsInfo.updateTimeMax, time);
-
-    for (Collision& collision : m_detectedCollisions)
-        Receiver<Collision>::broadcast(collision);
-    m_detectedCollisions.clear();
-
-    flushCurrentUpdateInfo();
-}
 
 namespace {
 
@@ -108,7 +47,7 @@ namespace {
     }
 }
 
-std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities) {
+std::tuple<bool, float> PhysicsSystemBase::move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities) {
 
     const glm::vec3 movement = rb.velocity * dt;
 
@@ -152,7 +91,7 @@ std::tuple<bool, float> PhysicsSystem::move(Entity entity, Transform& tf, Rigidb
     return {false, 0.f};
 }
 
-void PhysicsSystem::addGravity(Entity entity, Transform& tf, Rigidbody& rb, float dt) {
+void PhysicsSystemBase::addGravity(Entity entity, Transform& tf, Rigidbody& rb, float dt) {
 
     rb.velocity += m_gravity * dt;
 
@@ -167,7 +106,7 @@ void PhysicsSystem::addGravity(Entity entity, Transform& tf, Rigidbody& rb, floa
     }*/
 }
 
-void PhysicsSystem::flushCurrentUpdateInfo() {
+void PhysicsSystemBase::flushCurrentUpdateInfo() {
 
     using namespace std::literals::string_literals;
     using namespace std::chrono;
@@ -177,20 +116,20 @@ void PhysicsSystem::flushCurrentUpdateInfo() {
     const auto& u = m_currentUpdateInfo;
     std::stringstream s;
     s <<
-        "Physics:\n" <<
-        "update time          : " << duration_cast<ms>(u.time).count() << "ms" << std::endl <<
-        "update time (average): " << duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms" << std::endl <<
-        "update time (max)    : " << duration_cast<ms>(i.updateTimeMax).count() << "ms" << std::endl <<
-        "update time (min)    : " << duration_cast<ms>(i.updateTimeMin).count() << "ms" << std::endl <<
-        "collision checks: " << u.numCollisionChecks << std::endl <<
-        "collisions      : " << u.numCollisions << std::endl;
+      "Physics:\n" <<
+      "update time          : " << duration_cast<ms>(u.time).count() << "ms" << std::endl <<
+      "update time (average): " << duration_cast<ms>(i.updateTimeAverage.get()).count() << "ms" << std::endl <<
+      "update time (max)    : " << duration_cast<ms>(i.updateTimeMax).count() << "ms" << std::endl <<
+      "update time (min)    : " << duration_cast<ms>(i.updateTimeMin).count() << "ms" << std::endl <<
+      "collision checks: " << u.numCollisionChecks << std::endl <<
+      "collisions      : " << u.numCollisions << std::endl;
     //std::cout << s.str();
     ensureDebugText().setString(s.str());
 
     m_currentUpdateInfo = {};
 }
 
-Text& PhysicsSystem::ensureDebugText() {
+Text& PhysicsSystemBase::ensureDebugText() {
 
     if (!m_debugTextActor.isValid()) {
         m_debugTextActor = m_engine->makeActor("PhysicsSystemDebug");
@@ -209,13 +148,19 @@ Text& PhysicsSystem::ensureDebugText() {
         .setFont(Resources<sf::Font>::get(config::FONT_PATH + "Menlo.ttc"));
 }
 
-const PhysicsSystem::DiagnosticsInfo& PhysicsSystem::getDiagnosticsInfo() const {
+const PhysicsSystemBase::DiagnosticsInfo& PhysicsSystemBase::getDiagnosticsInfo() const {
     return m_diagnosticsInfo;
 }
 
-PhysicsSystem::DiagnosticsInfo PhysicsSystem::resetDiagnosticsInfo() {
+PhysicsSystemBase::DiagnosticsInfo PhysicsSystemBase::resetDiagnosticsInfo() {
 
     auto copy = m_diagnosticsInfo;
     m_diagnosticsInfo = {};
     return copy;
+}
+
+PhysicsSystemBase& PhysicsSystemBase::setGravity(const glm::vec3& gravity) {
+
+    m_gravity = gravity;
+    return *this;
 }

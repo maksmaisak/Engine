@@ -1,9 +1,9 @@
 //
-// Created by Maksym Maisak on 20/10/18.
+// Created by Maksym Maisak on 2019-04-01.
 //
 
-#ifndef SAXION_Y2Q1_CPP_PHYSICSSYSTEM_H
-#define SAXION_Y2Q1_CPP_PHYSICSSYSTEM_H
+#ifndef ENGINE_PHYSICSSYSTEMBASE_H
+#define ENGINE_PHYSICSSYSTEMBASE_H
 
 #include <tuple>
 #include <utility>
@@ -24,7 +24,7 @@ namespace en {
     struct Collision;
     class Text;
 
-    class PhysicsSystem : public System {
+    class PhysicsSystemBase : public System {
 
     public:
 
@@ -42,26 +42,29 @@ namespace en {
             int numCollisions      = 0;
         };
 
-        void update(float dt) override;
-        PhysicsSystem& setGravity(const glm::vec3& gravity);
+        PhysicsSystemBase& setGravity(const glm::vec3& gravity);
         const DiagnosticsInfo& getDiagnosticsInfo() const;
         DiagnosticsInfo resetDiagnosticsInfo();
 
-    private:
+    protected:
 
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities);
         void addGravity(Entity entity, Transform& tf, Rigidbody& rb, float dt);
-
         void flushCurrentUpdateInfo();
+
+        std::vector<Collision> m_detectedCollisions;
+        DiagnosticsInfo m_diagnosticsInfo;
+        UpdateInfo m_currentUpdateInfo;
+
+    private:
+
         Text& ensureDebugText();
 
         glm::vec3 m_gravity;
-        std::vector<Collision> m_detectedCollisions;
 
-        DiagnosticsInfo m_diagnosticsInfo;
-        UpdateInfo m_currentUpdateInfo;
         Actor m_debugTextActor;
     };
 }
 
-#endif //SAXION_Y2Q1_CPP_PHYSICSSYSTEM_H
+
+#endif //ENGINE_PHYSICSSYSTEMBASE_H
