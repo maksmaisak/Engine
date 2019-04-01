@@ -12,6 +12,7 @@
 #include "PhysicsTestScene.h"
 #include "PhysicsSystem.h"
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
+#include "PhysicsSystemFlatGrid.h"
 #include "GameTime.h"
 
 using namespace en;
@@ -25,7 +26,8 @@ namespace {
 
     const std::vector<SystemConfig> systemConfigs {
         {"No optimizations"          , [](Engine& engine){return engine.makeSystem<PhysicsSystem>();}},
-        {"Bounding sphere pre-checks", [](Engine& engine){return engine.makeSystem<PhysicsSystemBoundingSphereNarrowphase>();}}
+        {"Bounding sphere pre-checks", [](Engine& engine){return engine.makeSystem<PhysicsSystemBoundingSphereNarrowphase>();}},
+        {"Flat grid"                 , [](Engine& engine){return engine.makeSystem<PhysicsSystemFlatGrid>();}}
     };
 
     const std::vector<PhysicsTestScene::Preset> scenePresets {
@@ -52,7 +54,10 @@ namespace {
     }
 }
 
-PhysicsStressTestingSystem::PhysicsStressTestingSystem() : m_outputFilepath(generateOutputFilepath()) {}
+PhysicsStressTestingSystem::PhysicsStressTestingSystem(const std::chrono::milliseconds& testDuration) :
+    m_testDuration(testDuration),
+    m_outputFilepath(generateOutputFilepath())
+{}
 
 void PhysicsStressTestingSystem::start() {
 

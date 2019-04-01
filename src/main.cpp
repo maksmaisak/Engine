@@ -9,6 +9,7 @@
 #include "RenderSystem.h"
 #include "PhysicsSystem.h"
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
+#include "PhysicsSystemFlatGrid.h"
 #include "UIEventSystem.h"
 #include "TweenSystem.h"
 
@@ -26,6 +27,8 @@
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
+
+using namespace std::literals::chrono_literals;
 
 void openStartLuaScene(en::Engine& engine) {
 
@@ -48,9 +51,10 @@ int main() {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
 
-        engine->addSystem<en::PhysicsStressTestingSystem>();
+        engine->addSystem<en::PhysicsStressTestingSystem>(20s);
         //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
+        //engine->addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
 
         engine->addSystem<en::UIEventSystem>();
         engine->addSystem<en::BehaviorsSystem>();
