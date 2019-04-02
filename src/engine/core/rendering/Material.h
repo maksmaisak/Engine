@@ -191,7 +191,7 @@ namespace en {
         BuiltinUniformLocations cacheBuiltinUniformLocations();
         AttributeLocations cacheAttributeLocations();
 
-        void setBuiltinUniforms(Engine* engine, DepthMaps* depthMaps, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::mat4& perspectiveMatrix);
+        void setBuiltinUniforms(Engine* engine, DepthMaps* depthMaps, const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);
         void setCustomUniforms();
 
         template<typename T>

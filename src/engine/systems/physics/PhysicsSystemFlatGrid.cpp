@@ -14,14 +14,14 @@
 #include "Name.h"
 
 #include "UIRect.h"
-#include "Text.h"
+#include "Camera.h"
 
 using namespace en;
 
 namespace {
 
-    const float GRID_CELL_SIZE = 2.f;
-    const std::size_t NUM_GRID_CELLS = 100;
+    const float GRID_CELL_SIZE = 20.f;
+    const std::size_t NUM_GRID_CELLS = 10;
 
     using vec3Index = glm::vec<3, std::size_t>;
 
@@ -39,7 +39,10 @@ namespace {
     }
 }
 
-PhysicsSystemFlatGrid::PhysicsSystemFlatGrid() : m_grid(NUM_GRID_CELLS * NUM_GRID_CELLS * NUM_GRID_CELLS) {}
+PhysicsSystemFlatGrid::PhysicsSystemFlatGrid() :
+    m_grid(NUM_GRID_CELLS * NUM_GRID_CELLS * NUM_GRID_CELLS),
+    m_wireframeShader(Resources<ShaderProgram>::get("wireframe"))
+{}
 
 void PhysicsSystemFlatGrid::update(float dt) {
 
@@ -162,27 +165,26 @@ void PhysicsSystemFlatGrid::updateGrid(Entity entity, const Rigidbody& rb, const
 
         const auto [oldMin, oldMax] = *oldBounds;
 
-        for (std::size_t x = oldMin.x; x <= oldMax.x; ++x) {
+        if (oldMin != min || oldMax != max) {
 
-            if (x >= min.x || x <= max.x)
-                continue;
+            for (std::size_t x = oldMin.x; x <= oldMax.x; ++x) {
 
-            const std::size_t xIndexOffset = x * NUM_GRID_CELLS * NUM_GRID_CELLS;
-            for (std::size_t y = oldMin.y; y <= oldMax.y; ++y) {
+                const bool xInsideCurrentBounds = x >= min.x && x <= max.x;
+                const std::size_t xIndexOffset = x * NUM_GRID_CELLS * NUM_GRID_CELLS;
+                for (std::size_t y = oldMin.y; y <= oldMax.y; ++y) {
 
-                if (y >= min.y || y <= max.y)
-                    continue;
+                    const bool xyInsideCurrentBounds = xInsideCurrentBounds && y >= min.y && y <= max.y;
+                    const std::size_t indexOffset = xIndexOffset + y * NUM_GRID_CELLS;
+                    for (std::size_t z = oldMin.z; z <= oldMax.z; ++z) {
 
-                const std::size_t indexOffset = xIndexOffset + y * NUM_GRID_CELLS;
-                for (std::size_t z = oldMin.z; z <= oldMax.z; ++z) {
+                        if (xyInsideCurrentBounds && z >= min.z && z <= max.z)
+                            continue;
 
-                    if (z >= min.z || z <= max.z)
-                        continue;
-
-                    auto& collection = m_grid[indexOffset + z];
-                    auto it = std::find(collection.begin(), collection.end(), entity);
-                    if (it != collection.end()) {
-                        collection.erase(it);
+                        auto& collection = m_grid[indexOffset + z];
+                        auto it = std::find(collection.begin(), collection.end(), entity);
+                        if (it != collection.end()) {
+                            collection.erase(it);
+                        }
                     }
                 }
             }
@@ -211,4 +213,99 @@ void PhysicsSystemFlatGrid::updateGrid(Entity entity, const Rigidbody& rb, const
         m_previousBounds.insert(entity, min, max);
     else
         m_previousBounds.get(entity) = {min, max};
+}
+
+void PhysicsSystemFlatGrid::draw() {
+
+    static const std::array<Vertex, 36> cubeVertices {
+        Vertex {{-1.0f,  1.0f, -1.0f}},
+        Vertex {{ 1.0f, -1.0f, -1.0f}},
+        Vertex {{-1.0f, -1.0f, -1.0f}},
+
+        Vertex {{ 1.0f, -1.0f, -1.0f}},
+        Vertex {{-1.0f,  1.0f, -1.0f}},
+        Vertex {{ 1.0f,  1.0f, -1.0f}},
+
+        Vertex {{-1.0f, -1.0f,  1.0f}},
+        Vertex {{-1.0f,  1.0f, -1.0f}},
+        Vertex {{-1.0f, -1.0f, -1.0f}},
+
+        Vertex {{-1.0f,  1.0f, -1.0f}},
+        Vertex {{-1.0f, -1.0f,  1.0f}},
+        Vertex {{-1.0f,  1.0f,  1.0f}},
+
+        Vertex {{ 1.0f, -1.0f, -1.0f}},
+        Vertex {{ 1.0f,  1.0f,  1.0f}},
+        Vertex {{ 1.0f, -1.0f,  1.0f}},
+
+        Vertex {{ 1.0f,  1.0f,  1.0f}},
+        Vertex {{ 1.0f, -1.0f, -1.0f}},
+        Vertex {{ 1.0f,  1.0f, -1.0f}},
+
+        Vertex {{-1.0f, -1.0f,  1.0f}},
+        Vertex {{ 1.0f,  1.0f,  1.0f}},
+        Vertex {{-1.0f,  1.0f,  1.0f}},
+
+        Vertex {{ 1.0f,  1.0f,  1.0f}},
+        Vertex {{-1.0f, -1.0f,  1.0f}},
+        Vertex {{ 1.0f, -1.0f,  1.0f}},
+
+        Vertex {{-1.0f,  1.0f, -1.0f}},
+        Vertex {{ 1.0f,  1.0f,  1.0f}},
+        Vertex {{ 1.0f,  1.0f, -1.0f}},
+
+        Vertex {{ 1.0f,  1.0f,  1.0f}},
+        Vertex {{-1.0f,  1.0f, -1.0f}},
+        Vertex {{-1.0f,  1.0f,  1.0f}},
+
+        Vertex {{-1.0f, -1.0f, -1.0f}},
+        Vertex {{ 1.0f, -1.0f, -1.0f}},
+        Vertex {{-1.0f, -1.0f,  1.0f}},
+
+        Vertex {{ 1.0f, -1.0f, -1.0f}},
+        Vertex {{ 1.0f, -1.0f,  1.0f}},
+        Vertex {{-1.0f, -1.0f,  1.0f}}
+    };
+
+    Entity entity = m_registry->with<Transform, Camera>().tryGetOne();
+    if (!entity)
+        return;
+
+    std::vector<Vertex> cellVertices(36, Vertex{});
+
+    m_wireframeShader->use();
+    m_wireframeShader->setUniformValue("matrixProjection", m_registry->get<Camera>(entity).getCameraProjectionMatrix(*m_engine) * glm::inverse(m_registry->get<Transform>(entity).getWorldTransform()));
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    // Add to new grid cells
+    for (std::size_t x = 0; x < NUM_GRID_CELLS; ++x) {
+
+        const std::size_t xIndexOffset = x * NUM_GRID_CELLS * NUM_GRID_CELLS;
+        for (std::size_t y = 0; y < NUM_GRID_CELLS; ++y) {
+
+            const std::size_t indexOffset = xIndexOffset + y * NUM_GRID_CELLS;
+            for (std::size_t z = 0; z < NUM_GRID_CELLS; ++z) {
+
+                const std::size_t numEntities = m_grid[indexOffset + z].size();
+                if (numEntities == 0)
+                    continue;
+
+                const glm::vec4 color = glm::lerp(glm::vec4(0, 1, 0, 1), glm::vec4(1, 0, 0, 1), glm::vec4(glm::saturate<float, glm::defaultp>((numEntities - 1.f) / 10.f)));
+                //const glm::vec4 color = {1,1,0,1};
+                m_wireframeShader->setUniformValue("color", color);
+
+                const glm::mat4 matrix =
+                    glm::translate((glm::vec3(x, y, z) - glm::floor(glm::vec3(NUM_GRID_CELLS) * 0.5f) + 0.5f) * GRID_CELL_SIZE) *
+                    glm::scale(glm::vec3(GRID_CELL_SIZE));
+
+                std::transform(cubeVertices.begin(), cubeVertices.end(), cellVertices.begin(), [&matrix](const Vertex& vertex) -> Vertex {
+                    return {matrix * glm::vec4(vertex.position * 0.5f, 1.f), vertex.uv};
+                });
+
+                m_vertexRenderer.renderVertices(cellVertices);
+            }
+        }
+    }
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
