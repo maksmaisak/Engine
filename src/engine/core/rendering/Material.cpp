@@ -194,17 +194,17 @@ void Material::setBuiltinUniforms(
     DepthMaps* depthMaps,
     const glm::mat4& modelMatrix,
     const glm::mat4& viewMatrix,
-    const glm::mat4& perspectiveMatrix
+    const glm::mat4& projectionMatrix
 ) {
     const auto& u = m_builtinUniformLocations;
 
     updateModelMatrix(modelMatrix);
     // glUniform functions do nothing if location is -1, so checks are only necessary for avoiding calculations.
     gl::setUniform(u.view      , viewMatrix      );
-    gl::setUniform(u.projection, perspectiveMatrix);
+    gl::setUniform(u.projection, projectionMatrix);
 
     if (valid(u.pvm))
-        gl::setUniform(u.pvm, perspectiveMatrix * viewMatrix * modelMatrix);
+        gl::setUniform(u.pvm, projectionMatrix * viewMatrix * modelMatrix);
 
     if (valid(u.modelNormal))
         gl::setUniform(u.modelNormal, glm::mat3(glm::transpose(glm::inverse(modelMatrix))));

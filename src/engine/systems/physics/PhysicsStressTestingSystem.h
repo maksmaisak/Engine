@@ -16,16 +16,17 @@ namespace en {
     class PhysicsStressTestingSystem : public System {
 
     public:
-        PhysicsStressTestingSystem();
+        PhysicsStressTestingSystem(const std::chrono::milliseconds& testDuration = 10s);
         void start() override;
         void update(float dt) override;
+        void draw() override;
 
     private:
         void startTest();
         void writeDiagnosticsHeader();
         void outputDiagnosticsData();
 
-        std::chrono::milliseconds m_testDuration = 5s;
+        std::chrono::milliseconds m_testDuration = 10s;
         std::size_t m_currentSystemConfigIndex = 0;
         std::size_t m_currentTestSceneIndex    = 0;
         std::chrono::high_resolution_clock::duration m_timeForNextScene;
