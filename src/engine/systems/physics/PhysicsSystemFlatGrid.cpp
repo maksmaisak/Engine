@@ -49,6 +49,8 @@ void PhysicsSystemFlatGrid::update(float dt) {
     using clock = std::chrono::high_resolution_clock;
     const auto start = clock::now();
 
+    removeInvalidEntitiesFromGrid();
+
     auto entities = m_registry->with<Transform, Rigidbody>();
 
     for (Entity entity : entities) {
@@ -60,8 +62,7 @@ void PhysicsSystemFlatGrid::update(float dt) {
         const auto& tf = m_registry->get<Transform>(entity);
         rb.collider->updateTransform(tf.getWorldTransform());
 
-        // TODO handle a case where the rigidbody component is removed
-        updateGrid(entity, rb, tf);
+        updateGridCells(entity, rb, tf);
     }
 
     for (Entity entity : entities) {
@@ -127,23 +128,22 @@ std::tuple<bool, float> PhysicsSystemFlatGrid::move(Entity entity, Transform& tf
                         if (entity == other)
                             continue;
 
-                        // TODO Handle entities being destroyed
-                        auto* otherRb = m_registry->tryGet<Rigidbody>(other);
-                        if (!otherRb || !otherRb->collider)
+                        auto& otherRb = m_registry->get<Rigidbody>(other);
+                        if (!otherRb.collider)
                             continue;
 
-            //            const utils::BoundingSphere sphereB = otherRb.collider->getBoundingSphere();
-            //            if (glm::distance2(sphereA.position, sphereB.position) > glm::length2(sphereA.radius + sphereB.radius))
-            //                continue;
+//                        const utils::BoundingSphere sphereB = otherRb.collider->getBoundingSphere();
+//                        if (glm::distance2(sphereA.position, sphereB.position) > glm::length2(sphereA.radius + sphereB.radius))
+//                            continue;
 
                         m_currentUpdateInfo.numCollisionChecks += 1;
-                        std::optional<Hit> optionalHit = rb.collider->collide(*otherRb->collider, movement);
+                        std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
                         if (!optionalHit)
                             continue;
 
                         m_currentUpdateInfo.numCollisions += 1;
                         const Hit& hit = *optionalHit;
-                        resolve(*optionalHit, tf, rb, *otherRb, movement);
+                        resolve(*optionalHit, tf, rb, otherRb, movement);
                         m_detectedCollisions.emplace_back(hit, entity, other);
                         return {true, dt * (1.f - hit.timeOfImpact)};
                     }
@@ -156,7 +156,29 @@ std::tuple<bool, float> PhysicsSystemFlatGrid::move(Entity entity, Transform& tf
     return {false, 0.f};
 }
 
-void PhysicsSystemFlatGrid::updateGrid(Entity entity, const Rigidbody& rb, const Transform& tf) {
+void PhysicsSystemFlatGrid::removeInvalidEntitiesFromGrid() {
+
+    const auto isInvalidEntity = [this](Entity e) -> bool {
+        // TODO bool registry.has<Types...>()
+        return !m_registry->tryGet<Rigidbody>(e) || !m_registry->tryGet<Transform>(e);
+    };
+
+    for (std::size_t x = 0; x < NUM_GRID_CELLS; ++x) {
+
+        const std::size_t xIndexOffset = x * NUM_GRID_CELLS * NUM_GRID_CELLS;
+        for (std::size_t y = 0; y < NUM_GRID_CELLS; ++y) {
+
+            const std::size_t indexOffset = xIndexOffset + y * NUM_GRID_CELLS;
+            for (std::size_t z = 0; z < NUM_GRID_CELLS; ++z) {
+
+                std::vector<Entity>& vec = m_grid[indexOffset + z];
+                vec.erase(std::remove_if(vec.begin(), vec.end(), isInvalidEntity), vec.end());
+            }
+        }
+    }
+}
+
+void PhysicsSystemFlatGrid::updateGridCells(Entity entity, const Rigidbody& rb, const Transform& tf) {
 
     const auto [min, max] = getBoundsOnGrid(rb.collider->getBounds());
 

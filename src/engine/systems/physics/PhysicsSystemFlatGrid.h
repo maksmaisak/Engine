@@ -19,7 +19,8 @@ namespace en {
         PhysicsSystemFlatGrid();
         void update(float dt) override;
         void draw() override;
-        void updateGrid(Entity entity, const Rigidbody& rb, const Transform& tf);
+        void removeInvalidEntitiesFromGrid();
+        void updateGridCells(Entity entity, const Rigidbody& rb, const Transform& tf);
 
     private:
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt);
