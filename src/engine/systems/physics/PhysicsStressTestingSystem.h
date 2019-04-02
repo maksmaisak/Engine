@@ -19,6 +19,7 @@ namespace en {
         PhysicsStressTestingSystem(const std::chrono::milliseconds& testDuration = 10s);
         void start() override;
         void update(float dt) override;
+        void draw() override;
 
     private:
         void startTest();

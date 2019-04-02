@@ -92,6 +92,12 @@ void PhysicsStressTestingSystem::update(float dt) {
     startTest();
 }
 
+void PhysicsStressTestingSystem::draw() {
+
+    if (m_physicsSystem)
+        m_physicsSystem->draw();
+}
+
 void PhysicsStressTestingSystem::startTest() {
 
     const auto& preset = scenePresets[m_currentTestSceneIndex];

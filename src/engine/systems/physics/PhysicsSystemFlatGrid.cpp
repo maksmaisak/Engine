@@ -20,27 +20,39 @@ using namespace en;
 
 namespace {
 
-    const float GRID_CELL_SIZE = 6.f;
-    const std::size_t NUM_GRID_CELLS = 40;
+    const float GRID_CELL_SIZE = 10.f;
+    const std::size_t NUM_GRID_CELLS = 20;
 
-    using vec3Index = glm::vec<3, std::size_t>;
+    using vec3Int = glm::vec<3, std::int64_t>;
 
-    inline std::pair<vec3Index, vec3Index> getBoundsOnGrid(const utils::Bounds& bounds) {
+    inline std::pair<vec3Int, vec3Int> getBoundsOnGrid(const utils::Bounds& bounds) {
 
         const auto size = glm::vec3(GRID_CELL_SIZE);
-        const auto minIndex = vec3Index(0);
-        const auto maxIndex = vec3Index(NUM_GRID_CELLS - 1);
-        const glm::vec3 halfMaxIndex = glm::ceil(glm::vec3(maxIndex) * 0.5f);
+        const auto minIndex = glm::vec3(0);
+        const auto maxIndex = glm::vec3(NUM_GRID_CELLS - 1);
+        const glm::vec3 halfGridSize = glm::vec3(GRID_CELL_SIZE * NUM_GRID_CELLS * 0.5f);
+        const glm::vec3 halfMaxIndex = maxIndex * 0.5f;
+
+        static const auto toGrid = [](const glm::vec3& pos){
+
+            const glm::vec3 a = pos / glm::vec3(GRID_CELL_SIZE);
+            const glm::vec3 b = glm::floor(a);
+            const vec3Int c = b + glm::vec3(NUM_GRID_CELLS * 0.5f);
+            const vec3Int d = glm::clamp(c, vec3Int(0), vec3Int(NUM_GRID_CELLS - 1));
+
+            return d;
+        };
 
         return {
-            glm::clamp(vec3Index(glm::floor(bounds.min / size + halfMaxIndex)), minIndex, maxIndex),
-            glm::clamp(vec3Index(glm::floor(bounds.max / size + halfMaxIndex)), minIndex, maxIndex),
+            toGrid(bounds.min),
+            toGrid(bounds.max)
         };
     }
 }
 
 PhysicsSystemFlatGrid::PhysicsSystemFlatGrid() :
-    m_grid(NUM_GRID_CELLS * NUM_GRID_CELLS * NUM_GRID_CELLS)
+    m_grid(NUM_GRID_CELLS * NUM_GRID_CELLS * NUM_GRID_CELLS),
+    m_volumeRenderer(32768 * 4)
 {}
 
 void PhysicsSystemFlatGrid::update(float dt) {
@@ -108,10 +120,10 @@ std::tuple<bool, float> PhysicsSystemFlatGrid::move(Entity entity, Transform& tf
 
         //const utils::BoundingSphere sphereA = rb.collider->getBoundingSphere();
         auto [min, max] = getBoundsOnGrid(rb.collider->getBounds());
-        min = glm::max(min - vec3Index(1), vec3Index(0));
-        max = glm::min(max + vec3Index(1), vec3Index(NUM_GRID_CELLS - 1));
+        min = glm::max(vec3Int(min) - vec3Int(1), vec3Int(0));
+        max = glm::min(vec3Int(max) + vec3Int(1), vec3Int(NUM_GRID_CELLS - 1));
 
-        const auto num = (max - min) + vec3Index(1);
+        //const auto num = (max - min) + vec3Index(1);
         //std::cout << num.x * num.y * num.z << " cells\n";
 
         for (std::size_t x = min.x; x <= max.x; ++x) {
@@ -236,6 +248,17 @@ void PhysicsSystemFlatGrid::updateGridCells(Entity entity, const Rigidbody& rb, 
         m_previousBounds.get(entity) = {min, max};
 }
 
+namespace {
+
+    glm::vec4 getGridCellColor(std::size_t numEntities) {
+
+        constexpr float MAX_NUM_ENTITIES_IN_CELL = 20.f;
+
+        const float t = glm::saturate<float, glm::defaultp>((numEntities - 1.f) / MAX_NUM_ENTITIES_IN_CELL);
+        return glm::mix(glm::vec4(1, 1, 1, 0.8f), glm::vec4(1, 0, 0, 1), glm::vec4(t));
+    }
+}
+
 void PhysicsSystemFlatGrid::draw() {
 
     Entity entity = m_registry->with<Transform, Camera>().tryGetOne();
@@ -255,9 +278,9 @@ void PhysicsSystemFlatGrid::draw() {
                 if (numEntities == 0)
                     continue;
 
-                const glm::vec4 color = glm::lerp(glm::vec4(1, 1, 1, 0.8f), glm::vec4(1, 0, 0, 1), glm::vec4(glm::saturate<float, glm::defaultp>((numEntities - 1.f) / 5.f)));
                 const glm::vec3& center = (glm::vec3(x, y, z) - glm::floor(glm::vec3(NUM_GRID_CELLS) * 0.5f) + 0.5f) * GRID_CELL_SIZE;
-                m_volumeRenderer.addCube(center, glm::vec3(GRID_CELL_SIZE * 0.5f), color);
+                const glm::vec4 color = getGridCellColor(numEntities);
+                m_volumeRenderer.addAABB(center, glm::vec3(GRID_CELL_SIZE * 0.5f), color);
             }
         }
     }

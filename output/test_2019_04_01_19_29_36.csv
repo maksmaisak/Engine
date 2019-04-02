@@ -1,9 +1,0 @@
-test name,static bodies,dynamic bodies,min update time,avg update time,max update time
-No optimizations,100,100,0.742681ms,0.891826ms,1.51763ms
-Bounding sphere pre-checks,100,100,0.454056ms,0.516233ms,1.28729ms
-No optimizations,200,200,2.90359ms,3.56541ms,5.22508ms
-Bounding sphere pre-checks,200,200,1.80791ms,2.25041ms,3.70624ms
-No optimizations,400,200,4.28987ms,4.94531ms,7.65067ms
-Bounding sphere pre-checks,400,200,2.86762ms,3.45421ms,5.00985ms
-No optimizations,400,400,11.093ms,12.097ms,14.9566ms
-Bounding sphere pre-checks,400,400,6.93246ms,7.63493ms,8.99116ms

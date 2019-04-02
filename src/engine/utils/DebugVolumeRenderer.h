@@ -17,9 +17,9 @@ namespace en {
     class DebugVolumeRenderer {
 
     public:
-        DebugVolumeRenderer(std::size_t maxNumVerticesPerDrawCall = 32768 * 4);
+        DebugVolumeRenderer(std::size_t maxNumVerticesPerDrawCall = 32768);
 
-        void addCube(const glm::vec3& center, const glm::vec3& halfSize, const glm::vec4& color = {1,1,1,1});
+        void addAABB(const glm::vec3& center, const glm::vec3& halfSize, const glm::vec4& color = {1, 1, 1, 1});
         void render(const glm::mat4& matrixPVM);
 
     private:

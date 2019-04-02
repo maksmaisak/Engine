@@ -52,9 +52,9 @@ DebugVolumeRenderer::DebugVolumeRenderer(std::size_t maxNumVerticesPerDrawCall) 
     glBindVertexArray(0);
 }
 
-void DebugVolumeRenderer::addCube(const glm::vec3& center, const glm::vec3& halfSize, const glm::vec4& color) {
+void DebugVolumeRenderer::addAABB(const glm::vec3& center, const glm::vec3& halfSize, const glm::vec4& color) {
 
-    assert(m_vertexData.size() + 24 * 7 < m_maxNumVerticesPerDrawCall * 7 && "Can't render that many vertices in one go.");
+    assert(m_vertexData.size() + 24 * 7 < m_maxNumVerticesPerDrawCall * 24 && "Can't render that many vertices in one go.");
 
     for (const glm::vec3& pos : cubeVertices) {
 

@@ -9,7 +9,6 @@
 #include <memory>
 #include "ShaderProgram.hpp"
 #include "ComponentPool.h"
-#include "VertexRenderer.h"
 #include "DebugVolumeRenderer.h"
 
 namespace en {
@@ -27,9 +26,8 @@ namespace en {
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt);
 
         std::vector<std::vector<Entity>> m_grid;
-        ComponentPool<std::pair<glm::vec<3, std::size_t>, glm::vec<3, std::size_t>>> m_previousBounds;
+        ComponentPool<std::pair<glm::vec<3, std::int64_t>, glm::vec<3, std::int64_t>>> m_previousBounds;
 
-        VertexRenderer m_vertexRenderer;
         DebugVolumeRenderer m_volumeRenderer;
     };
 }
