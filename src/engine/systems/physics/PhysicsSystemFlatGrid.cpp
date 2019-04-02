@@ -252,7 +252,7 @@ namespace {
 
     glm::vec4 getGridCellColor(std::size_t numEntities) {
 
-        constexpr float MAX_NUM_ENTITIES_IN_CELL = 20.f;
+        constexpr float MAX_NUM_ENTITIES_IN_CELL = 10.f;
 
         const float t = glm::saturate<float, glm::defaultp>((numEntities - 1.f) / MAX_NUM_ENTITIES_IN_CELL);
         return glm::mix(glm::vec4(1, 1, 1, 0.8f), glm::vec4(1, 0, 0, 1), glm::vec4(t));
@@ -280,7 +280,7 @@ void PhysicsSystemFlatGrid::draw() {
 
                 const glm::vec3& center = (glm::vec3(x, y, z) - glm::floor(glm::vec3(NUM_GRID_CELLS) * 0.5f) + 0.5f) * GRID_CELL_SIZE;
                 const glm::vec4 color = getGridCellColor(numEntities);
-                m_volumeRenderer.addAABB(center, glm::vec3(GRID_CELL_SIZE * 0.5f), color);
+                m_volumeRenderer.addAABB(center, glm::vec3(GRID_CELL_SIZE * 0.5f - 0.01f), color);
             }
         }
     }
