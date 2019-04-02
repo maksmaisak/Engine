@@ -1,10 +1,8 @@
 #version 330
 
-in vec2 texCoords;
-uniform vec4 color;
+in vec4 interpolatedColor;
 out vec4 fragmentColor;
 
 void main() {
-
-    fragmentColor = color + vec4(texCoords, 0, 0) * 0.00001;
+    fragmentColor = interpolatedColor;
 }

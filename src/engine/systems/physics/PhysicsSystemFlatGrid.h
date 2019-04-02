@@ -10,6 +10,7 @@
 #include "ShaderProgram.hpp"
 #include "ComponentPool.h"
 #include "VertexRenderer.h"
+#include "DebugVolumeRenderer.h"
 
 namespace en {
 
@@ -28,8 +29,8 @@ namespace en {
         std::vector<std::vector<Entity>> m_grid;
         ComponentPool<std::pair<glm::vec<3, std::size_t>, glm::vec<3, std::size_t>>> m_previousBounds;
 
-        std::shared_ptr<ShaderProgram> m_wireframeShader;
         VertexRenderer m_vertexRenderer;
+        DebugVolumeRenderer m_volumeRenderer;
     };
 }
 

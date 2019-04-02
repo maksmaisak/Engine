@@ -20,8 +20,8 @@ using namespace en;
 
 namespace {
 
-    const float GRID_CELL_SIZE = 20.f;
-    const std::size_t NUM_GRID_CELLS = 10;
+    const float GRID_CELL_SIZE = 6.f;
+    const std::size_t NUM_GRID_CELLS = 40;
 
     using vec3Index = glm::vec<3, std::size_t>;
 
@@ -40,8 +40,7 @@ namespace {
 }
 
 PhysicsSystemFlatGrid::PhysicsSystemFlatGrid() :
-    m_grid(NUM_GRID_CELLS * NUM_GRID_CELLS * NUM_GRID_CELLS),
-    m_wireframeShader(Resources<ShaderProgram>::get("wireframe"))
+    m_grid(NUM_GRID_CELLS * NUM_GRID_CELLS * NUM_GRID_CELLS)
 {}
 
 void PhysicsSystemFlatGrid::update(float dt) {
@@ -239,65 +238,9 @@ void PhysicsSystemFlatGrid::updateGridCells(Entity entity, const Rigidbody& rb, 
 
 void PhysicsSystemFlatGrid::draw() {
 
-    static const std::array<Vertex, 36> cubeVertices {
-        Vertex {{-1.0f,  1.0f, -1.0f}},
-        Vertex {{ 1.0f, -1.0f, -1.0f}},
-        Vertex {{-1.0f, -1.0f, -1.0f}},
-
-        Vertex {{ 1.0f, -1.0f, -1.0f}},
-        Vertex {{-1.0f,  1.0f, -1.0f}},
-        Vertex {{ 1.0f,  1.0f, -1.0f}},
-
-        Vertex {{-1.0f, -1.0f,  1.0f}},
-        Vertex {{-1.0f,  1.0f, -1.0f}},
-        Vertex {{-1.0f, -1.0f, -1.0f}},
-
-        Vertex {{-1.0f,  1.0f, -1.0f}},
-        Vertex {{-1.0f, -1.0f,  1.0f}},
-        Vertex {{-1.0f,  1.0f,  1.0f}},
-
-        Vertex {{ 1.0f, -1.0f, -1.0f}},
-        Vertex {{ 1.0f,  1.0f,  1.0f}},
-        Vertex {{ 1.0f, -1.0f,  1.0f}},
-
-        Vertex {{ 1.0f,  1.0f,  1.0f}},
-        Vertex {{ 1.0f, -1.0f, -1.0f}},
-        Vertex {{ 1.0f,  1.0f, -1.0f}},
-
-        Vertex {{-1.0f, -1.0f,  1.0f}},
-        Vertex {{ 1.0f,  1.0f,  1.0f}},
-        Vertex {{-1.0f,  1.0f,  1.0f}},
-
-        Vertex {{ 1.0f,  1.0f,  1.0f}},
-        Vertex {{-1.0f, -1.0f,  1.0f}},
-        Vertex {{ 1.0f, -1.0f,  1.0f}},
-
-        Vertex {{-1.0f,  1.0f, -1.0f}},
-        Vertex {{ 1.0f,  1.0f,  1.0f}},
-        Vertex {{ 1.0f,  1.0f, -1.0f}},
-
-        Vertex {{ 1.0f,  1.0f,  1.0f}},
-        Vertex {{-1.0f,  1.0f, -1.0f}},
-        Vertex {{-1.0f,  1.0f,  1.0f}},
-
-        Vertex {{-1.0f, -1.0f, -1.0f}},
-        Vertex {{ 1.0f, -1.0f, -1.0f}},
-        Vertex {{-1.0f, -1.0f,  1.0f}},
-
-        Vertex {{ 1.0f, -1.0f, -1.0f}},
-        Vertex {{ 1.0f, -1.0f,  1.0f}},
-        Vertex {{-1.0f, -1.0f,  1.0f}}
-    };
-
     Entity entity = m_registry->with<Transform, Camera>().tryGetOne();
     if (!entity)
         return;
-
-    std::vector<Vertex> cellVertices(36, Vertex{});
-
-    m_wireframeShader->use();
-    m_wireframeShader->setUniformValue("matrixProjection", m_registry->get<Camera>(entity).getCameraProjectionMatrix(*m_engine) * glm::inverse(m_registry->get<Transform>(entity).getWorldTransform()));
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // Add to new grid cells
     for (std::size_t x = 0; x < NUM_GRID_CELLS; ++x) {
@@ -312,22 +255,14 @@ void PhysicsSystemFlatGrid::draw() {
                 if (numEntities == 0)
                     continue;
 
-                const glm::vec4 color = glm::lerp(glm::vec4(0, 1, 0, 1), glm::vec4(1, 0, 0, 1), glm::vec4(glm::saturate<float, glm::defaultp>((numEntities - 1.f) / 10.f)));
-                //const glm::vec4 color = {1,1,0,1};
-                m_wireframeShader->setUniformValue("color", color);
-
-                const glm::mat4 matrix =
-                    glm::translate((glm::vec3(x, y, z) - glm::floor(glm::vec3(NUM_GRID_CELLS) * 0.5f) + 0.5f) * GRID_CELL_SIZE) *
-                    glm::scale(glm::vec3(GRID_CELL_SIZE));
-
-                std::transform(cubeVertices.begin(), cubeVertices.end(), cellVertices.begin(), [&matrix](const Vertex& vertex) -> Vertex {
-                    return {matrix * glm::vec4(vertex.position * 0.5f, 1.f), vertex.uv};
-                });
-
-                m_vertexRenderer.renderVertices(cellVertices);
+                const glm::vec4 color = glm::lerp(glm::vec4(1, 1, 1, 0.8f), glm::vec4(1, 0, 0, 1), glm::vec4(glm::saturate<float, glm::defaultp>((numEntities - 1.f) / 5.f)));
+                const glm::vec3& center = (glm::vec3(x, y, z) - glm::floor(glm::vec3(NUM_GRID_CELLS) * 0.5f) + 0.5f) * GRID_CELL_SIZE;
+                m_volumeRenderer.addCube(center, glm::vec3(GRID_CELL_SIZE * 0.5f), color);
             }
         }
     }
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    const glm::mat4 matrixView = glm::inverse(m_registry->get<Transform>(entity).getWorldTransform());
+    const glm::mat4 matrixProjection = m_registry->get<Camera>(entity).getCameraProjectionMatrix(*m_engine);
+    m_volumeRenderer.render(matrixProjection * matrixView);
 }
