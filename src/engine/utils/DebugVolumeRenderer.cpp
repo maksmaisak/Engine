@@ -27,6 +27,14 @@ namespace {
         { 1,  1,  1}, { 1,  1, -1},
         { 1,  1,  1}, {-1,  1,  1}
     };
+
+    glm::vec4 getColorFromNumEntities(std::size_t numEntities) {
+
+        constexpr float MAX_NUM_ENTITIES_IN_CELL = 10.f;
+
+        const float t = glm::saturate<float, glm::defaultp>((numEntities - 1.f) / MAX_NUM_ENTITIES_IN_CELL);
+        return glm::mix(glm::vec4(1, 1, 1, 0.8f), glm::vec4(1, 0, 0, 1), glm::vec4(t));
+    }
 }
 
 DebugVolumeRenderer::DebugVolumeRenderer(std::size_t maxNumVerticesPerDrawCall) :
@@ -67,6 +75,11 @@ void DebugVolumeRenderer::addAABB(const glm::vec3& center, const glm::vec3& half
         m_vertexData.push_back(color.b);
         m_vertexData.push_back(color.a);
     }
+}
+
+void DebugVolumeRenderer::addAABB(const glm::vec3& center, const glm::vec3& halfSize, std::size_t numEntities) {
+
+    addAABB(center, halfSize, getColorFromNumEntities(numEntities));
 }
 
 void DebugVolumeRenderer::render(const glm::mat4& matrixPVM) {

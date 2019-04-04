@@ -53,7 +53,7 @@ void PhysicsTestBodyGenerator::setUpNonBodies() {
         .rotate(90.f, {0,1,0});
 
     // TODO have behaviors work when added via registry too.
-    auto& cameraOrbitBehavior = camera.add<CameraOrbitBehavior>(glm::length(m_halfSize) * 1.2f, -80.f, 80.f);
+    auto& cameraOrbitBehavior = camera.add<CameraOrbitBehavior>(glm::length(m_halfSize) * 2.f, -80.f, 80.f);
     auto center = m_engine->makeActor();
     center.add<en::Transform>().move({0, m_halfSize.y, 0});
     cameraOrbitBehavior.setTarget(center);
@@ -81,14 +81,17 @@ void PhysicsTestBodyGenerator::setUpBounds() {
         return actor;
     };
 
-    make(center + glm::vec3(0, -m_halfSize.y, 0), {m_halfSize.x, 1, m_halfSize.z});
-    make(center + glm::vec3(0, +m_halfSize.y, 0), {m_halfSize.x, 1, m_halfSize.z}, false);
+    const float halfThickness = 1.f;
+    const glm::vec3 halfSizeExpanded = m_halfSize + halfThickness;
 
-    make(center + glm::vec3(-m_halfSize.x, 0, 0), {1, m_halfSize.y, m_halfSize.z}, false);
-    make(center + glm::vec3(+m_halfSize.x, 0, 0), {1, m_halfSize.y, m_halfSize.z}, false);
+    make(center + glm::vec3(0, -halfSizeExpanded.y, 0), {halfSizeExpanded.x, halfThickness, halfSizeExpanded.z}, true );
+    make(center + glm::vec3(0, +halfSizeExpanded.y, 0), {halfSizeExpanded.x, halfThickness, halfSizeExpanded.z}, false);
 
-    make(center + glm::vec3(0, 0, -m_halfSize.z), {m_halfSize.x, m_halfSize.y, 1}, false);
-    make(center + glm::vec3(0, 0, +m_halfSize.z), {m_halfSize.x, m_halfSize.y, 1}, false);
+    make(center + glm::vec3(-halfSizeExpanded.x, 0, 0), {halfThickness, halfSizeExpanded.y, halfSizeExpanded.z}, false);
+    make(center + glm::vec3(+halfSizeExpanded.x, 0, 0), {halfThickness, halfSizeExpanded.y, halfSizeExpanded.z}, false);
+
+    make(center + glm::vec3(0, 0, -halfSizeExpanded.z), {halfSizeExpanded.x, halfSizeExpanded.y, halfThickness}, false);
+    make(center + glm::vec3(0, 0, +halfSizeExpanded.z), {halfSizeExpanded.x, halfSizeExpanded.y, halfThickness}, false);
 }
 
 Actor PhysicsTestBodyGenerator::makeSphere(const glm::vec3& position, float radius, bool isStatic) {

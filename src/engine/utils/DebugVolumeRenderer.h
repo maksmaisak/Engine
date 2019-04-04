@@ -20,6 +20,7 @@ namespace en {
         DebugVolumeRenderer(std::size_t maxNumVerticesPerDrawCall = 32768);
 
         void addAABB(const glm::vec3& center, const glm::vec3& halfSize, const glm::vec4& color = {1, 1, 1, 1});
+        void addAABB(const glm::vec3& center, const glm::vec3& halfSize, std::size_t numEntities);
         void render(const glm::mat4& matrixPVM);
 
     private:
