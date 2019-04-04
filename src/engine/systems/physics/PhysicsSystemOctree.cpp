@@ -18,12 +18,19 @@
 
 using namespace en;
 
-PhysicsSystemOctree::PhysicsSystemOctree() : m_volumeRenderer(32768 * 4) {
+namespace {
 
+    const float FIELD_HALF_SIDE = 50.f;
+}
+
+PhysicsSystemOctree::PhysicsSystemOctree() :
+    m_volumeRenderer(32768 * 4),
+    m_octreeRoot({0.f, FIELD_HALF_SIDE, 0.f}, glm::vec3(FIELD_HALF_SIDE))
+{
+    m_octreeRoot.add(1, {{30.f, 30.f, 30.f}, {32.f, 32.f, 32.f}});
 }
 
 void PhysicsSystemOctree::update(float dt) {
-
     System::update(dt);
 }
 

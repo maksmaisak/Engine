@@ -10,6 +10,7 @@
 #include "PhysicsSystem.h"
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
 #include "PhysicsSystemFlatGrid.h"
+#include "PhysicsSystemOctree.h"
 #include "UIEventSystem.h"
 #include "TweenSystem.h"
 
@@ -54,7 +55,8 @@ int main() {
         //engine->addSystem<en::PhysicsStressTestingSystem>(10s);
         //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
-        engine->addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
+        //engine->addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
+        engine->addSystem<en::PhysicsSystemOctree>().setGravity({0, -9.8, 0});
 
         engine->addSystem<en::UIEventSystem>();
         engine->addSystem<en::BehaviorsSystem>();
