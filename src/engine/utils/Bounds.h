@@ -14,6 +14,8 @@ namespace utils {
         glm::vec3 max;
 
         bool intersect(const Bounds& other) const;
+        glm::vec3 clamp(const glm::vec3& other) const;
+        Bounds clamp(const Bounds& other) const;
     };
 
     struct BoundingSphere {

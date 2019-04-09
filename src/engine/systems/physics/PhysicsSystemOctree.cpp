@@ -23,7 +23,7 @@ using namespace en;
 namespace {
 
     const float OCTREE_CENTER_Y = 50.f;
-    const float FIELD_HALF_SIDE = 60.f;
+    const float FIELD_HALF_SIDE = 55.f;
 }
 
 PhysicsSystemOctree::PhysicsSystemOctree() :
@@ -101,7 +101,7 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
     }
 
     //const utils::BoundingSphere sphereA = rb.collider->getBoundingSphere();
-    utils::Bounds bounds = rb.collider->getBounds();
+    utils::Bounds bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
     bounds.min -= glm::vec3(1); // TODO expand the bounds along movement
     bounds.max += glm::vec3(1);
 
@@ -115,8 +115,13 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
         OctreeNode* node = nodes.top();
         nodes.pop();
 
-        const auto& children = node->getChildren();
-        if (std::all_of(children.begin(), children.end(), [](const auto& ptr){return ptr == nullptr;})) {
+        if (!node->isLeafNode()) {
+
+            for (const std::unique_ptr<OctreeNode>& childNodePtr : node->getChildren())
+                if (childNodePtr)
+                    if (bounds.intersect(childNodePtr->getBounds()))
+                        nodes.push(childNodePtr.get());
+        } else {
 
             for (const auto& [other, otherBounds] : node->getEntities()) {
 
@@ -142,12 +147,6 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
                 m_detectedCollisions.emplace_back(hit, entity, other);
                 return {true, dt * (1.f - hit.timeOfImpact)};
             }
-        } else {
-
-            for (const std::unique_ptr<OctreeNode>& childNodePtr : node->getChildren())
-                if (childNodePtr)
-                    if (bounds.intersect(childNodePtr->getBounds()))
-                        nodes.push(childNodePtr.get());
         }
     }
 
@@ -167,7 +166,7 @@ void PhysicsSystemOctree::removeInvalidEntitiesFromTree() {
 
 void PhysicsSystemOctree::updateGridCells(Entity entity, const Rigidbody& rb, const Transform& tf) {
 
-    const utils::Bounds bounds = rb.collider->getBounds();
+    const utils::Bounds bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
     const utils::Bounds* oldBounds = m_previousBounds.tryGet(entity);
     if (!oldBounds)
         m_octreeRoot.add(entity, bounds);
@@ -200,12 +199,18 @@ void PhysicsSystemOctree::draw() {
             return;
         }
 
+        const std::size_t numEntities = node.getEntities().size();
+        if (numEntities == 0)
+            return;
+
         const utils::Bounds& bounds = node.getBounds();
         const glm::vec3& center = (bounds.min + bounds.max) * 0.5f;
         const glm::vec3& halfSize = bounds.max - center;
-        const float t = glm::saturate<float, glm::defaultp>((node.getEntities().size() - 1.f) / node.getCapacity());
+
+        const float t = glm::saturate<float, glm::defaultp>((numEntities - 1.f) / node.getCapacity());
         const glm::vec4 color = glm::mix(glm::vec4(1, 1, 1, 0.8f), glm::vec4(1, 0, 0, 1), glm::vec4(t));
-        m_volumeRenderer.addAABB(center, halfSize, node.getEntities().size());
+
+        m_volumeRenderer.addAABB(center, halfSize, color);
     };
     addToVolumeRenderer(m_octreeRoot);
 

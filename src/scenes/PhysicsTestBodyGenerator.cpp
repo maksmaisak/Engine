@@ -81,7 +81,7 @@ void PhysicsTestBodyGenerator::setUpBounds() {
         return actor;
     };
 
-    const float halfThickness = 1.f;
+    const float halfThickness = 5.f;
     const glm::vec3 halfSizeExpanded = m_halfSize + halfThickness;
 
     make(center + glm::vec3(0, -halfSizeExpanded.y, 0), {halfSizeExpanded.x, halfThickness, halfSizeExpanded.z}, true );

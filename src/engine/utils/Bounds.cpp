@@ -14,3 +14,19 @@ bool Bounds::intersect(const Bounds& other) const {
 
     return true;
 }
+
+glm::vec3 Bounds::clamp(const glm::vec3& other) const {
+
+    return glm::clamp(other, min, max);
+}
+
+Bounds Bounds::clamp(const Bounds& other) const {
+
+    const glm::vec3 otherHalfSize = (other.max - other.min) * 0.5f;
+
+    const glm::vec3 shrunkMin = min + otherHalfSize;
+    const glm::vec3 shrunkMax = max - otherHalfSize;
+    const glm::vec3 center = glm::clamp(other.max - otherHalfSize, shrunkMin, shrunkMax);
+    
+    return {center - otherHalfSize, center + otherHalfSize};
+}
