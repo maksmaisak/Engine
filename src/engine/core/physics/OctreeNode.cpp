@@ -178,17 +178,20 @@ void OctreeNode::removeIf(const std::function<bool(Entity, const utils::Bounds&)
         for (int i = 0; i < 8; ++i)
             if (const std::unique_ptr<OctreeNode>& childPtr = m_children[i])
                 childPtr->removeIf(condition);
-
-        return;
     }
 
-    m_entities.erase(
-        std::remove_if(m_entities.begin(), m_entities.end(), [&condition](const auto& pair){return condition(pair.first, pair.second);}),
-        m_entities.end()
-    );
+    if (isLeafNode()) {
 
-    if (m_parent)
-        m_parent->mergeIfNeeded();
+        m_entities.erase(
+            std::remove_if(m_entities.begin(), m_entities.end(), [&condition](const auto& pair) {
+                return condition(pair.first, pair.second);
+            }),
+            m_entities.end()
+        );
+
+        if (m_parent)
+            m_parent->mergeIfNeeded();
+    }
 }
 
 void OctreeNode::addAndSplitIfNeeded(Entity entity, const utils::Bounds& bounds) {
