@@ -4,9 +4,31 @@
 
 #include "OctreeNode.h"
 #include <cassert>
+#include <numeric>
 #include "Exception.h"
 
 using namespace en;
+
+OctreeNode::OctreeNode(const glm::vec3& center, const glm::vec3& halfSize, int maxDepth, std::size_t capacity, int depth) :
+    m_center(center),
+    m_halfSize(halfSize),
+    m_maxDepth(maxDepth),
+    m_capacity(capacity),
+    m_depth(depth)
+{
+    assert(depth <= maxDepth);
+}
+
+OctreeNode::OctreeNode(OctreeNode* parent, const glm::vec3& center, const glm::vec3& halfSize) :
+    m_parent(parent),
+    m_center(center),
+    m_halfSize(halfSize),
+    m_depth(parent->m_depth + 1),
+    m_maxDepth(parent->m_maxDepth),
+    m_capacity(parent->m_capacity)
+{
+    assert(m_depth <= m_maxDepth);
+}
 
 std::size_t OctreeNode::getTotalNumEntities() const {
 
@@ -18,21 +40,21 @@ std::size_t OctreeNode::getTotalNumEntities() const {
     return count;
 }
 
-const std::array<std::unique_ptr<en::OctreeNode>, 8>& OctreeNode::getChildren() const {
+const std::array<std::unique_ptr<en::OctreeNode>, 8>& OctreeNode::getChildren() const {return m_children;}
 
-    return m_children;
+const std::vector<std::pair<Entity, utils::Bounds>> OctreeNode::getEntities() const {return m_entities;}
+
+std::size_t OctreeNode::getCapacity() const {return m_capacity;}
+
+utils::Bounds OctreeNode::getBounds() const {
+
+    return {
+        m_center - m_halfSize,
+        m_center + m_halfSize
+    };
 }
 
-OctreeNode::OctreeNode(const glm::vec3& center, const glm::vec3& halfSize, int maxDepth, int depth) :
-    m_center(center),
-    m_halfSize(halfSize),
-    m_maxDepth(maxDepth),
-    m_depth(depth)
-{
-    assert(depth <= maxDepth);
-}
-
-utils::Bounds OctreeNode::getChildBounds(int childIndex) {
+utils::Bounds OctreeNode::getChildBounds(int childIndex) const {
 
     const glm::vec3 min = {
         (childIndex & 1) ? m_center.x : m_center.x - m_halfSize.x,
@@ -51,43 +73,73 @@ utils::Bounds OctreeNode::getChildBounds(int childIndex) {
 
 void OctreeNode::add(Entity entity, const utils::Bounds& bounds) {
 
-    if (m_depth == m_maxDepth) {
-        m_entities.push_back(entity);
-    }
+    if (!isLeafNode()) {
 
-    int intersectsChildIndex = -1;
-    bool intersectsMoreThanOneChild = false;
-    for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < 8; ++i)
+            if (getChildBounds(i).intersect(bounds))
+                ensureChildNode(i).add(entity, bounds);
 
-        if (bounds.intersect(getChildBounds(i))) {
-
-            if (intersectsChildIndex == -1) {
-                intersectsChildIndex = i;
-            } else {
-                intersectsMoreThanOneChild = true;
-                break;
-            }
-        }
-    }
-
-    if (intersectsMoreThanOneChild || intersectsChildIndex == -1) {
-        m_entities.push_back(entity);
     } else {
-        ensureChildNode(intersectsChildIndex).add(entity, bounds);
+
+        addAndSplitIfNeeded(entity, bounds);
     }
 }
 
 void OctreeNode::remove(Entity entity, const utils::Bounds& searchInBounds) {
 
-    throw utils::Exception("Not implemented");
-    // TODO remove from nodes that intersect the bounds.
+    if (!isLeafNode()) {
+
+        for (int i = 0; i < 8; ++i)
+            if (m_children[i] && getChildBounds(i).intersect(searchInBounds))
+                m_children[i]->remove(entity, searchInBounds);
+
+    } else if (getBounds().intersect(searchInBounds)) {
+        removeAndMergeParentIfNeeded(entity);
+    }
 }
 
 void OctreeNode::update(Entity entity, const utils::Bounds& oldBounds, const utils::Bounds& newBounds) {
 
-    throw utils::Exception("Not implemented");
-    // TODO remove from nodes that intersect the oldBounds BUT not the newBounds.
+    // Remove from nodes that intersect the oldBounds BUT not the newBounds.
     // Add to nodes that intersect the newBounds BUT not the oldBounds.
+
+    if (!isLeafNode()) {
+
+        for (int i = 0; i < 8; ++i) {
+
+            const utils::Bounds& childBounds = getChildBounds(i);
+
+            const bool wasInChild      = m_children[i] && childBounds.intersect(oldBounds);
+            const bool shouldBeInChild = childBounds.intersect(newBounds);
+
+            if (!wasInChild && !shouldBeInChild)
+                continue;
+
+            if (m_children[i])
+                m_children[i]->update(entity, oldBounds, newBounds);
+            else
+                ensureChildNode(i).add(entity, newBounds);
+        };
+        return;
+    }
+
+    const utils::Bounds& bounds = getBounds();
+    const bool wasHere = oldBounds.intersect(bounds);
+    const bool shouldBeHere = newBounds.intersect(bounds);
+
+    if (wasHere && !shouldBeHere)
+        remove(entity, bounds);
+    else if (!wasHere && shouldBeHere)
+        add(entity, bounds);
+    else if (wasHere && shouldBeHere) {
+
+        auto it = std::find_if(m_entities.begin(), m_entities.end(), [entity](const auto& pair) {
+            return pair.first == entity;
+        });
+
+        if (it != m_entities.end())
+            it->second = newBounds;
+    }
 }
 
 OctreeNode& OctreeNode::ensureChildNode(int childIndex) {
@@ -108,5 +160,124 @@ std::unique_ptr<OctreeNode> OctreeNode::makeChild(int childIndex) {
         (childIndex & 4) ? childHalfSize.z : -childHalfSize.z
     };
 
-    return std::make_unique<OctreeNode>(m_center + offset, childHalfSize, m_maxDepth, m_depth + 1);
+    return std::make_unique<OctreeNode>(this, m_center + offset, childHalfSize);
+}
+
+bool OctreeNode::isLeafNode() const {
+
+    // TODO keep track of this when adding/removing children
+    return std::none_of(m_children.begin(), m_children.end(), [](const std::unique_ptr<OctreeNode>& child) -> bool {
+        return child.get();
+    });
+}
+
+void OctreeNode::removeIf(const std::function<bool(Entity, const utils::Bounds&)>& condition) {
+
+    if (!isLeafNode()) {
+
+        for (int i = 0; i < 8; ++i)
+            if (const std::unique_ptr<OctreeNode>& childPtr = m_children[i])
+                childPtr->removeIf(condition);
+
+        return;
+    }
+
+    m_entities.erase(
+        std::remove_if(m_entities.begin(), m_entities.end(), [&condition](const auto& pair){return condition(pair.first, pair.second);}),
+        m_entities.end()
+    );
+
+    if (m_parent)
+        m_parent->mergeIfNeeded();
+}
+
+void OctreeNode::addAndSplitIfNeeded(Entity entity, const utils::Bounds& bounds) {
+
+    const auto it = std::find_if(m_entities.begin(), m_entities.end(), [entity](const auto& pair){
+        return pair.first == entity;
+    });
+    if (it != m_entities.end())
+        return;
+
+    m_entities.emplace_back(entity, bounds);
+
+    splitIfNeeded();
+}
+
+void OctreeNode::removeAndMergeParentIfNeeded(Entity entity) {
+
+    assert(isLeafNode());
+
+    const auto it = std::find_if(m_entities.begin(), m_entities.end(), [entity](const auto& pair){return pair.first == entity;});
+    //assert(it != m_entities.end());
+    if (it == m_entities.end())
+        return;
+
+    m_entities.erase(it);
+
+    if (m_parent)
+        m_parent->mergeIfNeeded();
+}
+
+void OctreeNode::splitIfNeeded() {
+
+    assert(isLeafNode());
+
+    if (m_depth == m_maxDepth)
+        return;
+
+    if (m_entities.size() <= m_capacity)
+        return;
+
+    for (int i = 0; i < 8; ++i) {
+
+        const utils::Bounds childBounds = getChildBounds(i);
+
+        for (const auto& [e, entityBounds] : m_entities)
+            if (childBounds.intersect(entityBounds))
+                ensureChildNode(i).add(e, entityBounds);
+    }
+    m_entities.clear();
+}
+
+void OctreeNode::mergeIfNeeded() {
+
+    const std::size_t numEntities = getTotalNumEntities();
+    if (numEntities > m_capacity)
+        return;
+
+    for (int i = 0; i < 8; ++i) {
+
+        if (!m_children[i])
+            continue;
+
+        assert(m_children[i]->isLeafNode());
+        const auto& childEntities = m_children[i]->m_entities;
+        std::copy(childEntities.begin(), childEntities.end(), std::back_inserter(m_entities));
+
+        m_children[i] = nullptr;
+    }
+
+    // Remove duplicates
+    std::sort(m_entities.begin(), m_entities.end(), [](const auto& pairA, const auto& pairB){
+        return pairA.first < pairB.first;
+    });
+    m_entities.erase(
+        std::unique(m_entities.begin(), m_entities.end(), [](const auto& pairA, const auto& pairB){
+            return pairA.first == pairB.first;
+        }),
+        m_entities.end()
+    );
+}
+
+void OctreeNode::printWithIndent(std::ostream& stream, int indentDepth) const {
+
+    std::string indent {};
+    for (int i = 0; i < indentDepth * 4; ++i)
+        indent.push_back(' ');
+
+    stream << indent << "node entities: " << m_entities.size() << ", children:\n";
+    for (int i = 0; i < 8; ++i)
+        if (m_children[i])
+            m_children[i]->printWithIndent(stream, indentDepth + 1);
 }

@@ -27,7 +27,7 @@ namespace en {
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt);
 
         OctreeNode m_octreeRoot;
-        ComponentPool<std::pair<glm::vec<3, std::int64_t>, glm::vec<3, std::int64_t>>> m_previousBounds;
+        ComponentPool<utils::Bounds> m_previousBounds;
         DebugVolumeRenderer m_volumeRenderer;
     };
 }
