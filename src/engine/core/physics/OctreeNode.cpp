@@ -127,18 +127,21 @@ void OctreeNode::update(Entity entity, const utils::Bounds& oldBounds, const uti
     const bool wasHere = oldBounds.intersect(bounds);
     const bool shouldBeHere = newBounds.intersect(bounds);
 
-    if (wasHere && !shouldBeHere)
-        remove(entity, bounds);
-    else if (!wasHere && shouldBeHere)
-        add(entity, bounds);
-    else if (wasHere && shouldBeHere) {
+    if (!wasHere) {
+        if (shouldBeHere) {
+            add(entity, bounds);
+        }
+    } else {
+        if (!shouldBeHere) {
+            remove(entity, bounds);
+        } else {
+            auto it = std::find_if(m_entities.begin(), m_entities.end(), [entity](const auto& pair) {
+                return pair.first == entity;
+            });
 
-        auto it = std::find_if(m_entities.begin(), m_entities.end(), [entity](const auto& pair) {
-            return pair.first == entity;
-        });
-
-        if (it != m_entities.end())
-            it->second = newBounds;
+            if (it != m_entities.end())
+                it->second = newBounds;
+        }
     }
 }
 
