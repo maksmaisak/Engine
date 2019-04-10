@@ -21,7 +21,7 @@ namespace en {
         void update(float dt) override;
         void draw() override;
         void removeInvalidEntitiesFromTree();
-        void updateGridCells(Entity entity, const Rigidbody& rb, const Transform& tf);
+        void updateTree(Entity entity, const Rigidbody& rb, const Transform& tf);
 
     private:
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt);

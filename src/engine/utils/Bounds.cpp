@@ -30,3 +30,13 @@ Bounds Bounds::clamp(const Bounds& other) const {
     
     return {center - otherHalfSize, center + otherHalfSize};
 }
+
+void Bounds::expandByMovement(const glm::vec3& movement) {
+
+    for (int i = 0; i < 3; ++i) {
+        if (movement[i] > 3)
+            max[i] += movement[i];
+        else
+            min[i] += movement[i];
+    }
+}

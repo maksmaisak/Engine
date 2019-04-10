@@ -28,7 +28,7 @@ namespace {
 
 PhysicsSystemOctree::PhysicsSystemOctree() :
     m_volumeRenderer(32768 * 4),
-    m_octreeRoot({0.f, OCTREE_CENTER_Y, 0.f}, glm::vec3(FIELD_HALF_SIDE))
+    m_octreeRoot({0.f, OCTREE_CENTER_Y, 0.f}, glm::vec3(FIELD_HALF_SIDE), 4)
 {
     //test, remove later
     m_octreeRoot.add(1, {{30.f, 30.f, 30.f}, {32.f, 32.f, 32.f}});
@@ -43,6 +43,7 @@ void PhysicsSystemOctree::update(float dt) {
 
     auto entities = m_registry->with<Transform, Rigidbody>();
 
+    // Update the octree
     for (Entity entity : entities) {
 
         auto& rb = m_registry->get<Rigidbody>(entity);
@@ -52,9 +53,10 @@ void PhysicsSystemOctree::update(float dt) {
         const auto& tf = m_registry->get<Transform>(entity);
         rb.collider->updateTransform(tf.getWorldTransform());
 
-        updateGridCells(entity, rb, tf);
+        updateTree(entity, rb, tf);
     }
 
+    // Move bodies
     for (Entity entity : entities) {
 
         auto& rb = m_registry->get<Rigidbody>(entity);
@@ -84,7 +86,7 @@ void PhysicsSystemOctree::update(float dt) {
     m_diagnosticsInfo.updateTimeMin = std::min(m_diagnosticsInfo.updateTimeMin, time);
     m_diagnosticsInfo.updateTimeMax = std::max(m_diagnosticsInfo.updateTimeMax, time);
 
-    for (Collision& collision : m_detectedCollisions)
+    for (const Collision& collision : m_detectedCollisions)
         Receiver<Collision>::broadcast(collision);
     m_detectedCollisions.clear();
 
@@ -100,12 +102,8 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
         return {false, 0.f};
     }
 
-    //const utils::BoundingSphere sphereA = rb.collider->getBoundingSphere();
     utils::Bounds bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
-    bounds.min -= glm::vec3(1); // TODO expand the bounds along movement
-    bounds.max += glm::vec3(1);
-
-    //std::cout << m_octreeRoot << std::endl;
+    bounds.expandByMovement(movement);
 
     std::stack<OctreeNode*> nodes;
     nodes.push(&m_octreeRoot);
@@ -131,10 +129,6 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
                 auto& otherRb = m_registry->get<Rigidbody>(other);
                 if (!otherRb.collider)
                     continue;
-
-    //          const utils::BoundingSphere sphereB = otherRb.collider->getBoundingSphere();
-    //          if (glm::distance2(sphereA.position, sphereB.position) > glm::length2(sphereA.radius + sphereB.radius))
-    //              continue;
 
                 m_currentUpdateInfo.numCollisionChecks += 1;
                 std::optional<Hit> optionalHit = rb.collider->collide(*otherRb.collider, movement);
@@ -164,7 +158,7 @@ void PhysicsSystemOctree::removeInvalidEntitiesFromTree() {
     m_octreeRoot.removeIf(isInvalidEntity);
 }
 
-void PhysicsSystemOctree::updateGridCells(Entity entity, const Rigidbody& rb, const Transform& tf) {
+void PhysicsSystemOctree::updateTree(Entity entity, const Rigidbody& rb, const Transform& tf) {
 
     const utils::Bounds bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
     const utils::Bounds* oldBounds = m_previousBounds.tryGet(entity);
