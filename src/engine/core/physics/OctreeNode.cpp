@@ -145,8 +145,10 @@ void OctreeNode::update(Entity entity, const utils::Bounds& oldBounds, const uti
 OctreeNode& OctreeNode::ensureChildNode(int childIndex) {
 
     const std::unique_ptr<OctreeNode>& ptr = m_children[childIndex];
-    if (!ptr)
+    if (!ptr) {
+        ++m_numChildren;
         return *(m_children[childIndex] = makeChild(childIndex));
+    }
 
     return *ptr;
 }
@@ -164,11 +166,7 @@ std::unique_ptr<OctreeNode> OctreeNode::makeChild(int childIndex) {
 }
 
 bool OctreeNode::isLeafNode() const {
-
-    // TODO keep track of this when adding/removing children
-    return std::none_of(m_children.begin(), m_children.end(), [](const std::unique_ptr<OctreeNode>& child) -> bool {
-        return child.get();
-    });
+    return m_numChildren == 0;
 }
 
 void OctreeNode::removeIf(const std::function<bool(Entity, const utils::Bounds&)>& condition) {
@@ -255,10 +253,13 @@ void OctreeNode::mergeIfNeeded() {
             continue;
 
         assert(m_children[i]->isLeafNode());
+
         const auto& childEntities = m_children[i]->m_entities;
+        m_entities.reserve(m_entities.size() + childEntities.size());
         std::copy(childEntities.begin(), childEntities.end(), std::back_inserter(m_entities));
 
         m_children[i] = nullptr;
+        --m_numChildren;
     }
 
     // Remove duplicates

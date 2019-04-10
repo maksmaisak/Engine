@@ -56,6 +56,7 @@ namespace en {
         int m_depth       = -1;
         std::size_t m_capacity = 10;
 
+        int m_numChildren = 0;
         std::array<std::unique_ptr<OctreeNode>, 8> m_children;
         OctreeNode* m_parent = nullptr;
 
