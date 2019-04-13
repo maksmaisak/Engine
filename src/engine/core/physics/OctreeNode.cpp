@@ -213,7 +213,6 @@ void OctreeNode::removeAndMergeParentIfNeeded(Entity entity) {
     assert(isLeafNode());
 
     const auto it = std::find_if(m_entities.begin(), m_entities.end(), [entity](const auto& pair){return pair.first == entity;});
-    //assert(it != m_entities.end());
     if (it == m_entities.end())
         return;
 
@@ -246,7 +245,8 @@ void OctreeNode::splitIfNeeded() {
 
 void OctreeNode::mergeIfNeeded() {
 
-    const std::size_t numEntities = getTotalNumEntities();
+    // TODO Fix this includes duplicates
+    std::size_t numEntities = getTotalNumEntities();
     if (numEntities > m_capacity)
         return;
 
