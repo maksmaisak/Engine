@@ -80,17 +80,11 @@ void PhysicsSystemOctree::update(float dt) {
         }
     }
 
-    const auto time = clock::now() - start;
-    m_currentUpdateInfo.time = time;
-    m_diagnosticsInfo.updateTimeAverage.addSample(time);
-    m_diagnosticsInfo.updateTimeMin = std::min(m_diagnosticsInfo.updateTimeMin, time);
-    m_diagnosticsInfo.updateTimeMax = std::max(m_diagnosticsInfo.updateTimeMax, time);
+    updateCurrentUpdateInfo(clock::now() - start);
 
     for (const Collision& collision : m_detectedCollisions)
         Receiver<Collision>::broadcast(collision);
     m_detectedCollisions.clear();
-
-    flushCurrentUpdateInfo();
 }
 
 std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, Rigidbody& rb, float dt) {
