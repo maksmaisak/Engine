@@ -57,7 +57,7 @@ namespace {
 }
 
 PhysicsStressTestingSystem::PhysicsStressTestingSystem(const std::chrono::milliseconds& testDuration) :
-    m_testDuration(testDuration),
+    m_numUpdatesPerTest(static_cast<std::size_t>(testDuration.count() * 0.1)), // TODO fix hardcoded 10ms timestep
     m_outputFilepath(generateOutputFilepath())
 {}
 
@@ -75,10 +75,13 @@ void PhysicsStressTestingSystem::update(float dt) {
     if (m_isDone)
         return;
 
-    if (GameTime::now() < m_timeForNextScene)
+    ++m_numUpdatesInCurrentTest;
+    if (m_numUpdatesInCurrentTest < m_numUpdatesPerTest)
         return;
 
     outputDiagnosticsData();
+
+    m_numUpdatesInCurrentTest = 0;
 
     m_currentSystemConfigIndex += 1;
     if (m_currentSystemConfigIndex >= systemConfigs.size()) {
@@ -108,8 +111,6 @@ void PhysicsStressTestingSystem::startTest() {
     m_physicsSystem = systemConfigs[m_currentSystemConfigIndex].makeSystem(*m_engine);
     m_physicsSystem->setGravity({0, -9.8f, 0});
     m_physicsSystem->start();
-
-    m_timeForNextScene = GameTime::now() + m_testDuration;
 }
 
 void PhysicsStressTestingSystem::writeDiagnosticsHeader() {

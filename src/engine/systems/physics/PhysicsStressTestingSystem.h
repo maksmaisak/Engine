@@ -26,10 +26,10 @@ namespace en {
         void writeDiagnosticsHeader();
         void outputDiagnosticsData();
 
-        std::chrono::milliseconds m_testDuration = 10s;
         std::size_t m_currentSystemConfigIndex = 0;
         std::size_t m_currentTestSceneIndex    = 0;
-        std::chrono::high_resolution_clock::duration m_timeForNextScene;
+        std::size_t m_numUpdatesInCurrentTest  = 0;
+        std::size_t m_numUpdatesPerTest        = 0;
         bool m_isDone = false;
 
         std::string m_outputFilepath;
