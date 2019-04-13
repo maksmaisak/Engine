@@ -144,7 +144,11 @@ void PhysicsStressTestingSystem::outputDiagnosticsData() {
         scenePresets[m_currentTestSceneIndex].numBodiesDynamic << ',' <<
         duration_cast<ms>(info.updateTimeMin          ).count() << "ms," <<
         duration_cast<ms>(info.updateTimeAverage.get()).count() << "ms," <<
-        duration_cast<ms>(info.updateTimeMax          ).count() << "ms\n";
+        duration_cast<ms>(info.updateTimeMax          ).count() << "ms,";
+
+    for (const auto& updateTime : info.updateTimes)
+        out << duration_cast<ms>(updateTime).count() << ",";
+    out << std::endl;
 
     out.close();
 }

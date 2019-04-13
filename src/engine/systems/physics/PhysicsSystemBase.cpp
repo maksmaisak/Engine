@@ -110,14 +110,21 @@ void PhysicsSystemBase::addGravity(Entity entity, Transform& tf, Rigidbody& rb, 
     }*/
 }
 
-void PhysicsSystemBase::flushCurrentUpdateInfo() {
+void PhysicsSystemBase::updateCurrentUpdateInfo(const std::chrono::nanoseconds& updateTime) {
 
     using namespace std::literals::string_literals;
     using namespace std::chrono;
     using ms = duration<double, std::milli>;
 
-    const auto& i = m_diagnosticsInfo;
-    const auto& u = m_currentUpdateInfo;
+    auto& i = m_diagnosticsInfo;
+    auto& u = m_currentUpdateInfo;
+
+    u.time = updateTime;
+    i.updateTimes.push_back(updateTime);
+    i.updateTimeAverage.addSample(updateTime);
+    i.updateTimeMin = std::min(m_diagnosticsInfo.updateTimeMin, updateTime);
+    i.updateTimeMax = std::max(m_diagnosticsInfo.updateTimeMax, updateTime);
+
     std::stringstream s;
     s <<
       "Physics:\n" <<

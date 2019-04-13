@@ -33,6 +33,7 @@ namespace en {
             utils::Average<std::chrono::nanoseconds> updateTimeAverage = {};
             std::chrono::nanoseconds updateTimeMin = std::chrono::nanoseconds::max();
             std::chrono::nanoseconds updateTimeMax = {};
+            std::vector<std::chrono::nanoseconds> updateTimes;
         };
 
         struct UpdateInfo {
@@ -51,7 +52,7 @@ namespace en {
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt, EntitiesView<Transform, Rigidbody>& entities);
         void resolve(const Hit& hit, Transform& tf, Rigidbody& rb, Rigidbody& otherRb, const glm::vec3& movement);
         void addGravity(Entity entity, Transform& tf, Rigidbody& rb, float dt);
-        void flushCurrentUpdateInfo();
+        void updateCurrentUpdateInfo(const std::chrono::nanoseconds& updateTime);
 
         std::vector<Collision> m_detectedCollisions;
         DiagnosticsInfo m_diagnosticsInfo;
