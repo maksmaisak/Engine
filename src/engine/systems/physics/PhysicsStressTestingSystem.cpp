@@ -13,6 +13,7 @@
 #include "PhysicsSystem.h"
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
 #include "PhysicsSystemFlatGrid.h"
+#include "PhysicsSystemOctree.h"
 #include "GameTime.h"
 
 using namespace en;
@@ -27,15 +28,16 @@ namespace {
     const std::vector<SystemConfig> systemConfigs {
         {"No optimizations"          , [](Engine& engine){return engine.makeSystem<PhysicsSystem>();}},
         {"Bounding sphere pre-checks", [](Engine& engine){return engine.makeSystem<PhysicsSystemBoundingSphereNarrowphase>();}},
-        {"Flat grid"                 , [](Engine& engine){return engine.makeSystem<PhysicsSystemFlatGrid>();}}
+        {"Flat grid"                 , [](Engine& engine){return engine.makeSystem<PhysicsSystemFlatGrid>();}},
+        {"Octree"                    , [](Engine& engine){return engine.makeSystem<PhysicsSystemOctree>();}}
     };
 
     const std::vector<PhysicsTestScene::Preset> scenePresets {
-        {100 , 100},
-        {200 , 200},
-        {400 , 200},
-        {400 , 400},
-        //{1000, 1000}
+        {100 , 100 },
+        {200 , 200 },
+        {400 , 200 },
+        {400 , 400 },
+        {400 , 1000}
     };
 
     std::string generateOutputFilepath() {
@@ -103,7 +105,7 @@ void PhysicsStressTestingSystem::startTest() {
     const auto& preset = scenePresets[m_currentTestSceneIndex];
     m_engine->getSceneManager().setCurrentSceneNextUpdate<PhysicsTestScene>(preset);
 
-    m_physicsSystem = systemConfigs[m_currentSystemConfigIndex].makeSystem(*m_engine);//m_engine->makeSystem<PhysicsSystem>();
+    m_physicsSystem = systemConfigs[m_currentSystemConfigIndex].makeSystem(*m_engine);
     m_physicsSystem->setGravity({0, -9.8f, 0});
     m_physicsSystem->start();
 

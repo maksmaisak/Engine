@@ -119,7 +119,9 @@ std::tuple<bool, float> PhysicsSystemFlatGrid::move(Entity entity, Transform& tf
     if (rb.collider) {
 
         //const utils::BoundingSphere sphereA = rb.collider->getBoundingSphere();
-        auto [min, max] = getBoundsOnGrid(rb.collider->getBounds());
+        utils::Bounds bounds = rb.collider->getBounds();
+        bounds.expandByMovement(movement);
+        auto [min, max] = getBoundsOnGrid(bounds);
         min = glm::max(vec3Int(min) - vec3Int(1), vec3Int(0));
         max = glm::min(vec3Int(max) + vec3Int(1), vec3Int(NUM_GRID_CELLS - 1));
 
