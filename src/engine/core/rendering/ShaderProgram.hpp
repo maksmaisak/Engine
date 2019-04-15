@@ -25,14 +25,12 @@ namespace en {
 		std::string name;
 	};
 
-    /**
-     * Generic shader program to which you can add separate shaders.
-     * Usage:
-     *  -create shader program
-     *  -add shaders
-     *  -finalize shader program
-     *  -use shader program
-     */
+    /// Generic shader program to which you can add separate shaders.
+    /// Usage:
+    ///  - Create
+    ///  - Add shaders using addShader
+    ///  - Call finalize()
+    ///  - Use
 	class ShaderProgram {
 
 	public:

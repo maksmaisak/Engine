@@ -8,6 +8,9 @@
 #include "DestroyByTimerSystem.h"
 #include "RenderSystem.h"
 #include "PhysicsSystem.h"
+#include "PhysicsSystemBoundingSphereNarrowphase.h"
+#include "PhysicsSystemFlatGrid.h"
+#include "PhysicsSystemOctree.h"
 #include "UIEventSystem.h"
 #include "TweenSystem.h"
 
@@ -25,6 +28,8 @@
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
+
+using namespace std::literals::chrono_literals;
 
 void openStartLuaScene(en::Engine& engine) {
 
@@ -47,8 +52,11 @@ int main() {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
 
-        engine->addSystem<en::PhysicsStressTestingSystem>();
+        engine->addSystem<en::PhysicsStressTestingSystem>(10s);
         //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
+        //engine->addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
+        //engine->addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
+        //engine->addSystem<en::PhysicsSystemOctree>().setGravity({0, -9.8, 0});
 
         engine->addSystem<en::UIEventSystem>();
         engine->addSystem<en::BehaviorsSystem>();
@@ -60,6 +68,9 @@ int main() {
 
     //openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
+    //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{20, 0, glm::vec3(20.f)});
+    //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});
+    //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{500, 1000, glm::vec3(50.f)});
     //engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();

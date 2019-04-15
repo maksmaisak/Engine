@@ -84,7 +84,7 @@ void PhysicsTestScene::open() {
         .setEngine(getEngine())
         .setRandomizeRotation(true);
     m_bodyGenerator.setUpNonBodies();
-    m_bodyGenerator.setUpBounds   ();
+    m_bodyGenerator.setUpBounds  ();
     addStaticBodies();
     addDynamicBodies();
 }

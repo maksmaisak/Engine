@@ -6,9 +6,11 @@
 #define ENGINE_COLLIDER_H
 
 #include <optional>
+#include <utility>
 #include "glm.hpp"
 #include "CollisionDetection.h"
 #include "Transform.h"
+#include "Bounds.h"
 
 namespace en {
 
@@ -20,6 +22,8 @@ namespace en {
 
         virtual ~Collider() = default;
         virtual void updateTransform(const glm::mat4& transform) = 0;
+        virtual utils::Bounds getBounds() = 0;
+        virtual utils::BoundingSphere getBoundingSphere() = 0;
 
         // Base case when the other is indeterminate
         virtual std::optional<Hit> collide(Collider& other, const glm::vec3& movement) = 0;

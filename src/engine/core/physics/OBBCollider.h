@@ -18,6 +18,8 @@ namespace en {
         OBBCollider(const glm::vec3& halfSize);
 
         void updateTransform(const glm::mat4& transform) override;
+        utils::Bounds getBounds() override;
+        utils::BoundingSphere getBoundingSphere() override;
 
         std::optional<Hit> collide(Collider& other, const glm::vec3& movement) override;
 

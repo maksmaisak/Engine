@@ -1,4 +1,0 @@
-test,static bodies,dynamic bodies,min update time,avg update time,max update time
-1,100,100,0.499777ms,0.654073ms,1.16327ms
-2,200,200,1.99409ms,2.38232ms,3.68092ms
-3,400,200,3.02234ms,3.43604ms,5.51061ms
