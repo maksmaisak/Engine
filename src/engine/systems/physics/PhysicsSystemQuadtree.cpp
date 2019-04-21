@@ -1,8 +1,8 @@
 //
-// Created by Maksym Maisak on 2019-04-04.
+// Created by Maksym Maisak on 2019-04-21.
 //
 
-#include "PhysicsSystemOctree.h"
+#include "PhysicsSystemQuadtree.h"
 #include <sstream>
 #include <algorithm>
 #include <chrono>
@@ -21,17 +21,15 @@
 using namespace en;
 
 namespace {
-
-    const float CENTER_Y = 50.f;
     const float FIELD_HALF_SIDE = 55.f;
 }
 
-PhysicsSystemOctree::PhysicsSystemOctree() :
+PhysicsSystemQuadtree::PhysicsSystemQuadtree() :
     m_volumeRenderer(32768 * 4),
-    m_octreeRoot({0.f, CENTER_Y, 0.f}, glm::vec3(FIELD_HALF_SIDE), 4)
+    m_quadtreeRoot({0.f, 0.f}, glm::vec2(FIELD_HALF_SIDE), 4)
 {}
 
-void PhysicsSystemOctree::update(float dt) {
+void PhysicsSystemQuadtree::update(float dt) {
 
     using clock = std::chrono::high_resolution_clock;
     const auto start = clock::now();
@@ -40,7 +38,7 @@ void PhysicsSystemOctree::update(float dt) {
 
     auto entities = m_registry->with<Transform, Rigidbody>();
 
-    // Update the octree
+    // Update the quadtree
     for (Entity entity : entities) {
 
         auto& rb = m_registry->get<Rigidbody>(entity);
@@ -84,7 +82,7 @@ void PhysicsSystemOctree::update(float dt) {
     m_detectedCollisions.clear();
 }
 
-std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, Rigidbody& rb, float dt) {
+std::tuple<bool, float> PhysicsSystemQuadtree::move(Entity entity, Transform& tf, Rigidbody& rb, float dt) {
 
     const glm::vec3 movement = rb.velocity * dt;
 
@@ -93,20 +91,20 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
         return {false, 0.f};
     }
 
-    utils::Bounds bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
-    bounds.expandByMovement(movement);
+    utils::Bounds2D bounds = m_quadtreeRoot.getBounds().clamp(rb.collider->getBounds());
+    bounds.expandByMovement({movement.x, movement.z});
 
-    std::stack<OctreeNode*> nodes;
-    nodes.push(&m_octreeRoot);
+    std::stack<QuadtreeNode*> nodes;
+    nodes.push(&m_quadtreeRoot);
 
     while (!nodes.empty()) {
 
-        OctreeNode* node = nodes.top();
+        QuadtreeNode* node = nodes.top();
         nodes.pop();
 
         if (!node->isLeafNode()) {
 
-            for (const std::unique_ptr<OctreeNode>& childNodePtr : node->getChildren())
+            for (const std::unique_ptr<QuadtreeNode>& childNodePtr : node->getChildren())
                 if (childNodePtr)
                     if (bounds.intersect(childNodePtr->getBounds()))
                         nodes.push(childNodePtr.get());
@@ -139,24 +137,24 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
     return {false, 0.f};
 }
 
-void PhysicsSystemOctree::removeInvalidEntitiesFromTree() {
+void PhysicsSystemQuadtree::removeInvalidEntitiesFromTree() {
 
     const auto isInvalidEntity = [this](Entity e, const utils::Bounds& bounds) -> bool {
         // TODO bool registry.has<Types...>()
         return !m_registry->tryGet<Rigidbody>(e) || !m_registry->tryGet<Transform>(e);
     };
 
-    m_octreeRoot.removeIf(isInvalidEntity);
+    m_quadtreeRoot.removeIf(isInvalidEntity);
 }
 
-void PhysicsSystemOctree::updateTree(Entity entity, const Rigidbody& rb, const Transform& tf) {
+void PhysicsSystemQuadtree::updateTree(Entity entity, const Rigidbody& rb, const Transform& tf) {
 
-    const utils::Bounds bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
-    const utils::Bounds* oldBounds = m_previousBounds.tryGet(entity);
+    const utils::Bounds2D bounds = m_quadtreeRoot.getBounds().clamp(rb.collider->getBounds());
+    const utils::Bounds2D* oldBounds = m_previousBounds.tryGet(entity);
     if (!oldBounds)
-        m_octreeRoot.add(entity, bounds);
+        m_quadtreeRoot.add(entity, bounds);
     else
-        m_octreeRoot.update(entity, *oldBounds, bounds);
+        m_quadtreeRoot.update(entity, *oldBounds, bounds);
 
     // TODO ComponentPool::set(args...) (aka getOrAdd)
     if (!m_previousBounds.contains(entity))
@@ -165,21 +163,21 @@ void PhysicsSystemOctree::updateTree(Entity entity, const Rigidbody& rb, const T
         m_previousBounds.get(entity) = bounds;
 }
 
-void PhysicsSystemOctree::draw() {
+void PhysicsSystemQuadtree::draw() {
 
     Entity entity = m_registry->with<Transform, Camera>().tryGetOne();
     if (!entity)
         return;
 
-    std::function<void(const OctreeNode&)> addToVolumeRenderer;
-    addToVolumeRenderer = [&](const OctreeNode& node) {
+    std::function<void(const QuadtreeNode&)> addToVolumeRenderer;
+    addToVolumeRenderer = [&](const QuadtreeNode& node) {
 
         if (!node.isLeafNode()) {
 
             const auto& children = node.getChildren();
-            for (int i = 0; i < 8; ++i)
-                if (children[i])
-                    addToVolumeRenderer(*children[i]);
+            for (const auto& childPtr : node.getChildren())
+                if (childPtr)
+                    addToVolumeRenderer(*childPtr);
 
             return;
         }
@@ -188,16 +186,16 @@ void PhysicsSystemOctree::draw() {
         if (numEntities == 0)
             return;
 
-        const utils::Bounds& bounds = node.getBounds();
-        const glm::vec3& center = (bounds.min + bounds.max) * 0.5f;
-        const glm::vec3& halfSize = bounds.max - center;
+        const utils::Bounds2D& bounds = node.getBounds();
+        const glm::vec2& center = (bounds.min + bounds.max) * 0.5f;
+        const glm::vec2& halfSize = bounds.max - center;
 
         const float t = glm::saturate<float, glm::defaultp>((numEntities - 1.f) / node.getCapacity());
         const glm::vec4 color = glm::mix(glm::vec4(1, 1, 1, 0.8f), glm::vec4(1, 0, 0, 1), glm::vec4(t));
 
-        m_volumeRenderer.addAABB(center, halfSize, color);
+        m_volumeRenderer.addAABB({center.x, 0.f, center.y}, {halfSize.x, 1.f, halfSize.y}, color);
     };
-    addToVolumeRenderer(m_octreeRoot);
+    addToVolumeRenderer(m_quadtreeRoot);
 
     const glm::mat4 matrixView = glm::inverse(m_registry->get<Transform>(entity).getWorldTransform());
     const glm::mat4 matrixProjection = m_registry->get<Camera>(entity).getCameraProjectionMatrix(*m_engine);

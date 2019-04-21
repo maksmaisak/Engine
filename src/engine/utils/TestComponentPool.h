@@ -1,0 +1,8 @@
+//
+// Created by Maksym Maisak on 2019-04-21.
+//
+
+#ifndef ENGINE_TESTCOMPONENTPOOL_H
+#define ENGINE_TESTCOMPONENTPOOL_H
+
+#endif //ENGINE_TESTCOMPONENTPOOL_H

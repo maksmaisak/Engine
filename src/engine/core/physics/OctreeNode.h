@@ -21,9 +21,9 @@ namespace en {
     public:
         OctreeNode(const glm::vec3& center, const glm::vec3& halfSize, int maxDepth = 3, std::size_t capacity = 10, int depth = 0);
         OctreeNode(OctreeNode* parent, const glm::vec3& center, const glm::vec3& halfSize);
-        std::size_t getTotalNumEntities() const;
         const std::array<std::unique_ptr<OctreeNode>, 8>& getChildren() const;
         const std::vector<std::pair<Entity, utils::Bounds>> getEntities() const;
+        std::size_t getTotalNumEntities() const;
         std::size_t getCapacity() const;
         utils::Bounds getBounds() const;
         utils::Bounds getChildBounds(int childIndex) const;
