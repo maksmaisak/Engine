@@ -15,20 +15,14 @@
 #include "UIEventSystem.h"
 #include "TweenSystem.h"
 
-#include "RenderInfo.h"
-#include "Camera.h"
-#include "Transform.h"
-#include "UIRect.h"
-#include "Sprite.h"
-#include "Text.h"
-#include "Model.h"
-
 #include "PhysicsTestScene.h"
 #include "PhysicsStressTestingSystem.h"
 #include "CollisionDetectionTestScene.h"
 #include "LightingScene.h"
 #include "TerrainScene.h"
 #include "LuaScene.h"
+
+#include "TestComponentPool.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -46,6 +40,9 @@ void openStartLuaScene(en::Engine& engine) {
 int main() {
 
     std::cout << "Starting Game" << std::endl;
+
+//    testIterationEntityRegistry();
+//    testIterationHeapAllocated();
 
     auto engine = std::make_unique<en::Engine>();
     engine->initialize();
