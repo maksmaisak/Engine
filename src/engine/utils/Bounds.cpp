@@ -41,7 +41,7 @@ Bounds Bounds::clamp(const Bounds& other) const {
 void Bounds::expandByMovement(const glm::vec3& movement) {
 
     for (int i = 0; i < 3; ++i) {
-        if (movement[i] > 0)
+        if (movement[i] > 0.f)
             max[i] += movement[i];
         else
             min[i] += movement[i];
@@ -82,7 +82,7 @@ Bounds2D Bounds2D::clamp(const Bounds2D& other) const {
 void Bounds2D::expandByMovement(const glm::vec2& movement) {
 
     for (int i = 0; i < 2; ++i) {
-        if (movement[i] > 0)
+        if (movement[i] > 0.f)
             max[i] += movement[i];
         else
             min[i] += movement[i];

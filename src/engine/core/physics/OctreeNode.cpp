@@ -76,6 +76,7 @@ void OctreeNode::add(Entity entity, const utils::Bounds& bounds) {
 
     if (!isLeafNode()) {
 
+        // TODO instead of checking against each child's bounds, efficiently set a bitmask with 8 bits in one go.
         for (int i = 0; i < 8; ++i)
             if (getChildBounds(i).intersect(bounds))
                 ensureChildNode(i).add(entity, bounds);

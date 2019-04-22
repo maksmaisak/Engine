@@ -63,6 +63,13 @@ void Engine::run() {
         fixedUpdateLag = std::min(fixedUpdateLag, TimestepFixed * static_cast<float>(MAX_FIXED_UPDATES_PER_FRAME));
         while (fixedUpdateLag >= TimestepFixed) {
             update(timestepFixedSeconds);
+            update(timestepFixedSeconds);
+            update(timestepFixedSeconds);
+            update(timestepFixedSeconds);
+            update(timestepFixedSeconds);
+            update(timestepFixedSeconds);
+            update(timestepFixedSeconds);
+            update(timestepFixedSeconds);
             fixedUpdateLag -= TimestepFixed;
         }
 
