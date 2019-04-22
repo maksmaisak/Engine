@@ -10,9 +10,13 @@ namespace en {
     bool ComponentPoolBase::contains(en::Entity entity) const {
 
         const auto id = getId(entity);
-        if (id >= m_entityIdToIndex.size()) return false;
+        if (id >= m_entityIdToIndex.size())
+            return false;
+
         const index_type index = m_entityIdToIndex[id];
-        if (index >= m_indexToEntity.size()) return false;
+        if (index >= m_indexToEntity.size())
+            return false;
+
         return m_indexToEntity[index] == entity;
     }
 

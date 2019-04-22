@@ -19,7 +19,7 @@ namespace en {
 
         std::unique_ptr<Collider> collider;
 
-        bool isKinematic = false;
+        bool isStatic = false;
         bool useGravity  = true;
         glm::vec3 velocity;
         float invMass    = 1.f;

@@ -67,12 +67,13 @@ namespace {
         } else {
 
             // If movedSpherePosition is inside the box
-            const glm::vec3 penetration    = (boxHalfSize + radius) - glm::abs(movedSpherePosition - boxCenter);
-            const float* minPenetrationPtr = std::min_element(penetration.data.data, penetration.data.data + 3);
+            const glm::vec3 fromCenter  = movedSpherePosition - boxCenter;
+            const glm::vec3 penetration = (boxHalfSize + radius) - glm::abs(fromCenter);
+            const float* const minPenetrationPtr = std::min_element(penetration.data.data, penetration.data.data + 3);
+            const int axisIndex = minPenetrationPtr - penetration.data.data;
             glm::vec3 normal {};
-            normal[minPenetrationPtr - penetration.data.data] = glm::sign(*minPenetrationPtr);
-            assert(!glm::any(glm::isnan(normal)) && glm::abs(normal) == glm::vec3(0, 0, 1));
-            return Hit{normal, 1.f, normal * -(*minPenetrationPtr)};
+            normal[axisIndex] = glm::sign(fromCenter[axisIndex]);
+            return Hit{normal, 1.f, normal * *minPenetrationPtr};
         }
     }
 
@@ -94,11 +95,13 @@ namespace {
         } else {
 
             // If spherePosition is inside the box
-            const glm::vec3 penetration    = (boxHalfSize + radius) - glm::abs(aabbPosition - spherePosition);
+            const glm::vec3 fromCenter  = aabbPosition - spherePosition;
+            const glm::vec3 penetration    = (boxHalfSize + radius) - glm::abs(fromCenter);
             const float* minPenetrationPtr = std::min_element(penetration.data.data, penetration.data.data + 3);
+            const int axisIndex = minPenetrationPtr - penetration.data.data;
             glm::vec3 normal {};
-            normal[minPenetrationPtr - penetration.data.data] = glm::sign(*minPenetrationPtr);
-            return Hit{normal, 1.f, normal * -(*minPenetrationPtr)};
+            normal[axisIndex] = glm::sign(fromCenter[axisIndex]);
+            return Hit{normal, 1.f, normal * *minPenetrationPtr};
         }
     }
 
@@ -135,7 +138,6 @@ namespace {
             return true;
 
         const glm::vec3 axis = glm::normalize(glm::cross(axisA, axisB));
-        assert(!glm::any(glm::isnan(axis)));
         const float rb = glm::epsilon<float>() + glm::dot(bHalfSize, glm::abs(axis));
         const float ra = glm::epsilon<float>() + glm::dot(aHalfSize, glm::abs(glm::transpose(a2B) * axis));
         const float distanceProjected = glm::abs(glm::dot(delta, axis));

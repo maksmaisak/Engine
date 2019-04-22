@@ -72,6 +72,8 @@ std::tuple<bool, float> PhysicsSystemBase::move(Entity entity, Transform& tf, Ri
             resolve(hit, tf, rb, otherRb, movement);
             m_detectedCollisions.emplace_back(hit, entity, other);
             return {true, dt * (1.f - hit.timeOfImpact)};
+            // TODO BUG in the case of discrete collision detection, this ignores all other potential collisions.
+            // Evident when a body is sliding across the floor. The collision with the floor is resolved correctly but it ignores other bodies.
         }
     }
 
@@ -82,13 +84,13 @@ std::tuple<bool, float> PhysicsSystemBase::move(Entity entity, Transform& tf, Ri
 
 void PhysicsSystemBase::resolve(const Hit& hit, Transform& tf, Rigidbody& rb, Rigidbody& otherRb, const glm::vec3& movement) {
 
-    const float otherInvMass = otherRb.isKinematic ? 0.f : otherRb.invMass;
+    const float otherInvMass = otherRb.isStatic ? 0.f : otherRb.invMass;
     updateVelocities(
         rb.velocity, rb.invMass,
         otherRb.velocity, otherInvMass,
         hit.normal, std::min(rb.bounciness, otherRb.bounciness)
     );
-    if (otherRb.isKinematic)
+    if (otherRb.isStatic)
         otherRb.velocity = glm::vec3(0);
 
     tf.move(movement * hit.timeOfImpact + hit.depenetrationOffset);

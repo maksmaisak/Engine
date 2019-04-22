@@ -39,7 +39,7 @@ void PhysicsSystem::update(float dt) {
     for (Entity entity : entities) {
 
         auto& rb = m_registry->get<Rigidbody>(entity);
-        if (rb.isKinematic)
+        if (rb.isStatic)
             continue;
 
         auto& tf = m_registry->get<Transform>(entity);
