@@ -47,8 +47,8 @@ void PhysicsSystemOctree::update(float dt) {
         if (!rb.collider)
             continue;
 
-//        if (rb.isStatic && m_previousBounds.contains(entity))
-//            continue;
+        if (rb.isStatic && m_previousBounds.contains(entity))
+            continue;
 
         const auto& tf = m_registry->get<Transform>(entity);
         rb.collider->updateTransform(tf.getWorldTransform());
