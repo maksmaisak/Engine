@@ -92,8 +92,10 @@ void PhysicsSystemFlatGrid::update(float dt) {
 
             bool didCollide;
             std::tie(didCollide, timeToMove) = move(entity, tf, rb, timeToMove);
-            if (didCollide)
+            if (didCollide) {
+                updateGridCells(entity, rb, tf);
                 continue;
+            }
 
             break;
         }

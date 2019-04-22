@@ -50,8 +50,8 @@ int main() {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
 
-        engine->addSystem<en::PhysicsStressTestingSystem>(10s);
-        //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
+        //engine->addSystem<en::PhysicsStressTestingSystem>(10s);
+        engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemQuadtree>().setGravity({0, -9.8, 0});
@@ -70,7 +70,7 @@ int main() {
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{20, 0, glm::vec3(20.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{500, 1000, glm::vec3(50.f)});
-    //engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
+    engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 
