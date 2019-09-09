@@ -30,6 +30,10 @@ namespace en {
     class DebugHud;
 	struct UIRect;
 
+	/// Renders (in this order):
+	/// * Entities with both a Transform and a RenderInfo.
+	/// * Skybox
+	/// * Entities with both a Transform and a UIRect.
     class RenderSystem : public System, Receiver<SceneManager::OnSceneClosed, sf::Event> {
 
     public:
@@ -52,27 +56,32 @@ namespace en {
         void updateDepthMapsDirectionalLights(const std::vector<Entity>& directionalLights);
         void updateDepthMapsPositionalLights (const std::vector<Entity>& pointLights);
         void updateShadowCastersBounds();
-        utils::Bounds getCameraFrustrumBounds();
+        utils::Bounds getCameraFrustumBounds();
 
         void renderUIRect(Entity entity, UIRect& rect);
         glm::vec2 getWindowSize();
         float getUIScaleFactor();
 
+        // Shadowmapping
         DepthMaps m_depthMaps;
         std::shared_ptr<ShaderProgram> m_directionalDepthShader;
         std::shared_ptr<ShaderProgram> m_positionalDepthShader;
         utils::Bounds m_shadowReceiversBounds;
 
-        bool m_enableStaticBatching = true;
+        // Static batching
+        bool m_enableStaticBatching;
         std::unordered_map<std::shared_ptr<Material>, Mesh> m_batches;
-        
+
+        // Skybox
         SkyboxRenderer m_skyboxRenderer;
         std::shared_ptr<Texture> m_defaultSkybox;
 
+        // UI rendering
         VertexRenderer m_vertexRenderer;
         glm::vec2 m_referenceResolution;
 
-        bool m_enableDebugOutput = false;
+        // Debug
+        bool m_enableDebugOutput;
         std::unique_ptr<DebugHud> m_debugHud;
     };
 }

@@ -207,7 +207,7 @@ namespace en {
     template<typename T>
     inline void Material::setUniformValue(const std::string& name, const T& value) {
 
-        auto it = m_uniforms.find(name);
+        const auto it = m_uniforms.find(name);
         if (it == m_uniforms.end()) {
             throw utils::Exception("No such uniform: " + name);
         }
@@ -225,7 +225,7 @@ namespace en {
     template<typename T>
     const T& Material::getUniformValue(const std::string& name) {
 
-        auto it = m_uniforms.find(name);
+        const auto it = m_uniforms.find(name);
         if (it == m_uniforms.end()) {
             throw utils::Exception("No such uniform: " + name);
         }

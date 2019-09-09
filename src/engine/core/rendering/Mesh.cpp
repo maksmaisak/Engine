@@ -251,17 +251,14 @@ void Mesh::generateTangentsAndBitangents() {
 
 void Mesh::add(const Mesh& mesh, const glm::mat4& transform) {
 
-	std::transform(mesh.m_indices.begin(), mesh.m_indices.end(), std::back_inserter(m_indices), [offset = static_cast<unsigned int>(m_vertices.size())](unsigned int i){
-		return offset + i;
-	});
+    const auto transformIndex = [offset = static_cast<unsigned int>(m_vertices.size())](unsigned int i) {return offset + i;};
+	std::transform(mesh.m_indices.begin(), mesh.m_indices.end(), std::back_inserter(m_indices), transformIndex);
 
-	auto transformPoint3D  = [&transform](const glm::vec3& position) {return transform * glm::vec4(position, 1.f);};
+	const auto transformPoint3D = [&transform](const glm::vec3& position) {return transform * glm::vec4(position, 1.f);};
 	std::transform(mesh.m_vertices.begin(), mesh.m_vertices.end(), std::back_inserter(m_vertices), transformPoint3D);
 	std::copy(mesh.m_uvs.begin(), mesh.m_uvs.end(), std::back_inserter(m_uvs));
 
-	auto transformNormal = [matrix = glm::mat3(glm::transpose(glm::inverse(transform)))](const glm::vec3& normal) {
-		return matrix * normal;
-	};
+	const auto transformNormal = [matrix = glm::mat3(glm::transpose(glm::inverse(transform)))](const glm::vec3& normal) {return matrix * normal;};
 	std::transform(mesh.m_normals   .begin(), mesh.m_normals   .end(), std::back_inserter(m_normals   ), transformNormal);
 	std::transform(mesh.m_tangents  .begin(), mesh.m_tangents  .end(), std::back_inserter(m_tangents  ), transformNormal);
 	std::transform(mesh.m_bitangents.begin(), mesh.m_bitangents.end(), std::back_inserter(m_bitangents), transformNormal);

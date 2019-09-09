@@ -28,12 +28,12 @@ using namespace en;
 
 namespace {
 
-    void checkRenderingError(const Actor& actor) {
+    inline void checkRenderingError(const Actor& actor) {
 
         if (glCheckError() == GL_NO_ERROR)
             return;
 
-        auto* namePtr = actor.tryGet<en::Name>();
+        const en::Name* const namePtr = actor.tryGet<en::Name>();
         std::string name = namePtr ? namePtr->value : "unnamed";
         std::cerr << "Error while rendering " << name << std::endl;
     }
@@ -105,7 +105,11 @@ RenderSystem::RenderSystem() :
     m_directionalDepthShader(Resources<ShaderProgram>::get("depthDirectional")),
     m_positionalDepthShader (Resources<ShaderProgram>::get("depthPositional")),
     m_depthMaps(4, {1024, 1024}, 10, {64, 64}),
-    m_vertexRenderer(4096)
+    m_vertexRenderer(4096),
+    m_referenceResolution(1920, 1080),
+    m_enableStaticBatching(true),
+    m_enableDebugOutput(false),
+    m_shadowReceiversBounds()
 {}
 
 void RenderSystem::start() {
@@ -140,9 +144,9 @@ void RenderSystem::start() {
         lua_getglobal(lua, "Config");
         auto popConfig = lua::PopperOnDestruct(lua);
 
-        m_referenceResolution  = lua.tryGetField<glm::vec2>("referenceResolution").value_or(glm::vec2(1920, 1080));
-        m_enableStaticBatching = lua.tryGetField<bool>("enableStaticBatching").value_or(true);
-        m_enableDebugOutput    = lua.tryGetField<bool>("enableDebugOutput").value_or(false);
+        m_referenceResolution  = lua.tryGetField<glm::vec2>("referenceResolution").value_or(m_referenceResolution);
+        m_enableStaticBatching = lua.tryGetField<bool>("enableStaticBatching").value_or(m_enableStaticBatching);
+        m_enableDebugOutput    = lua.tryGetField<bool>("enableDebugOutput").value_or(m_enableDebugOutput);
         m_defaultSkybox        = getDefaultSkybox(lua);
     }
 
@@ -164,7 +168,7 @@ namespace {
 
         if (camera.isOrthographic) {
 
-            glm::vec2 halfSize = {
+            const glm::vec2 halfSize = {
                 camera.orthographicHalfSize * aspectRatio,
                 camera.orthographicHalfSize
             };
@@ -204,30 +208,48 @@ void RenderSystem::draw() {
         renderDebug();
 }
 
+void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
+
+    m_batches.clear();
+}
+
+void RenderSystem::receive(const sf::Event& event) {
+
+    if (event.type == sf::Event::EventType::Resized) {
+        // Make viewport match window size.
+        glViewport(0, 0, event.size.width, event.size.height);
+    }
+}
+
 void RenderSystem::updateBatches() {
+
+    const auto findBatchMesh = [&batches = m_batches](const std::shared_ptr<en::Material>& material) -> en::Mesh& {
+
+        const auto foundIt = batches.find(material);
+        if (foundIt != batches.end())
+            return foundIt->second;
+
+        const auto [it, didEmplace] = batches.emplace(std::make_pair(material, Mesh{}));
+        assert(didEmplace);
+        return it->second;
+    };
 
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (renderInfo.isInBatch || !renderInfo.isBatchingStatic)
+        if (renderInfo.isInBatch || !renderInfo.isBatchingStatic || !renderInfo.material || !renderInfo.model)
             continue;
 
-        if (!renderInfo.material || !renderInfo.model)
-            continue;
+        en::Mesh& batchMesh = findBatchMesh(renderInfo.material);
+        const glm::mat4& worldMatrix = m_registry->get<Transform>(e).getWorldTransform();
+        for (const en::Mesh& mesh : renderInfo.model->getMeshes())
+            batchMesh.add(mesh, worldMatrix);
 
-        auto it = m_batches.find(renderInfo.material);
-        if (it == m_batches.end()) {
-            std::tie(it, std::ignore) = m_batches.emplace(std::make_pair(renderInfo.material, Mesh{}));
-        }
-
-        const auto& worldMatrix = m_registry->get<Transform>(e).getWorldTransform();
-        for (auto& mesh : renderInfo.model->getMeshes())
-            it->second.add(mesh, worldMatrix);
         renderInfo.isInBatch = true;
     }
 
     for (auto& [material, batch] : m_batches) {
-        //batch.removeDestroyedEntities();
+
         batch.updateBuffers();
     }
 }
@@ -249,7 +271,7 @@ void RenderSystem::updateDepthMaps() {
     updateDepthMapsDirectionalLights(directionalLights);
     updateDepthMapsPositionalLights(pointLights);
 
-    auto size = m_engine->getWindow().getSize();
+    const auto size = m_engine->getWindow().getSize();
     glViewport(0, 0, size.x, size.y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glCheckError();
@@ -260,15 +282,15 @@ void RenderSystem::renderEntities() {
     Actor mainCamera = getMainCamera();
     if (!mainCamera)
         return;
-
     const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
     const glm::mat4 matrixProjection = getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>());
 
-    // Draw batches
+    // Render batches
     for (const auto& [material, mesh] : m_batches) {
         material->render(&mesh, m_engine, &m_depthMaps, glm::mat4(1), matrixView, matrixProjection);
     }
 
+    // Render entities
     int numBatched = 0;
     Material* previousMaterial = nullptr;
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
@@ -446,16 +468,15 @@ Actor RenderSystem::getMainCamera() {
     return m_engine->actor(entity);
 }
 
-utils::Bounds RenderSystem::getCameraFrustrumBounds() {
+utils::Bounds RenderSystem::getCameraFrustumBounds() {
 
     const Actor mainCamera = getMainCamera();
-    if (!mainCamera) // Even though this function shouldn't get called at all if there's no camera.
+    if (!mainCamera)
         return {glm::vec3(-100.f), glm::vec3(100.f)};
 
     const glm::mat4 viewToWorld = mainCamera.get<Transform>().getWorldTransform();
     const glm::mat4 clipToView  = glm::inverse(getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>(), MAX_SHADOW_DISTANCE));
     const glm::mat4 clipToWorld = viewToWorld * clipToView;
-
     const std::array<glm::vec4, 8> corners = {
         clipToWorld * glm::vec4(-1, -1, -1, 1),
         clipToWorld * glm::vec4(-1, -1,  1, 1),
@@ -481,7 +502,7 @@ utils::Bounds RenderSystem::getCameraFrustrumBounds() {
 
 void RenderSystem::updateShadowCastersBounds() {
 
-    const utils::Bounds constrainingBounds = getCameraFrustrumBounds();
+    const utils::Bounds constrainingBounds = getCameraFrustumBounds();
 
     utils::Bounds bounds = {
         glm::vec3(std::numeric_limits<float>::max()),
@@ -548,26 +569,30 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_directionalDepthShader->use();
-    int i = 0;
+
+    // Set uniforms
+    int numLights = 0;
     for (Entity e : directionalLights) {
 
-        if (i >= m_depthMaps.getMaxNumDirectionalLights())
+        if (numLights >= m_depthMaps.getMaxNumDirectionalLights())
             break;
 
         auto& light = m_registry->get<Light>(e);
-        auto& tf = m_registry->get<Transform>(e);
+        const auto& tf = m_registry->get<Transform>(e);
         light.matrixPV = getDirectionalLightspaceTransform(light, tf, m_shadowReceiversBounds);
-        m_directionalDepthShader->setUniformValue("matrixPV[" + std::to_string(i) + "]", light.matrixPV);
+        m_directionalDepthShader->setUniformValue("matrixPV[" + std::to_string(numLights) + "]", light.matrixPV);
 
-        i += 1;
+        numLights += 1;
     }
-    m_directionalDepthShader->setUniformValue("numLights", i);
-
+    m_directionalDepthShader->setUniformValue("numLights", numLights);
     m_directionalDepthShader->setUniformValue("matrixModel", glm::mat4(1));
+
+    // Render batches
     for (const auto& [material, mesh] : m_batches) {
         mesh.render(0, -1, -1);
     }
 
+    // Render entities
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         auto& renderInfo = m_registry->get<RenderInfo>(e);
@@ -581,6 +606,7 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
 
         checkRenderingError(m_engine->actor(e));
     }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -588,16 +614,16 @@ namespace {
 
     std::tuple<float, glm::vec3, std::array<glm::mat4, 6>> getPointLightUniforms(const DepthMaps& depthMaps, const Light& light, const Transform& lightTransform) {
 
-        float nearPlaneDistance = light.nearPlaneDistance;
-        float farPlaneDistance  = light.farPlaneDistance;
-        glm::mat4 lightProjectionMatrix = glm::perspective(
+        const float nearPlaneDistance = light.nearPlaneDistance;
+        const float farPlaneDistance  = light.farPlaneDistance;
+        const glm::mat4 lightProjectionMatrix = glm::perspective(
             glm::radians(90.f),
             (float)depthMaps.getCubemapResolution().x / (float)depthMaps.getCubemapResolution().y,
             nearPlaneDistance,
             farPlaneDistance
         );
 
-        glm::vec3 lightPosition = lightTransform.getWorldPosition();
+        const glm::vec3 lightPosition = lightTransform.getWorldPosition();
 
         return {
             farPlaneDistance,
@@ -627,13 +653,14 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
         glm::vec3 position;
     };
 
+    // Set uniforms, collect info on lightspheres.
     std::vector<Sphere> lightSpheres;
     int i = 0;
     for (Entity e : pointLights) {
 
-        auto& light = m_registry->get<Light>(e);
-        auto& tf = m_registry->get<Transform>(e);
-        auto [farPlaneDistance, lightPosition, pvMatrices] = getPointLightUniforms(m_depthMaps, light, tf);
+        const auto& light = m_registry->get<Light>(e);
+        const auto& tf = m_registry->get<Transform>(e);
+        const auto [farPlaneDistance, lightPosition, pvMatrices] = getPointLightUniforms(m_depthMaps, light, tf);
         lightSpheres.push_back({light.range, lightPosition});
 
         for (unsigned int face = 0; face < 6; ++face)
@@ -647,17 +674,14 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
     }
     m_positionalDepthShader->setUniformValue("numLights", i);
 
-//    m_positionalDepthShader->setUniformValue("matrixModel", glm::mat4(1));
-//    for (const auto& [material, mesh] : m_batches) {
-//        mesh.render(0);
-//    }
-
+    // Render entities
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
-        auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (/*renderInfo.isInBatch ||*/ !renderInfo.isEnabled || !renderInfo.model)
+        const auto& renderInfo = m_registry->get<RenderInfo>(e);
+        if (!renderInfo.isEnabled || !renderInfo.model)
             continue;
 
+        // If not in range of any lights, skip.
         const glm::mat4& modelTransform = m_registry->get<Transform>(e).getWorldTransform();
         if (std::none_of(lightSpheres.begin(), lightSpheres.end(), [pos = glm::vec3(modelTransform[3])](const Sphere& sphere){
             return glm::distance2(pos, sphere.position) < sphere.radius * sphere.radius;
@@ -667,11 +691,9 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
         m_positionalDepthShader->setUniformValue("matrixModel", modelTransform);
         for (const Mesh& mesh : renderInfo.model->getMeshes())
             mesh.render(0);
-        glCheckError();
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glCheckError();
 }
 
 glm::vec2 RenderSystem::getWindowSize() {
@@ -684,18 +706,4 @@ float RenderSystem::getUIScaleFactor() {
 
     const glm::vec2 scale = getWindowSize() / m_referenceResolution;
     return std::sqrt(scale.x * scale.y);
-}
-
-void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
-
-    m_batches.clear();
-}
-
-void RenderSystem::receive(const sf::Event& event) {
-
-    if (event.type != sf::Event::EventType::Resized)
-        return;
-
-    // Unconstrained match viewport scaling
-    glViewport(0, 0, event.size.width, event.size.height);
 }
