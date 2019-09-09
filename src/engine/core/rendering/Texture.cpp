@@ -76,7 +76,7 @@ Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internal
 
         for (GLuint i = 0; i < 6; ++i) {
             const sf::Image& image = images[i];
-            auto temp = image.getSize();
+            const auto temp = image.getSize();
             m_size = {temp.x, temp.y};
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
         }

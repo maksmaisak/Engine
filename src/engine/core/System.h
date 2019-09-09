@@ -13,9 +13,9 @@ namespace en {
 
     public:
         virtual ~System() = default;
-        virtual void start() {}
-        virtual void update(float dt) {}
-        virtual void draw() {}
+        virtual void start() {} // called once before the first update
+        virtual void update(float dt) {} // called every fixed timestep
+        virtual void draw() {} // called every frame
 
     protected:
         class Engine* m_engine = {};

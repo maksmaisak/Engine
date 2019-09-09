@@ -42,7 +42,7 @@ namespace en {
 		// ID of the OpenGL Texture object
 		GLuint m_id = 0;
 		Kind m_kind = Kind::None;
-		Size m_size;
+		Size m_size = {0, 0};
 	};
 }
 

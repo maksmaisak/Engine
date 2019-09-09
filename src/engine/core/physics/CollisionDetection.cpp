@@ -66,11 +66,14 @@ namespace {
 
         } else {
 
-            // If spherePosition is inside the box
-            const glm::vec3 fromCenter = glm::normalize(spherePosition - boxCenter);
-            const float distanceFromCenter = glm::length(fromCenter);
-            const glm::vec3 normal = fromCenter / (distanceFromCenter + glm::epsilon<float>());
-            return Hit{normal, 1.f, normal * (radius + (glm::dot(boxHalfSize, glm::abs(normal)) - distanceFromCenter))};
+            // If movedSpherePosition is inside the box
+            const glm::vec3 fromCenter  = movedSpherePosition - boxCenter;
+            const glm::vec3 penetration = (boxHalfSize + radius) - glm::abs(fromCenter);
+            const float* const minPenetrationPtr = std::min_element(penetration.data.data, penetration.data.data + 3);
+            const int axisIndex = minPenetrationPtr - penetration.data.data;
+            glm::vec3 normal {};
+            normal[axisIndex] = glm::sign(fromCenter[axisIndex]);
+            return Hit{normal, 1.f, normal * *minPenetrationPtr};
         }
     }
 
@@ -92,10 +95,13 @@ namespace {
         } else {
 
             // If spherePosition is inside the box
-            const glm::vec3 fromCenter = glm::normalize(aabbPosition - spherePosition);
-            const float distanceFromCenter = glm::length(fromCenter);
-            const glm::vec3 normal = fromCenter / (distanceFromCenter + glm::epsilon<float>());
-            return Hit{normal, 1.f, normal * (radius + (glm::dot(boxHalfSize, glm::abs(normal)) - distanceFromCenter))};
+            const glm::vec3 fromCenter  = aabbPosition - spherePosition;
+            const glm::vec3 penetration    = (boxHalfSize + radius) - glm::abs(fromCenter);
+            const float* minPenetrationPtr = std::min_element(penetration.data.data, penetration.data.data + 3);
+            const int axisIndex = minPenetrationPtr - penetration.data.data;
+            glm::vec3 normal {};
+            normal[axisIndex] = glm::sign(fromCenter[axisIndex]);
+            return Hit{normal, 1.f, normal * *minPenetrationPtr};
         }
     }
 

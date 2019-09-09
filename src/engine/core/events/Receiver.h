@@ -33,7 +33,7 @@ namespace en {
 
     private:
         inline static void broadcastInternal(const TMessage& info) {
-            for (Receiver<TMessage>* receiver : m_receivers) {
+            for (Receiver<TMessage>* const receiver : m_receivers) {
                 receiver->receive(info);
             }
         }

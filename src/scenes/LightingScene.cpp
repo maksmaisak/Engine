@@ -25,7 +25,6 @@ constexpr int NumRotatingLights = 2;
 void LightingScene::open() {
 
     m_renderSettings.ambientColor = glm::vec3(1.010478, 1.854524, 2.27060) * 0.5f;
-    //m_renderSettings.useSkybox = false;
 
     en::Engine& engine = getEngine();
 
@@ -112,15 +111,15 @@ void LightingScene::open() {
     sphere.add<en::Transform>().move({0, 0, 0});
     {
         auto model = en::Models::get(config::MODEL_PATH + "sphere.obj");
-        auto material = std::make_shared<en::Material>("pbr");
-        material->setUniformValue("albedoMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/albedo.png"));
-        material->setUniformValue("metallicSmoothnessMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/metallic_smoothness.psd", GL_RGBA));
-        material->setUniformValue("normalMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/rust/normal.png", GL_RGBA));
-        material->setUniformValue("aoMap", en::Textures::white());
-        material->setUniformValue("albedoColor"         , glm::vec4(1));
-        material->setUniformValue("metallicMultiplier"  , 1.f);
-        material->setUniformValue("smoothnessMultiplier", 1.f);
-        material->setUniformValue("aoMultiplier"        , 1.f);
+        auto material = std::make_shared<en::Material>("wobble");
+        material->setUniformValue("diffuseTexture", en::Textures::white());
+        material->setUniformValue("timeScale", 10.f);
+        material->setUniformValue("phaseOffsetPerUnitDistance", 10.f);
+        material->setUniformValue("wobbleMultiplierMin", 1.2f);
+        material->setUniformValue("wobbleMultiplierMax", 0.8f);
+        material->setUniformValue("transitionColor", glm::vec4(1.f, 1.f, 1.f, 0.7f));
+        material->setUniformValue("transitionWobbleFactorMin", -0.2f);
+        material->setUniformValue("transitionWobbleFactorMax",  0.2f);
         sphere.add<en::RenderInfo>(model, std::move(material));
     }
     camera.get<CameraOrbitBehavior>().setTarget(sphere);

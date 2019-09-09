@@ -73,7 +73,7 @@ void PhysicsTestBodyGenerator::setUpBounds() {
         en::Actor actor = engine.makeActor("Wall");
 
         actor.add<en::Transform>().move(center).scale(halfSize);
-        actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize)).isKinematic = true;
+        actor.add<en::Rigidbody>(std::make_unique<en::AABBCollider>(halfSize)).isStatic = true;
 
         if (isVisible)
             actor.add<en::RenderInfo>(model, material).isBatchingStatic = true;
@@ -81,17 +81,18 @@ void PhysicsTestBodyGenerator::setUpBounds() {
         return actor;
     };
 
-    const float halfThickness = 5.f;
+    const float halfThickness = 10.f;
     const glm::vec3 halfSizeExpanded = m_halfSize + halfThickness;
+    const glm::vec3 halfSizeExpanded2 = halfSizeExpanded + halfThickness;
 
-    make(center + glm::vec3(0, -halfSizeExpanded.y, 0), {halfSizeExpanded.x, halfThickness, halfSizeExpanded.z}, true );
-    make(center + glm::vec3(0, +halfSizeExpanded.y, 0), {halfSizeExpanded.x, halfThickness, halfSizeExpanded.z}, false);
+    make(center + glm::vec3(0, -halfSizeExpanded.y , 0), {m_halfSize.x, halfThickness, m_halfSize.z}, true );
+    make(center + glm::vec3(0, +halfSizeExpanded.y , 0), {m_halfSize.x, halfThickness, m_halfSize.z}, false);
 
-    make(center + glm::vec3(-halfSizeExpanded.x, 0, 0), {halfThickness, halfSizeExpanded.y, halfSizeExpanded.z}, false);
-    make(center + glm::vec3(+halfSizeExpanded.x, 0, 0), {halfThickness, halfSizeExpanded.y, halfSizeExpanded.z}, false);
+    make(center + glm::vec3(-halfSizeExpanded.x, 0, 0), {halfThickness, halfSizeExpanded2.y, m_halfSize.z}, false);
+    make(center + glm::vec3(+halfSizeExpanded.x, 0, 0), {halfThickness, halfSizeExpanded2.y, m_halfSize.z}, false);
 
-    make(center + glm::vec3(0, 0, -halfSizeExpanded.z), {halfSizeExpanded.x, halfSizeExpanded.y, halfThickness}, false);
-    make(center + glm::vec3(0, 0, +halfSizeExpanded.z), {halfSizeExpanded.x, halfSizeExpanded.y, halfThickness}, false);
+    make(center + glm::vec3(0, 0, -halfSizeExpanded.z), {halfSizeExpanded2.x, halfSizeExpanded2.y, halfThickness}, false);
+    make(center + glm::vec3(0, 0, +halfSizeExpanded.z), {halfSizeExpanded2.x, halfSizeExpanded2.y, halfThickness}, false);
 }
 
 Actor PhysicsTestBodyGenerator::makeSphere(const glm::vec3& position, float radius, bool isStatic) {
@@ -108,8 +109,8 @@ Actor PhysicsTestBodyGenerator::makeSphere(const glm::vec3& position, float radi
 
     auto& rb = actor.add<Rigidbody>(std::make_unique<SphereCollider>(radius));
     rb.invMass = 1.f / (4.f / 3.f * glm::pi<float>() * radius * radius * radius);
-    rb.isKinematic = isStatic;
-    if (!rb.isKinematic) {
+    rb.isStatic = isStatic;
+    if (!rb.isStatic) {
         std::uniform_real_distribution<float> d(-1.f, 1.f);
         rb.velocity = {d(m_randomEngine), d(m_randomEngine), d(m_randomEngine)};
     }
@@ -132,8 +133,8 @@ Actor PhysicsTestBodyGenerator::makeAABB(const glm::vec3& position, const glm::v
 
     auto& rb = actor.add<Rigidbody>(std::make_unique<AABBCollider>(halfSize));
     rb.invMass = 1.f / (8.f * halfSize.x * halfSize.y * halfSize.z);
-    rb.isKinematic = isStatic;
-    if (!rb.isKinematic) {
+    rb.isStatic = isStatic;
+    if (!rb.isStatic) {
         std::uniform_real_distribution<float> d(-10.f, 10.f);
         rb.velocity = {d(m_randomEngine), d(m_randomEngine), d(m_randomEngine)};
     }
@@ -160,8 +161,8 @@ Actor PhysicsTestBodyGenerator::makeCube(const glm::vec3& position, const glm::v
 
     auto& rb = actor.add<Rigidbody>(std::make_unique<OBBCollider>(halfSize));
     rb.invMass = 1.f / (8.f * halfSize.x * halfSize.y * halfSize.z);
-    rb.isKinematic = isStatic;
-    if (!rb.isKinematic) {
+    rb.isStatic = isStatic;
+    if (!rb.isStatic) {
         std::uniform_real_distribution<float> d(-10.f, 10.f);
         rb.velocity = {d(m_randomEngine), d(m_randomEngine), d(m_randomEngine)};
     }

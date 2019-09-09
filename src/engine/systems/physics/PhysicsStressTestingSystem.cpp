@@ -13,6 +13,7 @@
 #include "PhysicsSystem.h"
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
 #include "PhysicsSystemFlatGrid.h"
+#include "PhysicsSystemQuadtree.h"
 #include "PhysicsSystemOctree.h"
 #include "GameTime.h"
 
@@ -29,6 +30,7 @@ namespace {
         {"No optimizations"          , [](Engine& engine){return engine.makeSystem<PhysicsSystem>();}},
         {"Bounding sphere pre-checks", [](Engine& engine){return engine.makeSystem<PhysicsSystemBoundingSphereNarrowphase>();}},
         {"Flat grid"                 , [](Engine& engine){return engine.makeSystem<PhysicsSystemFlatGrid>();}},
+        {"Quadtree"                  , [](Engine& engine){return engine.makeSystem<PhysicsSystemQuadtree>();}},
         {"Octree"                    , [](Engine& engine){return engine.makeSystem<PhysicsSystemOctree>();}}
     };
 

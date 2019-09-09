@@ -64,7 +64,7 @@ namespace {
                 tf.setLocalScale({radius, radius, radius});
 
                 auto& rb = actor.add<en::Rigidbody>(std::make_unique<en::SphereCollider>(radius));
-                rb.isKinematic = true;
+                rb.isStatic = true;
                 //rb.radius = radius;
 
                 actor.add<en::RenderInfo>(model, material).isBatchingStatic = true;

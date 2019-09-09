@@ -43,11 +43,9 @@ namespace en {
         template<typename TLoader = ResourceLoader<TResource>, typename... Args>
         inline static std::shared_ptr<TResource> get(const std::string& key, Args&&... args) {
 
-            auto it = m_resources.find(key);
-            if (it != m_resources.end())
-                return it->second;
-
-            bool didAdd = false;
+            const auto foundIterator = m_resources.find(key);
+            if (foundIterator != m_resources.end())
+                return foundIterator->second;
 
             std::shared_ptr<TResource> resource;
 
@@ -67,7 +65,7 @@ namespace en {
                     resource = std::make_shared<TResource>(key, std::forward<Args>(args)...);
             }
 
-            std::tie(it, didAdd) = m_resources.emplace(key, std::move(resource));
+            const auto [it, didAdd] = m_resources.emplace(key, std::move(resource));
             assert(didAdd);
             return it->second;
         }

@@ -19,7 +19,7 @@ namespace en {
     template<typename TResource, typename SFINAEDummy = void>
     struct ResourceLoader : NoLoader {};
 
-    // If TResource::load(const std::string&) exists
+    // If TResource::load(const std::string&) exists and returns either a std::shared_ptr<TResource> or a TResource*
     template<typename TResource>
     struct ResourceLoader<TResource, std::enable_if_t<std::is_invocable_v<decltype(&TResource::load), const std::string&>>> {
 
@@ -34,13 +34,14 @@ namespace en {
         }
     };
 
+    // An example for the sf::Font type
     template<>
     struct ResourceLoader<sf::Font> {
 
         inline static std::shared_ptr<sf::Font> load(const std::string& filename) {
 
-            auto fontPtr = std::make_shared<sf::Font>();
-            bool didLoadFont = fontPtr->loadFromFile(filename);
+            const auto fontPtr = std::make_shared<sf::Font>();
+            const bool didLoadFont = fontPtr->loadFromFile(filename);
             return didLoadFont ? fontPtr : nullptr;
         }
     };

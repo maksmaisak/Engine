@@ -43,7 +43,8 @@ const glm::mat4& Transform::getWorldTransform() const {
 Transform& Transform::setLocalPosition(const glm::vec3& localPosition) {
 
     m_position = localPosition;
-    markDirty();
+    m_matrixLocal[3] = {m_position, 1.f};
+    markWorldDirty();
     return *this;
 }
 
@@ -112,7 +113,8 @@ void Transform::removeChild(Entity child) {
 Transform& Transform::move(const glm::vec3& offset) {
 
     m_position += offset;
-    markDirty();
+    m_matrixLocal[3] = {m_position, 1.f};
+    markWorldDirty();
     return *this;
 }
 
@@ -137,7 +139,6 @@ Transform& Transform::scale(const glm::vec3& scale) {
 }
 
 glm::vec3 Transform::getWorldPosition() const {
-    auto x = getWorldTransform()[3];
 
     return glm::vec3(getWorldTransform()[3]);
 }
