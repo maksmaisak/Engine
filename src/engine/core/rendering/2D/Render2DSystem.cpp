@@ -13,16 +13,19 @@
 #include "Camera.h"
 #include "Transform.h"
 #include "Bounds.h"
+#include "DebugVolumeRenderer.h"
+#include "KeyboardHelper.h"
 
 using namespace en;
 
-static constexpr uint32_t MapDataTextureResolution = 40;
+static constexpr uint32_t MapDataTextureResolution = 256;
 
 Render2DSystem::Render2DSystem() :
     m_quad(Mesh::makeQuad()),
     m_mapData(MapDataTextureResolution * MapDataTextureResolution),
     m_tileset(Textures::get(config::TEXTURE_PATH + "TileSet.png")),
-    m_tileLayerMaterial(std::make_unique<Material>("tileLayer"))
+    m_tileLayerMaterial(std::make_unique<Material>("tileLayer")),
+    m_debugVolumeRenderer(std::make_unique<DebugVolumeRenderer>())
 {
     Texture::CreationSettings settings;
     settings.internalFormat = GL_RGBA;
@@ -72,11 +75,11 @@ void Render2DSystem::draw() {
     const glm::vec2 orthographicHalfSize = camera.getOrthographicExtents(*m_engine);
 
     const glm::vec2 viewBottomLeftCornerPosition = cameraCenter - orthographicHalfSize;
-    const glm::vec<2, int64_t> visibleTileIndicesMin = glm::floor(viewBottomLeftCornerPosition) - 1.f;
+    const glm::vec<2, int64_t> visibleTileIndicesMin = glm::floor(viewBottomLeftCornerPosition);
     const glm::vec<2, int64_t> visibleTileIndicesMax = glm::ceil(cameraCenter + orthographicHalfSize);
     const glm::vec<2, int64_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
 
-    const glm::mat4 matrixView = glm::inverse(cameraTransform.getWorldTransform());//glm::inverse(glm::mat3(cameraTransform.getWorldTransform()));
+    const glm::mat4 matrixView = (utils::KeyboardHelper::isHeld("o") ? glm::scale(glm::vec3(0.6f)) : glm::mat4(1.f)) * glm::inverse(cameraTransform.getWorldTransform());
     const glm::mat4 matrixProjection = cameraActor.get<Camera>().getCameraProjectionMatrix(*m_engine);
 
     for (Entity e : m_registry->with<TileLayer>()) {
@@ -92,11 +95,9 @@ void Render2DSystem::draw() {
                         visibleTileIndicesMin.y + y
                     };
 
-                    m_mapData[x + y * MapDataTextureResolution] =
-                        (((uint32_t)glm::abs(indices.x)) << 24) | (((uint32_t)glm::abs(indices.y)) << 24 >> 8);
-                        //((uint32_t)glm::floor(255.f * (float)indices.x / MapDataTextureResolution) << 24) |
-                        //((uint32_t)glm::floor(255.f * (float)indices.y / MapDataTextureResolution) << 24 >> 8);
-                        //0x03030000; //tileLayer.getTileInfoAt({x, y});
+                    const uint32_t uintX = indices.x >= 0 ? indices.x % 11 : glm::abs(11 + indices.x % 11);
+                    const uint32_t uintY = indices.y >= 0 ? indices.y % 6  : glm::abs(6  + indices.y % 6 );
+                    m_mapData[x + y * MapDataTextureResolution] = (uintX << 24) | (uintY << 24 >> 8);
                 }
             }
         }
@@ -106,6 +107,12 @@ void Render2DSystem::draw() {
 
         m_tileLayerMaterial->render(&m_quad, m_engine, nullptr, matrixModel, matrixView, matrixProjection);
     }
+
+    m_debugVolumeRenderer->addAABB(glm::vec3(cameraCenter, 0.f), glm::vec3(orthographicHalfSize, 1.f));
+    m_debugVolumeRenderer->addAABBMinMax(glm::vec3(visibleTileIndicesMin, -1.f), glm::vec3(visibleTileIndicesMax,  1.f));
+
+    m_debugVolumeRenderer->addAABB(glm::vec3(0.5f), glm::vec3(0.5f), glm::vec4(1.f));
+    m_debugVolumeRenderer->render(matrixProjection * matrixView);
 
     glEnable(GL_DEPTH_TEST);
 }

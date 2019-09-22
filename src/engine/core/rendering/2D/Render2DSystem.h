@@ -8,6 +8,7 @@
 #include <vector>
 #include "System.h"
 #include "Mesh.h"
+#include "DebugVolumeRenderer.h"
 
 namespace en {
 
@@ -27,6 +28,8 @@ namespace en {
 
         std::vector<uint32_t> m_mapData;
         std::shared_ptr<class Texture> m_mapDataTexture;
+
+        std::unique_ptr<DebugVolumeRenderer> m_debugVolumeRenderer;
     };
 }
 

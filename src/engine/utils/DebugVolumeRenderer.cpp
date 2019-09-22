@@ -77,6 +77,12 @@ void DebugVolumeRenderer::addAABB(const glm::vec3& center, const glm::vec3& half
     }
 }
 
+void DebugVolumeRenderer::addAABBMinMax(const glm::vec3& min, const glm::vec3& max, const glm::vec4& color) {
+
+    const glm::vec3 center = (min + max) * 0.5f;
+    addAABB(center, max - center, color);
+}
+
 void DebugVolumeRenderer::addAABB(const glm::vec3& center, const glm::vec3& halfSize, std::size_t numEntities) {
 
     addAABB(center, halfSize, getColorFromNumEntities(numEntities));

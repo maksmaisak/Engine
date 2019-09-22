@@ -12,8 +12,8 @@ out vec4 fragmentColor;
 
 vec2 getTileAtlasUV() {
 
-
-    vec2 numTilesInMapDataTexture = vec2(40);
+    // TODO make these uniforms
+    vec2 numTilesInMapDataTexture = vec2(256);
     vec2 invNumTilesInMapDataTexture = 1.f / numTilesInMapDataTexture;
     vec2 numTilesInAtlas = vec2(11, 6);
     vec2 invNumTilesInAtlas = 1.f / numTilesInAtlas;
