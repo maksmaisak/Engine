@@ -10,7 +10,7 @@
 
 namespace en {
 
-    /// Owns the shadowmaps.
+    /// Owns depth maps from light sources, used for shadowmapping.
     class DepthMaps final {
 
     public:

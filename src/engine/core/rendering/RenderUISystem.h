@@ -17,13 +17,16 @@ namespace en {
     class RenderUISystem : public System {
 
     public:
-        RenderUISystem(RenderingSharedState& renderingSharedState);
+        explicit RenderUISystem(RenderingSharedState& renderingSharedState);
         void start() override;
         void draw() override;
 
     private:
 
-        void renderUIRect(Entity entity, class UIRect& rect);
+        void renderUIRect(Entity entity, const class UIRect& rect);
+        void renderSprite(const class Sprite& sprite, const class Transform& transform, const class UIRect& rect, const glm::mat4& matrixProjection);
+        void renderText(const class Text& text, const class Transform& transform, const class UIRect& rect, const glm::mat4& matrixProjection);
+
         float getUIScaleFactor();
         glm::vec2 getWindowSize();
 

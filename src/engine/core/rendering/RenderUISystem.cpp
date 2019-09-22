@@ -44,12 +44,10 @@ RenderUISystem::RenderUISystem(RenderingSharedState& renderingSharedState) :
 
 void RenderUISystem::start() {
 
-    {
-        auto& lua = m_engine->getLuaState();
-        lua_getglobal(lua, "Game");
-        auto popGame = lua::PopperOnDestruct(lua);
-        lua.setField("getUIScaleFactor", [this](){return getUIScaleFactor();});
-    }
+    LuaState& lua = m_engine->getLuaState();
+    lua_getglobal(lua, "Game");
+    auto popGame = lua::PopperOnDestruct(lua);
+    lua.setField("getUIScaleFactor", [this](){return getUIScaleFactor();});
 }
 
 void RenderUISystem::draw() {
@@ -67,66 +65,35 @@ void RenderUISystem::draw() {
     glEnable(GL_DEPTH_TEST);
 }
 
-void RenderUISystem::renderUIRect(Entity e, UIRect& rect) {
+void RenderUISystem::renderUIRect(Entity e, const UIRect& rect) {
 
-    if (!rect.isEnabled)
+    if (!rect.isEnabled) {
         return;
+    }
 
-    auto* tf = m_registry->tryGet<Transform>(e);
-    if (!tf)
+    const auto* transform = m_registry->tryGet<Transform>(e);
+    if (!transform) {
         return;
+    }
 
     const glm::vec2 windowSize = getWindowSize();
     const glm::mat4 matrixProjection = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y);
 
     auto* sprite = m_registry->tryGet<Sprite>(e);
     if (sprite && sprite->isEnabled && sprite->material) {
-
-        const glm::mat4& transform = tf->getWorldTransform();
-        const glm::vec2 localMin = -rect.computedSize * rect.pivot;
-        const glm::vec2 localMax =  rect.computedSize * (1.f - rect.pivot);
-        const glm::vec3 corners[] = {
-            transform * glm::vec4(localMin              , 0, 1),
-            transform * glm::vec4(localMin.x, localMax.y, 0, 1),
-            transform * glm::vec4(localMax.x, localMin.y, 0, 1),
-            transform * glm::vec4(localMax              , 0, 1)
-        };
-        const std::vector<Vertex> vertices = {
-            {corners[1], {0, 1}},
-            {corners[0], {0, 0}},
-            {corners[2], {1, 0}},
-
-            {corners[1], {0, 1}},
-            {corners[2], {1, 0}},
-            {corners[3], {1, 1}},
-        };
-
-        sprite->material->use(m_engine, &m_renderingSharedState->depthMaps, glm::mat4(1), glm::mat4(1), matrixProjection);
-        m_renderingSharedState->vertexRenderer.renderVertices(vertices);
+        renderSprite(*sprite, *transform, rect, matrixProjection);
     }
 
     auto* text = m_registry->tryGet<Text>(e);
     if (text && text->getMaterial()) {
-
-        const std::vector<Vertex>& vertices = text->getVertices();
-
-        const glm::vec2& alignment = text->getAlignment();
-        const glm::vec2 boundsAlignPoint = glm::lerp(text->getBoundsMin(), text->getBoundsMax(), alignment);
-        const glm::vec2 offsetInRect = rect.computedSize * (alignment - rect.pivot);
-
-        // Scale the bounds by the scale factor and bring them to the rect's position.
-        glm::mat4 matrix = glm::translate(glm::vec3(-boundsAlignPoint, 0.f));
-        matrix = glm::scale(glm::vec3(getUIScaleFactor())) * matrix;
-        matrix = glm::translate(glm::vec3(offsetInRect, 0.f)) * matrix;
-        matrix = tf->getWorldTransform() * matrix;
-
-        text->getMaterial()->use(m_engine, &m_renderingSharedState->depthMaps, glm::mat4(1), glm::mat4(1), matrixProjection * matrix);
-        m_renderingSharedState->vertexRenderer.renderVertices(vertices);
+        renderText(*text, *transform, rect, matrixProjection);
     }
 
-    for (Entity child : tf->getChildren())
-        if (auto* childRect = m_registry->tryGet<UIRect>(child))
+    for (Entity child : transform->getChildren()) {
+        if (auto* childRect = m_registry->tryGet<UIRect>(child)) {
             renderUIRect(child, *childRect);
+        }
+    }
 }
 
 float RenderUISystem::getUIScaleFactor() {
@@ -140,3 +107,51 @@ glm::vec2 RenderUISystem::getWindowSize() {
     const sf::Vector2u windowSizeSf = m_engine->getWindow().getSize();
     return glm::vec2(windowSizeSf.x, windowSizeSf.y);
 }
+
+void RenderUISystem::renderSprite(const Sprite& sprite, const Transform& transform, const UIRect& rect, const glm::mat4& matrixProjection) {
+
+    assert(sprite.isEnabled && sprite.material);
+
+    const glm::mat4& matrixModel = transform.getWorldTransform();
+    const glm::vec2 localMin = -rect.computedSize * rect.pivot;
+    const glm::vec2 localMax =  rect.computedSize * (1.f - rect.pivot);
+    const glm::vec3 corners[] = {
+        matrixModel * glm::vec4(localMin              , 0, 1),
+        matrixModel * glm::vec4(localMin.x, localMax.y, 0, 1),
+        matrixModel * glm::vec4(localMax.x, localMin.y, 0, 1),
+        matrixModel * glm::vec4(localMax              , 0, 1)
+    };
+    const std::vector<Vertex> vertices = {
+        {corners[1], {0, 1}},
+        {corners[0], {0, 0}},
+        {corners[2], {1, 0}},
+
+        {corners[1], {0, 1}},
+        {corners[2], {1, 0}},
+        {corners[3], {1, 1}},
+    };
+
+    sprite.material->use(m_engine, &m_renderingSharedState->depthMaps, glm::mat4(1), glm::mat4(1), matrixProjection);
+    m_renderingSharedState->vertexRenderer.renderVertices(vertices);
+}
+
+void RenderUISystem::renderText(const Text& text, const Transform& transform, const UIRect& rect, const glm::mat4& matrixProjection) {
+
+    assert(text.getMaterial());
+
+    const std::vector<Vertex>& vertices = text.getVertices();
+
+    const glm::vec2& alignment = text.getAlignment();
+    const glm::vec2 boundsAlignPoint = glm::lerp(text.getBoundsMin(), text.getBoundsMax(), alignment);
+    const glm::vec2 offsetInRect = rect.computedSize * (alignment - rect.pivot);
+
+    // Scale the bounds by the scale factor and bring them to the rect's position.
+    glm::mat4 matrix = glm::translate(glm::vec3(-boundsAlignPoint, 0.f));
+    matrix = glm::scale(glm::vec3(getUIScaleFactor())) * matrix;
+    matrix = glm::translate(glm::vec3(offsetInRect, 0.f)) * matrix;
+    matrix = transform.getWorldTransform() * matrix;
+
+    text.getMaterial()->use(m_engine, &m_renderingSharedState->depthMaps, glm::mat4(1), glm::mat4(1), matrixProjection * matrix);
+    m_renderingSharedState->vertexRenderer.renderVertices(vertices);
+}
+

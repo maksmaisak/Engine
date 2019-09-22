@@ -30,11 +30,12 @@ namespace {
 
     inline void checkRenderingError(const Actor& actor) {
 
-        if (glCheckError() == GL_NO_ERROR)
+        if (glCheckError() == GL_NO_ERROR) {
             return;
+        }
 
         const en::Name* const namePtr = actor.tryGet<en::Name>();
-        std::string name = namePtr ? namePtr->value : "unnamed";
+        const std::string name = namePtr ? namePtr->value : "unnamed";
         std::cerr << "Error while rendering " << name << std::endl;
     }
 
@@ -77,11 +78,12 @@ RenderSystem::RenderSystem() :
 
 void RenderSystem::start() {
 
+    getConfigFromLua();
+
     setOpenGLSettings();
 
     m_debugHud = std::make_unique<DebugHud>(*m_engine, m_renderingSharedState.vertexRenderer);
 
-    getConfigFromLua();
     addSystem<RenderSkyboxSystem>();
     addSystem<Render2DSystem>();
     addSystem<RenderUISystem>(m_renderingSharedState);
@@ -165,8 +167,9 @@ void RenderSystem::updateBatches() {
     const auto findBatchMesh = [&batches = m_batches](const std::shared_ptr<en::Material>& material) -> en::Mesh& {
 
         const auto foundIt = batches.find(material);
-        if (foundIt != batches.end())
+        if (foundIt != batches.end()) {
             return foundIt->second;
+        }
 
         const auto [it, didEmplace] = batches.emplace(std::make_pair(material, Mesh{}));
         assert(didEmplace);
@@ -176,19 +179,20 @@ void RenderSystem::updateBatches() {
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (renderInfo.isInBatch || !renderInfo.isBatchingStatic || !renderInfo.material || !renderInfo.model)
+        if (renderInfo.isInBatch || !renderInfo.isBatchingStatic || !renderInfo.material || !renderInfo.model) {
             continue;
+        }
 
         en::Mesh& batchMesh = findBatchMesh(renderInfo.material);
         const glm::mat4& worldMatrix = m_registry->get<Transform>(e).getWorldTransform();
-        for (const en::Mesh& mesh : renderInfo.model->getMeshes())
+        for (const en::Mesh& mesh : renderInfo.model->getMeshes()) {
             batchMesh.add(mesh, worldMatrix);
+        }
 
         renderInfo.isInBatch = true;
     }
 
     for (auto& [material, batch] : m_batches) {
-
         batch.updateBuffers();
     }
 }
@@ -197,19 +201,18 @@ void RenderSystem::updateDepthMaps() {
 
     std::vector<Entity> directionalLights;
     std::vector<Entity> pointLights;
-
     for (Entity lightEntity : m_registry->with<Transform, Light>()) {
-
-        auto& light = m_registry->get<Light>(lightEntity);
-        if (light.kind == Light::Kind::DIRECTIONAL)
+        if (m_registry->get<Light>(lightEntity).kind == Light::Kind::DIRECTIONAL) {
             directionalLights.push_back(lightEntity);
-        else
+        } else {
             pointLights.push_back(lightEntity);
+        }
     }
 
     updateDepthMapsDirectionalLights(directionalLights);
     updateDepthMapsPositionalLights(pointLights);
 
+    // Reset viewport back to the window size.
     const auto size = m_engine->getWindow().getSize();
     glViewport(0, 0, size.x, size.y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -221,8 +224,9 @@ void RenderSystem::renderEntities() {
     DepthMaps& depthMaps = m_renderingSharedState.depthMaps;
 
     Actor mainCamera = getMainCamera();
-    if (!mainCamera)
+    if (!mainCamera) {
         return;
+    }
 
     const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
     const glm::mat4 matrixProjection = mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine);
@@ -233,34 +237,37 @@ void RenderSystem::renderEntities() {
     }
 
     // Render entities
-    int numBatched = 0;
-    Material* previousMaterial = nullptr;
+    int numSavedByBatching = 0;
+    const Material* previousMaterial = nullptr;
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         const auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (!renderInfo.isEnabled || !renderInfo.material || !renderInfo.model)
+        if (!renderInfo.isEnabled || !renderInfo.material || !renderInfo.model) {
             continue;
+        }
 
         if (renderInfo.isInBatch) {
-            numBatched += renderInfo.model->getMeshes().size();
+            numSavedByBatching += renderInfo.model->getMeshes().size();
             continue;
         }
 
         const glm::mat4& matrixModel = m_registry->get<Transform>(e).getWorldTransform();
-        if (renderInfo.material.get() != previousMaterial)
+        if (renderInfo.material.get() != previousMaterial) {
             renderInfo.material->use(m_engine, &depthMaps, matrixModel, matrixView, matrixProjection);
-        else
+        } else {
             renderInfo.material->updateModelMatrix(matrixModel);
+        }
 
-        for (const Mesh& mesh : renderInfo.model->getMeshes())
+        for (const Mesh& mesh : renderInfo.model->getMeshes()) {
             renderInfo.material->setAttributesAndDraw(&mesh);
+        }
 
         previousMaterial = renderInfo.material.get();
 
         checkRenderingError(m_engine->actor(e));
     }
 
-    //std::cout << "Draw calls saved by batching: " << numBatched - m_batches.size() << '\n';
+    //std::cout << "Draw calls saved by batching: " << numSavedByBatching - m_batches.size() << '\n';
 }
 
 void RenderSystem::renderDebug() {
@@ -278,8 +285,9 @@ Actor RenderSystem::getMainCamera() {
 utils::Bounds RenderSystem::getCameraFrustumBounds() {
 
     const Actor mainCamera = getMainCamera();
-    if (!mainCamera)
+    if (!mainCamera) {
         return {glm::vec3(-100.f), glm::vec3(100.f)};
+    }
 
     const glm::mat4 viewToWorld = mainCamera.get<Transform>().getWorldTransform();
     const glm::mat4 clipToView  = glm::inverse(mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine, MAX_SHADOW_DISTANCE));
@@ -383,8 +391,9 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
     int numLights = 0;
     for (Entity e : directionalLights) {
 
-        if (numLights >= depthMaps.getMaxNumDirectionalLights())
+        if (numLights >= depthMaps.getMaxNumDirectionalLights()) {
             break;
+        }
 
         auto& light = m_registry->get<Light>(e);
         const auto& tf = m_registry->get<Transform>(e);
@@ -405,13 +414,15 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (renderInfo.isInBatch || !renderInfo.isEnabled || !renderInfo.model)
+        if (renderInfo.isInBatch || !renderInfo.isEnabled || !renderInfo.model) {
             continue;
+        }
 
         const glm::mat4& modelTransform = m_registry->get<Transform>(e).getWorldTransform();
         m_directionalDepthShader->setUniformValue("matrixModel", modelTransform);
-        for (const Mesh& mesh : renderInfo.model->getMeshes())
+        for (const Mesh& mesh : renderInfo.model->getMeshes()) {
             mesh.render(0, -1, -1);
+        }
 
         checkRenderingError(m_engine->actor(e));
     }
@@ -474,14 +485,16 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
         const auto [farPlaneDistance, lightPosition, pvMatrices] = getPointLightUniforms(depthMaps, light, tf);
         lightSpheres.push_back({light.range, lightPosition});
 
-        for (unsigned int face = 0; face < 6; ++face)
+        for (unsigned int face = 0; face < 6; ++face) {
             m_positionalDepthShader->setUniformValue("matrixPV[" + std::to_string(i * 6 + face) + "]", pvMatrices[face]);
+        }
         std::string prefix = "lights[" + std::to_string(i) + "].";
         m_positionalDepthShader->setUniformValue(prefix + "position", lightPosition);
         m_positionalDepthShader->setUniformValue(prefix + "farPlaneDistance", farPlaneDistance);
 
-        if (++i >= depthMaps.getMaxNumPositionalLights())
+        if (++i >= depthMaps.getMaxNumPositionalLights()) {
             break;
+        }
     }
     m_positionalDepthShader->setUniformValue("numLights", i);
 
@@ -500,8 +513,9 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
             continue;
 
         m_positionalDepthShader->setUniformValue("matrixModel", modelTransform);
-        for (const Mesh& mesh : renderInfo.model->getMeshes())
+        for (const Mesh& mesh : renderInfo.model->getMeshes()) {
             mesh.render(0);
+        }
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
