@@ -17,7 +17,6 @@ startScene = 'assets/scripts/test2DScene.lua'
 --startScene = 'assets/scripts/scenes/test/testTweening.lua'
 --startScene = 'assets/scripts/scenes/test/renderingShowcase.lua'
 
---[[
 defaultSkybox = {
     right  = "textures/skybox/SkyboxMap_right.png" ,
     left   = "textures/skybox/SkyboxMap_left.png"  ,
@@ -25,7 +24,7 @@ defaultSkybox = {
     bottom = "textures/skybox/SkyboxMap_bottom.png",
     front  = "textures/skybox/SkyboxMap_front.png" ,
     back   = "textures/skybox/SkyboxMap_back.png"
-}--]]
+}
 
 -- custom
 player = 'assets/scripts/player.lua'

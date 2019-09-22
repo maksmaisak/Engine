@@ -18,17 +18,11 @@
 #include "ComponentPool.h"
 #include "Receiver.h"
 #include "SceneManager.h"
-#include "RenderSkyboxSystem.h"
 #include "DebugHud.hpp"
 #include "Bounds.h"
+#include "RenderingSharedState.h"
 
 namespace en {
-
-    class ShaderProgram;
-    class Material;
-    class Mesh;
-    class DebugHud;
-	struct UIRect;
 
 	/// Renders (in this order):
 	/// * Entities with both a Transform and a RenderInfo.
@@ -48,7 +42,6 @@ namespace en {
         void updateBatches();
         void updateDepthMaps();
         void renderEntities();
-        void renderUI();
         void renderDebug();
 
         void setOpenGLSettings();
@@ -60,12 +53,9 @@ namespace en {
         void updateShadowCastersBounds();
         utils::Bounds getCameraFrustumBounds();
 
-        void renderUIRect(Entity entity, UIRect& rect);
-        glm::vec2 getWindowSize();
-        float getUIScaleFactor();
+        RenderingSharedState m_renderingSharedState;
 
         // Shadowmapping
-        DepthMaps m_depthMaps;
         std::shared_ptr<ShaderProgram> m_directionalDepthShader;
         std::shared_ptr<ShaderProgram> m_positionalDepthShader;
         utils::Bounds m_shadowReceiversBounds;
@@ -73,10 +63,6 @@ namespace en {
         // Static batching
         bool m_enableStaticBatching;
         std::unordered_map<std::shared_ptr<Material>, Mesh> m_batches;
-
-        // UI rendering
-        VertexRenderer m_vertexRenderer;
-        glm::vec2 m_referenceResolution;
 
         // Debug
         bool m_enableDebugOutput;
