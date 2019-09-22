@@ -10,7 +10,7 @@
 #include "Light.h"
 #include "Material.h"
 #include "Resources.h"
-#include "Mesh.hpp"
+#include "Mesh.h"
 #include "DepthMaps.h"
 #include "GLHelpers.h"
 #include "GLSetUniform.h"

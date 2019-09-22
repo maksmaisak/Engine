@@ -6,7 +6,7 @@
 #define ENGINE_MOUSEHELPER_H
 
 #include <SFML/Window.hpp>
-#include "glm.hpp"
+#include "glm.h"
 
 namespace utils {
     class MouseHelper {

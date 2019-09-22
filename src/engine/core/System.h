@@ -18,10 +18,10 @@ namespace en {
         virtual void draw() {} // called every frame
 
     protected:
+        sf::RenderWindow& getWindow();
+
         class Engine* m_engine = {};
         class EntityRegistry* m_registry = {};
-
-        sf::RenderWindow& getWindow();
 
     private:
         void init(Engine& engine);

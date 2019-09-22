@@ -5,7 +5,7 @@
 #ifndef ENGINE_VERTEX_H
 #define ENGINE_VERTEX_H
 
-#include "glm.hpp"
+#include "glm.h"
 
 namespace en {
 

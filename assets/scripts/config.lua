@@ -5,17 +5,19 @@ height = 1080
 windowTitle = "Engine"
 fullscreen = false
 framerateCap = 240
-vsync = false
+vsync = true
 enableStaticBatching = true
 enableDebugOutput    = true
 overlayPhiGrid       = false
 referenceResolution = {1920, 1080}
-startScene = 'assets/scripts/UI/mainMenu.lua'
+startScene = 'assets/scripts/test2DScene.lua'
+--startScene = 'assets/scripts/UI/mainMenu.lua'
 --startScene = 'assets/scripts/scenes/level1.lua'
 --startScene = 'assets/scripts/scenes/test/luaScene.lua'
 --startScene = 'assets/scripts/scenes/test/testTweening.lua'
 --startScene = 'assets/scripts/scenes/test/renderingShowcase.lua'
 
+--[[
 defaultSkybox = {
     right  = "textures/skybox/SkyboxMap_right.png" ,
     left   = "textures/skybox/SkyboxMap_left.png"  ,
@@ -23,7 +25,7 @@ defaultSkybox = {
     bottom = "textures/skybox/SkyboxMap_bottom.png",
     front  = "textures/skybox/SkyboxMap_front.png" ,
     back   = "textures/skybox/SkyboxMap_back.png"
-}
+}--]]
 
 -- custom
 player = 'assets/scripts/player.lua'

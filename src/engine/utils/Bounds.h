@@ -5,7 +5,7 @@
 #ifndef ENGINE_BOUNDS_H
 #define ENGINE_BOUNDS_H
 
-#include "glm.hpp"
+#include "glm.h"
 
 namespace utils {
 

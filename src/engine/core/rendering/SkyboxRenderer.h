@@ -7,8 +7,8 @@
 
 #include <memory>
 #include <GL/glew.h>
-#include "glm.hpp"
-#include "Texture.hpp"
+#include "glm.h"
+#include "Texture.h"
 #include "ShaderProgram.hpp"
 
 namespace en {

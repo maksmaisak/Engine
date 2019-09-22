@@ -12,6 +12,7 @@ namespace {
 
         std::ifstream file(filepath, std::ios::in);
         if (!file.is_open()) {
+
             std::cout << "Error reading shader " << filepath << std::endl;
             return std::nullopt;
         }
@@ -21,8 +22,8 @@ namespace {
 
         std::string line;
         if (getline(file, line)) {
-            text << line;
 
+            text << line;
             for (const auto& definition : preprocessorDefinitions) {
 
                 text << "\n" << "#define " << definition.name;
@@ -31,8 +32,10 @@ namespace {
             }
         }
 
-        while (getline(file, line))
+        while (getline(file, line)) {
+
             text << "\n" << line;
+        }
 
         file.close();
 

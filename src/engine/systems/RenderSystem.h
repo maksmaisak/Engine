@@ -9,7 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <SFML/Window.hpp>
-#include "glm.hpp"
+#include "glm.h"
 #include "Entity.h"
 #include "System.h"
 #include "Engine.h"
@@ -34,7 +34,7 @@ namespace en {
 	/// * Entities with both a Transform and a RenderInfo.
 	/// * Skybox
 	/// * Entities with both a Transform and a UIRect.
-    class RenderSystem : public System, Receiver<SceneManager::OnSceneClosed, sf::Event> {
+    class RenderSystem : public CompoundSystem, Receiver<SceneManager::OnSceneClosed, sf::Event> {
 
     public:
         RenderSystem();

@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <GL/glew.h>
-#include "glm.hpp"
+#include "glm.h"
 #include "Engine.h"
 #include "Resources.h"
 #include "ShaderProgram.hpp"

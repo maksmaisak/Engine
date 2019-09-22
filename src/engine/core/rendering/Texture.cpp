@@ -1,5 +1,5 @@
 
-#include "Texture.hpp"
+#include "Texture.h"
 #include <algorithm>
 #include <utility>
 #include <iostream>
@@ -7,7 +7,7 @@
 #include <cassert>
 #include <array>
 #include <SFML/Graphics.hpp> // For sf::Image
-#include "glm.hpp"
+#include "glm.h"
 #include "GLHelpers.h"
 
 using namespace en;
@@ -30,6 +30,22 @@ namespace {
     }
 }
 
+Texture::CreationSettings::CreationSettings() :
+    kind(Kind::Texture2D),
+    internalFormat(GL_SRGB_ALPHA),
+    wrapS(GL_REPEAT),
+    wrapT(GL_REPEAT),
+    minFilter(GL_LINEAR_MIPMAP_LINEAR),
+    magFilter(GL_LINEAR)
+{}
+
+Texture::Texture(const Size& size, const CreationSettings& settings) :
+    m_size(size),
+    m_kind(settings.kind)
+{
+    createOpenGlTexture2D(settings);
+}
+
 Texture::Texture(const std::string& filename, GLint internalFormat) {
 
     // Load from file using sf::Image, then put the data in an openGL buffer.
@@ -43,18 +59,9 @@ Texture::Texture(const std::string& filename, GLint internalFormat) {
     // 0, 0 in sf::Image is top left, but openGL expects 0,0 to be bottom left, flip to compensate.
     image.flipVertically();
 
-    glCheckError();
-    glGenTextures(1, &m_id);
-    glBindTexture(GL_TEXTURE_2D, m_id);
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);
+    CreationSettings settings;
+    settings.internalFormat = internalFormat;
+    createOpenGlTexture2D(settings, image.getPixelsPtr());
 
     m_kind = Kind::Texture2D;
 }
@@ -115,10 +122,31 @@ Texture::Size Texture::getSize() const {
     return m_size;
 }
 
+void Texture::createOpenGlTexture2D(const CreationSettings& settings, const GLvoid* imageData) {
 
+    assert(m_id == 0);
+    assert(settings.kind == Kind::Texture2D);
 
+    glCheckError();
+    glGenTextures(1, &m_id);
+    glBindTexture(GL_TEXTURE_2D, m_id);
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, settings.wrapS);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, settings.wrapT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings.minFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.magFilter);
+        glTexImage2D(GL_TEXTURE_2D, 0, settings.internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
+void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat) {
 
+    assert(isValid());
+    assert(m_kind == Kind::Texture2D);
 
-
-
+    glBindTexture(GL_TEXTURE_2D, m_id);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, dataFormat, imageData);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}

@@ -4,7 +4,7 @@
 
 #include "Sprite.h"
 #include <memory>
-#include "Texture.hpp"
+#include "Texture.h"
 
 using namespace en;
 

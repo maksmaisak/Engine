@@ -8,7 +8,7 @@
 #include <SFML/Window.hpp>
 #include "Behavior.h"
 #include "Actor.h"
-#include "glm.hpp"
+#include "glm.h"
 #include "ComponentsToLua.h"
 
 class CameraOrbitBehavior : public en::Behavior {

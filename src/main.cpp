@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <core/rendering/2D/Render2DSystem.h>
 
 #include "Engine.h"
 #include "Actor.h"
@@ -7,6 +8,7 @@
 #include "DestroySystem.h"
 #include "DestroyByTimerSystem.h"
 #include "RenderSystem.h"
+#include "Render2DSystem.h"
 #include "PhysicsSystem.h"
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
 #include "PhysicsSystemFlatGrid.h"
@@ -45,7 +47,7 @@ int main() {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
 
-        engine->addSystem<en::PhysicsStressTestingSystem>(10s);
+        //engine->addSystem<en::PhysicsStressTestingSystem>(10s);
         //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
@@ -60,7 +62,7 @@ int main() {
         engine->addSystem<en::DestroySystem>();
     }
 
-    //openStartLuaScene(*engine);
+    openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{20, 0, glm::vec3(20.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});

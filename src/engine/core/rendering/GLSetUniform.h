@@ -5,7 +5,7 @@
 #ifndef ENGINE_GLSETUNIFORM_H
 #define ENGINE_GLSETUNIFORM_H
 
-#include "glm.hpp"
+#include "glm.h"
 #include <GL/glew.h>
 
 /// Template wrapper around some of the glUniform* functions.

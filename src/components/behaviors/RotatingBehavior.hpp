@@ -2,7 +2,7 @@
 #define ROTATINGBEHAVIOUR_HPP
 
 #include "Behavior.h"
-#include "glm.hpp"
+#include "glm.h"
 #include "ComponentsToLua.h"
 
 /// Simply rotates the object around its origin with a fixed speed.

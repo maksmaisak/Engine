@@ -14,10 +14,10 @@
 #include "RotatingBehavior.hpp"
 #include "LightPropertyAnimator.h"
 #include "Resources.h"
-#include "Mesh.hpp"
-#include "Texture.hpp"
+#include "Mesh.h"
+#include "Texture.h"
 #include "Material.h"
-#include "glm.hpp"
+#include "glm.h"
 #include <glm/gtx/euler_angles.hpp>
 
 void TerrainScene::open() {

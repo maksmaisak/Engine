@@ -6,7 +6,7 @@
 #define SAXION_Y2Q1_CPP_RIGIDBODY_H
 
 #include <memory>
-#include "glm.hpp"
+#include "glm.h"
 #include "ComponentsToLua.h"
 #include "Collider.h"
 

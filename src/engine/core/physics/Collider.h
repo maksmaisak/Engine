@@ -7,7 +7,7 @@
 
 #include <optional>
 #include <utility>
-#include "glm.hpp"
+#include "glm.h"
 #include "CollisionDetection.h"
 #include "Transform.h"
 #include "Bounds.h"

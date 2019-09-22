@@ -14,9 +14,9 @@
 #include "RotatingBehavior.hpp"
 #include "LightPropertyAnimator.h"
 #include "Resources.h"
-#include "Texture.hpp"
+#include "Texture.h"
 #include "Material.h"
-#include "glm.hpp"
+#include "glm.h"
 #include <glm/gtx/euler_angles.hpp>
 
 constexpr bool AnimateLightProperties = false;

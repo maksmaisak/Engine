@@ -23,6 +23,7 @@
 #include "Material.h"
 #include "Exception.h"
 #include "UIRect.h"
+#include "Render2DSystem.h"
 
 using namespace en;
 
@@ -114,6 +115,10 @@ RenderSystem::RenderSystem() :
 
 void RenderSystem::start() {
 
+    addSystem<Render2DSystem>();
+
+    CompoundSystem::start();
+
     glEnable(GL_DEPTH_TEST);
 
     // Counterclockwise vertex order
@@ -157,38 +162,6 @@ void RenderSystem::start() {
     }
 }
 
-namespace {
-
-    glm::mat4 getCameraProjectionMatrix(Engine& engine, Camera& camera, std::optional<float> rangeLimit = std::nullopt) {
-
-        const auto size = engine.getWindow().getSize();
-        const float aspectRatio = (float)size.x / size.y;
-
-        const float farPlaneDistance = std::min(rangeLimit.value_or(camera.farPlaneDistance), camera.farPlaneDistance);
-
-        if (camera.isOrthographic) {
-
-            const glm::vec2 halfSize = {
-                camera.orthographicHalfSize * aspectRatio,
-                camera.orthographicHalfSize
-            };
-
-            return glm::ortho(
-                -halfSize.x, halfSize.x,
-                -halfSize.y, halfSize.y,
-                camera.nearPlaneDistance, farPlaneDistance
-            );
-        }
-
-        return glm::perspective(
-            glm::radians(camera.fov),
-            aspectRatio,
-            camera.nearPlaneDistance,
-            farPlaneDistance
-        );
-    }
-}
-
 void RenderSystem::draw() {
 
     if (glCheckError() != GL_NO_ERROR) {
@@ -202,6 +175,7 @@ void RenderSystem::draw() {
     updateDepthMaps();
     renderEntities();
     renderSkybox();
+    CompoundSystem::draw();
     renderUI();
 
     if (m_enableDebugOutput)
@@ -283,7 +257,7 @@ void RenderSystem::renderEntities() {
     if (!mainCamera)
         return;
     const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
-    const glm::mat4 matrixProjection = getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>());
+    const glm::mat4 matrixProjection = mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine);
 
     // Render batches
     for (const auto& [material, mesh] : m_batches) {
@@ -475,7 +449,7 @@ utils::Bounds RenderSystem::getCameraFrustumBounds() {
         return {glm::vec3(-100.f), glm::vec3(100.f)};
 
     const glm::mat4 viewToWorld = mainCamera.get<Transform>().getWorldTransform();
-    const glm::mat4 clipToView  = glm::inverse(getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>(), MAX_SHADOW_DISTANCE));
+    const glm::mat4 clipToView  = glm::inverse(mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine, MAX_SHADOW_DISTANCE));
     const glm::mat4 clipToWorld = viewToWorld * clipToView;
     const std::array<glm::vec4, 8> corners = {
         clipToWorld * glm::vec4(-1, -1, -1, 1),

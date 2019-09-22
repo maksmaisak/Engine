@@ -9,7 +9,7 @@
 #include <functional>
 #include <array>
 #include <cmath>
-#include "glm.hpp"
+#include "glm.h"
 
 namespace {
 

@@ -10,9 +10,6 @@
 #include <map>
 #include <type_traits>
 #include <algorithm>
-#include "Texture.hpp"
-#include "Model.h"
-#include "config.hpp"
 
 namespace en {
 
@@ -100,16 +97,6 @@ namespace en {
     // Using inline static to avoid defining this out of the class body causes clang to segfault :(
     template<typename TResource>
     std::map<std::string, std::shared_ptr<TResource>> Resources<TResource>::m_resources;
-
-    using Models = Resources<Model>;
-
-    struct Textures : Resources<Texture> {
-
-        inline static std::shared_ptr<Texture> white() {return get(config::TEXTURE_PATH + "white.png");}
-        inline static std::shared_ptr<Texture> black() {return get(config::TEXTURE_PATH + "black.png");}
-        inline static std::shared_ptr<Texture> transparent() {return get(config::TEXTURE_PATH + "transparent.png");}
-        inline static std::shared_ptr<Texture> defaultNormalMap() {return get(config::TEXTURE_PATH + "defaultNormalMap.png", GL_RGBA);}
-    };
 }
 
 #endif //ENGINE_RESOURCES_H

@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include <optional>
+#include <utils/Exception.h>
 #include "Resources.h"
 #include "config.hpp"
 #include "GLSetUniform.h"
@@ -42,9 +43,9 @@ namespace en {
 		ShaderProgram& operator=(ShaderProgram&& other) = default;
 		virtual ~ShaderProgram();
 
-		// Add a shader of a specific type (eg GL_VERTEX_SHADER / GL_FRAGMENT_SHADER)
+		/// Add a shader of a specific type (eg GL_VERTEX_SHADER / GL_FRAGMENT_SHADER)
 		bool addShader(GLuint shaderType, const std::string& filepath, const PreprocessorDefinitions& preprocessorDefinitions = {});
-		// Link and compile all added shaders
+		/// Link and compile all added shaders
 		void finalize();
 
 		void use() const;
@@ -69,7 +70,7 @@ namespace en {
 
 		GLint location = getUniformLocation(name);
 		if (location == -1)
-			throw "No such uniform!";
+			throw utils::Exception("Material: No such uniform: " + name);
 
 		gl::setUniform(location, std::forward<T>(value));
 	}

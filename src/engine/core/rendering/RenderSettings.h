@@ -7,8 +7,8 @@
 
 #include <memory>
 #include "config.hpp"
-#include "glm.hpp"
-#include "Texture.hpp"
+#include "glm.h"
+#include "Texture.h"
 
 namespace en {
 
