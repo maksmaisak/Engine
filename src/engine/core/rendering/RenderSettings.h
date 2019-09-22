@@ -12,6 +12,7 @@
 
 namespace en {
 
+    /// Render settings of a scene.
     struct RenderSettings {
 
         glm::vec3 ambientColor = {0, 0, 0};

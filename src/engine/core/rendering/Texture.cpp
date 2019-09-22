@@ -141,12 +141,21 @@ void Texture::createOpenGlTexture2D(const CreationSettings& settings, const GLvo
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat) {
+void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height) {
 
     assert(isValid());
     assert(m_kind == Kind::Texture2D);
+    assert(0 <= offsetX && offsetX < m_size.x);
+    assert(0 <= offsetY && offsetY < m_size.y);
+    assert(0 <= offsetX + width && offsetX + width <= m_size.x);
+    assert(0 <= offsetY + height && offsetY + height <= m_size.y);
 
     glBindTexture(GL_TEXTURE_2D, m_id);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, dataFormat, imageData);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, offsetX, offsetY, width, height, GL_RGBA, dataFormat, imageData);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat)
+{
+    updateData2D(imageData, dataFormat, 0, 0, m_size.x, m_size.y);
 }

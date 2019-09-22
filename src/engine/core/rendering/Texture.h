@@ -37,10 +37,10 @@ namespace en {
 	        GLint magFilter;
 	    };
 
-		Texture(const Size& size, const CreationSettings& settings = {});
+		explicit Texture(const Size& size, const CreationSettings& settings = {});
 		// TODO take CreationSettings instead of just here internalFormat
-		Texture(const std::string& path, GLint internalFormat = GL_SRGB_ALPHA);
-		Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat = GL_SRGB_ALPHA);
+		explicit Texture(const std::string& path, GLint internalFormat = GL_SRGB_ALPHA);
+		explicit Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat = GL_SRGB_ALPHA);
 
 		~Texture();
 		Texture(const Texture&) = delete;
@@ -48,7 +48,8 @@ namespace en {
 		Texture(Texture&&) noexcept;
 		Texture& operator=(Texture&&) noexcept;
 
-		void updateData2D(GLvoid* pixelData, GLenum dataFormat = GL_UNSIGNED_BYTE);
+		void updateData2D(GLvoid* pixelData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height);
+        void updateData2D(GLvoid* pixelData, GLenum dataFormat = GL_UNSIGNED_BYTE);
 
 		GLuint getId() const;
 		bool isValid() const;

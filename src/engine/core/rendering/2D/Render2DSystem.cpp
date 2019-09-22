@@ -29,8 +29,8 @@ Render2DSystem::Render2DSystem() :
 {
     Texture::CreationSettings settings;
     settings.internalFormat = GL_RGBA;
-    settings.wrapS = GL_REPEAT; //GL_CLAMP_TO_EDGE;
-    settings.wrapT = GL_REPEAT; //GL_CLAMP_TO_EDGE;
+    settings.wrapS = GL_CLAMP_TO_BORDER;
+    settings.wrapT = GL_CLAMP_TO_BORDER;
     settings.minFilter = GL_NEAREST;
     settings.magFilter = GL_NEAREST;
     m_mapDataTexture = std::make_shared<Texture>(glm::vec2(MapDataTextureResolution), settings);
@@ -46,7 +46,17 @@ void Render2DSystem::start() {
 
     if (!m_registry->with<TileLayer>().tryGetOne()) {
 
-        m_engine->makeActor("Test tile layer").add<TileLayer>();
+        TileLayer& layer = m_engine->makeActor("Test tile layer").add<TileLayer>();
+
+        const float radius = 20.f;
+        for (float theta = 0.f; theta < glm::two_pi<float>(); theta += 0.001f) {
+            const TileLayer::Coordinates position = {
+                glm::cos(theta) * radius,
+                glm::sin(theta) * radius
+            };
+
+            layer.at(position).atlasCoordinates = {1, 3};
+        }
     }
 
     if (!m_registry->with<Camera, Transform>().tryGetOne()) {
@@ -59,12 +69,14 @@ void Render2DSystem::start() {
 
 void Render2DSystem::draw() {
 
-    if (!m_tileset)
+    if (!m_tileset) {
         return;
+    }
 
     Actor cameraActor = m_engine->actor(m_registry->with<Camera, Transform>().tryGetOne());
-    if (!cameraActor)
+    if (!cameraActor) {
         return;
+    }
 
     glDisable(GL_DEPTH_TEST);
 
@@ -84,27 +96,25 @@ void Render2DSystem::draw() {
 
     for (Entity e : m_registry->with<TileLayer>()) {
 
-        const auto& tileLayer = m_registry->get<TileLayer>(e);
+        auto& tileLayer = m_registry->get<TileLayer>(e);
 
         for (int64_t x = 0; x < visibleTileRangeSize.x; ++x) {
             for (int64_t y = 0; y < visibleTileRangeSize.y; ++y) {
                 if (x < MapDataTextureResolution && y < MapDataTextureResolution) {
 
-                    glm::vec<2, int64_t> indices = {
-                        visibleTileIndicesMin.x + x,
-                        visibleTileIndicesMin.y + y
-                    };
+                    const Tile& tile = tileLayer.at({visibleTileIndicesMin.x + x, visibleTileIndicesMin.y + y});
+                    const glm::vec<2, uint32_t> altasCoordinates = tile.atlasCoordinates;
+                    m_mapData[x + y * MapDataTextureResolution] = (altasCoordinates.x << 24) | (altasCoordinates.y << 24 >> 8);
 
-                    const uint32_t uintX = indices.x >= 0 ? indices.x % 11 : glm::abs(11 + indices.x % 11);
-                    const uint32_t uintY = indices.y >= 0 ? indices.y % 6  : glm::abs(6  + indices.y % 6 );
-                    m_mapData[x + y * MapDataTextureResolution] = (uintX << 24) | (uintY << 24 >> 8);
+                    //const uint32_t uintX = indices.x >= 0 ? indices.x % 11 : glm::abs(11 + indices.x % 11);
+                    //const uint32_t uintY = indices.y >= 0 ? indices.y % 6  : glm::abs(6  + indices.y % 6 );
+                    //m_mapData[x + y * MapDataTextureResolution] = (uintX << 24) | (uintY << 24 >> 8);
                 }
             }
         }
         m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8);
 
         const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, 0.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
-
         m_tileLayerMaterial->render(&m_quad, m_engine, nullptr, matrixModel, matrixView, matrixProjection);
     }
 
