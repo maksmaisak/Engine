@@ -18,7 +18,7 @@
 
 using namespace en;
 
-static constexpr uint32_t MapDataTextureResolution = 256;
+static constexpr std::size_t MapDataTextureResolution = 256;
 
 Render2DSystem::Render2DSystem() :
     m_quad(Mesh::makeQuad()),
@@ -89,7 +89,7 @@ void Render2DSystem::draw() {
     const glm::vec2 viewBottomLeftCornerPosition = cameraCenter - orthographicHalfSize;
     const glm::vec<2, int64_t> visibleTileIndicesMin = glm::floor(viewBottomLeftCornerPosition);
     const glm::vec<2, int64_t> visibleTileIndicesMax = glm::ceil(cameraCenter + orthographicHalfSize);
-    const glm::vec<2, int64_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
+    const glm::vec<2, std::size_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
 
     const glm::mat4 matrixView = (utils::KeyboardHelper::isHeld("o") ? glm::scale(glm::vec3(0.6f)) : glm::mat4(1.f)) * glm::inverse(cameraTransform.getWorldTransform());
     const glm::mat4 matrixProjection = cameraActor.get<Camera>().getCameraProjectionMatrix(*m_engine);
@@ -98,21 +98,17 @@ void Render2DSystem::draw() {
 
         auto& tileLayer = m_registry->get<TileLayer>(e);
 
-        for (int64_t x = 0; x < visibleTileRangeSize.x; ++x) {
-            for (int64_t y = 0; y < visibleTileRangeSize.y; ++y) {
+        std::size_t mapDataIndex = 0;
+        for (std::size_t y = 0; y < visibleTileRangeSize.y; ++y) {
+            for (std::size_t x = 0; x < visibleTileRangeSize.x; ++x) {
                 if (x < MapDataTextureResolution && y < MapDataTextureResolution) {
-
                     const Tile& tile = tileLayer.at({visibleTileIndicesMin.x + x, visibleTileIndicesMin.y + y});
                     const glm::vec<2, uint32_t> altasCoordinates = tile.atlasCoordinates;
-                    m_mapData[x + y * MapDataTextureResolution] = (altasCoordinates.x << 24) | (altasCoordinates.y << 24 >> 8);
-
-                    //const uint32_t uintX = indices.x >= 0 ? indices.x % 11 : glm::abs(11 + indices.x % 11);
-                    //const uint32_t uintY = indices.y >= 0 ? indices.y % 6  : glm::abs(6  + indices.y % 6 );
-                    //m_mapData[x + y * MapDataTextureResolution] = (uintX << 24) | (uintY << 24 >> 8);
+                    m_mapData[mapDataIndex++] = (altasCoordinates.x << 24) | (altasCoordinates.y << 24 >> 8);
                 }
             }
         }
-        m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8);
+        m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, glm::min(visibleTileRangeSize.x, MapDataTextureResolution), glm::min(visibleTileRangeSize.y, MapDataTextureResolution));
 
         const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, 0.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
         m_tileLayerMaterial->render(&m_quad, m_engine, nullptr, matrixModel, matrixView, matrixProjection);
