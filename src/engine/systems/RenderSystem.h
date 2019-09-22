@@ -18,7 +18,7 @@
 #include "ComponentPool.h"
 #include "Receiver.h"
 #include "SceneManager.h"
-#include "SkyboxRenderer.h"
+#include "RenderSkyboxSystem.h"
 #include "DebugHud.hpp"
 #include "Bounds.h"
 
@@ -48,9 +48,11 @@ namespace en {
         void updateBatches();
         void updateDepthMaps();
         void renderEntities();
-        void renderSkybox();
         void renderUI();
         void renderDebug();
+
+        void setOpenGLSettings();
+        void getConfigFromLua();
 
         Actor getMainCamera();
         void updateDepthMapsDirectionalLights(const std::vector<Entity>& directionalLights);
@@ -71,10 +73,6 @@ namespace en {
         // Static batching
         bool m_enableStaticBatching;
         std::unordered_map<std::shared_ptr<Material>, Mesh> m_batches;
-
-        // Skybox
-        SkyboxRenderer m_skyboxRenderer;
-        std::shared_ptr<Texture> m_defaultSkybox;
 
         // UI rendering
         VertexRenderer m_vertexRenderer;

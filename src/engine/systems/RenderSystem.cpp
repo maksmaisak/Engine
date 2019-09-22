@@ -64,40 +64,6 @@ namespace {
         glDebugMessageCallback(messageCallback, 0);
     }
 
-    std::shared_ptr<Texture> getDefaultSkybox(LuaState& lua) {
-
-        lua_getglobal(lua, "Config");
-        auto popConfig = PopperOnDestruct(lua);
-        if (lua_isnil(lua, -1))
-            return nullptr;
-
-        lua_getfield(lua, -1, "defaultSkybox");
-        auto popSkybox = PopperOnDestruct(lua);
-        if (lua_isnil(lua, -1))
-            return nullptr;
-
-        static std::string keys[] = {
-            "right",
-            "left",
-            "top",
-            "bottom",
-            "front",
-            "back"
-        };
-
-        std::array<std::string, 6> imagePaths;
-        for (int i = 0; i < 6; ++i) {
-
-            std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
-            if (!path)
-                return nullptr;
-
-            imagePaths[i] = "assets/" + *path;
-        }
-
-        return Resources<Texture>::get("defaultSkybox", imagePaths);
-    }
-
     const float MAX_SHADOW_DISTANCE = 300.f;
     const glm::vec3 SHADOW_CASTERS_BOUNDS_PADDING = {5, 5, 5};
 }
@@ -115,9 +81,56 @@ RenderSystem::RenderSystem() :
 
 void RenderSystem::start() {
 
-    addSystem<Render2DSystem>();
+    setOpenGLSettings();
 
+    m_debugHud = std::make_unique<DebugHud>(*m_engine, m_vertexRenderer);
+
+    getConfigFromLua();
+    {
+        auto& lua = m_engine->getLuaState();
+        lua_getglobal(lua, "Game");
+        auto popGame = lua::PopperOnDestruct(lua);
+        lua.setField("getUIScaleFactor", [this](){return getUIScaleFactor();});
+    }
+
+    addSystem<Render2DSystem>();
+    addSystem<RenderSkyboxSystem>();
     CompoundSystem::start();
+}
+
+void RenderSystem::draw() {
+
+    if (glCheckError() != GL_NO_ERROR) {
+        std::cerr << "Uncaught openGL error(s) before rendering." << std::endl;
+    }
+
+    if (m_enableStaticBatching)
+        updateBatches();
+
+    updateShadowCastersBounds();
+    updateDepthMaps();
+    renderEntities();
+    CompoundSystem::draw();
+    renderUI();
+
+    if (m_enableDebugOutput)
+        renderDebug();
+}
+
+void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
+
+    m_batches.clear();
+}
+
+void RenderSystem::receive(const sf::Event& event) {
+
+    if (event.type == sf::Event::EventType::Resized) {
+        // Make viewport match window size.
+        glViewport(0, 0, event.size.width, event.size.height);
+    }
+}
+
+void RenderSystem::setOpenGLSettings() {
 
     glEnable(GL_DEPTH_TEST);
 
@@ -141,8 +154,9 @@ void RenderSystem::start() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+}
 
-    m_debugHud = std::make_unique<DebugHud>(*m_engine, m_vertexRenderer);
+void RenderSystem::getConfigFromLua() {
 
     auto& lua = m_engine->getLuaState();
     {
@@ -152,46 +166,6 @@ void RenderSystem::start() {
         m_referenceResolution  = lua.tryGetField<glm::vec2>("referenceResolution").value_or(m_referenceResolution);
         m_enableStaticBatching = lua.tryGetField<bool>("enableStaticBatching").value_or(m_enableStaticBatching);
         m_enableDebugOutput    = lua.tryGetField<bool>("enableDebugOutput").value_or(m_enableDebugOutput);
-        m_defaultSkybox        = getDefaultSkybox(lua);
-    }
-
-    {
-        lua_getglobal(lua, "Game");
-        auto popGame = lua::PopperOnDestruct(lua);
-        lua.setField("getUIScaleFactor", [this](){return getUIScaleFactor();});
-    }
-}
-
-void RenderSystem::draw() {
-
-    if (glCheckError() != GL_NO_ERROR) {
-        std::cerr << "Uncaught openGL error(s) before rendering." << std::endl;
-    }
-
-    if (m_enableStaticBatching)
-        updateBatches();
-
-    updateShadowCastersBounds();
-    updateDepthMaps();
-    renderEntities();
-    renderSkybox();
-    CompoundSystem::draw();
-    renderUI();
-
-    if (m_enableDebugOutput)
-        renderDebug();
-}
-
-void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
-
-    m_batches.clear();
-}
-
-void RenderSystem::receive(const sf::Event& event) {
-
-    if (event.type == sf::Event::EventType::Resized) {
-        // Make viewport match window size.
-        glViewport(0, 0, event.size.width, event.size.height);
     }
 }
 
@@ -293,38 +267,6 @@ void RenderSystem::renderEntities() {
     }
 
     //std::cout << "Draw calls saved by batching: " << numBatched - m_batches.size() << '\n';
-}
-
-void RenderSystem::renderSkybox() {
-
-    Actor mainCamera = getMainCamera();
-    if (!mainCamera)
-        return;
-
-    Scene* scene = m_engine->getSceneManager().getCurrentScene();
-    if (!scene)
-        return;
-
-    const auto& renderSettings = scene->getRenderSettings();
-    if (!renderSettings.useSkybox)
-        return;
-
-    const std::shared_ptr<Texture>& skyboxTexture = renderSettings.skyboxTexture ? renderSettings.skyboxTexture : m_defaultSkybox;
-    if (!skyboxTexture || !skyboxTexture->isValid() || skyboxTexture->getKind() != Texture::Kind::TextureCube)
-        return;
-
-    const glm::mat4 matrixView = glm::mat4(glm::inverse(mainCamera.get<Transform>().getWorldRotation()));
-
-    const auto& camera = mainCamera.get<Camera>();
-    const auto size = m_engine->getWindow().getSize();
-    const float aspectRatio = (float) size.x / size.y;
-    const glm::mat4 matrixProjection = glm::perspective(
-        glm::radians(camera.isOrthographic ? 90.f : camera.fov),
-        aspectRatio,
-        camera.nearPlaneDistance,
-        camera.farPlaneDistance
-    );
-    m_skyboxRenderer.draw(*skyboxTexture, matrixProjection * matrixView);
 }
 
 namespace {

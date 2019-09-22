@@ -29,8 +29,8 @@ Render2DSystem::Render2DSystem() :
 {
     Texture::CreationSettings settings;
     settings.internalFormat = GL_RGBA;
-    settings.wrapS = GL_CLAMP_TO_EDGE;
-    settings.wrapT = GL_CLAMP_TO_EDGE;
+    settings.wrapS = GL_REPEAT; //GL_CLAMP_TO_EDGE;
+    settings.wrapT = GL_REPEAT; //GL_CLAMP_TO_EDGE;
     settings.minFilter = GL_NEAREST;
     settings.magFilter = GL_NEAREST;
     m_mapDataTexture = std::make_shared<Texture>(glm::vec2(MapDataTextureResolution), settings);
