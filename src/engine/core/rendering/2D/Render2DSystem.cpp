@@ -33,10 +33,21 @@ Render2DSystem::Render2DSystem() :
     settings.wrapT = GL_CLAMP_TO_BORDER;
     settings.minFilter = GL_NEAREST;
     settings.magFilter = GL_NEAREST;
-    m_mapDataTexture = std::make_shared<Texture>(glm::vec2(MapDataTextureResolution), settings);
+    m_mapDataTexture = std::make_shared<Texture>(Texture::Size(MapDataTextureResolution), settings);
 
-    m_tileLayerMaterial->setUniformValue("mapDataTexture", m_mapDataTexture);
-    m_tileLayerMaterial->setUniformValue("tileAtlas", m_tileset);
+    {
+        assert(m_tileLayerMaterial);
+        const auto& m = *m_tileLayerMaterial;
+        m_tileLayerMaterial->setUniformValue("mapDataTexture", m_mapDataTexture);
+        m_tileLayerMaterial->setUniformValue("tileAtlas", m_tileset);
+
+        const glm::vec2 dataTextureResolution = glm::vec2(MapDataTextureResolution);
+        m_tileLayerMaterial->setUniformValue("mapDataTextureResolution", dataTextureResolution);
+        m_tileLayerMaterial->setUniformValue("invMapDataTextureResolution", 1.f / dataTextureResolution);
+
+        // TODO load the tile layout in atlas from file
+        m_tileLayerMaterial->setUniformValue("invNumTilesInAtlas", 1.f / glm::vec2(11, 6));
+    }
 
     assert(m_mapDataTexture->isValid());
     assert(m_tileset->isValid());
