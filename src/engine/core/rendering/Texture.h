@@ -30,6 +30,8 @@ namespace en {
             CreationSettings();
 
 	        Kind kind;
+	        bool generateMipmaps;
+
 	        GLint internalFormat;
 	        GLint wrapS;
 	        GLint wrapT;
@@ -38,8 +40,9 @@ namespace en {
 	    };
 
 		explicit Texture(const Size& size, const CreationSettings& settings = {});
-		// TODO take CreationSettings instead of just here internalFormat
-		explicit Texture(const std::string& path, GLint internalFormat = GL_SRGB_ALPHA);
+        explicit Texture(const std::string& path, const CreationSettings& settings = {});
+        /// Deprecated
+		explicit Texture(const std::string& path, GLint internalFormat);
 		explicit Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat = GL_SRGB_ALPHA);
 
 		~Texture();

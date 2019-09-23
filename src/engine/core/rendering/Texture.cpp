@@ -18,10 +18,12 @@ namespace {
 
         int i = 1;
         while (true) {
+
             size.x = std::max(1, size.x / 2);
             size.y = std::max(1, size.y / 2);
-            if (size.x == 1 && size.y == 1)
+            if (size.x == 1 && size.y == 1) {
                 break;
+            }
 
             ++i;
         }
@@ -32,6 +34,7 @@ namespace {
 
 Texture::CreationSettings::CreationSettings() :
     kind(Kind::Texture2D),
+    generateMipmaps(true),
     internalFormat(GL_SRGB_ALPHA),
     wrapS(GL_REPEAT),
     wrapT(GL_REPEAT),
@@ -46,8 +49,9 @@ Texture::Texture(const Size& size, const CreationSettings& settings) :
     createOpenGlTexture2D(settings);
 }
 
-Texture::Texture(const std::string& filename, GLint internalFormat) {
-
+Texture::Texture(const std::string& filename, const CreationSettings& settings) :
+    m_kind(settings.kind)
+{
     // Load from file using sf::Image, then put the data in an openGL buffer.
     sf::Image image;
     if (!image.loadFromFile(filename))
@@ -59,12 +63,24 @@ Texture::Texture(const std::string& filename, GLint internalFormat) {
     // 0, 0 in sf::Image is top left, but openGL expects 0,0 to be bottom left, flip to compensate.
     image.flipVertically();
 
-    CreationSettings settings;
-    settings.internalFormat = internalFormat;
     createOpenGlTexture2D(settings, image.getPixelsPtr());
 
     m_kind = Kind::Texture2D;
 }
+
+namespace {
+
+    Texture::CreationSettings makeSettingsFromInternalFormat(GLint internalFormat) {
+
+        Texture::CreationSettings settings;
+        settings.internalFormat = internalFormat;
+        return settings;
+    }
+}
+
+Texture::Texture(const std::string& filename, GLint internalFormat) :
+    Texture(filename, makeSettingsFromInternalFormat(internalFormat))
+{}
 
 Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat) {
 
@@ -136,7 +152,9 @@ void Texture::createOpenGlTexture2D(const CreationSettings& settings, const GLvo
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings.minFilter);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.magFilter);
         glTexImage2D(GL_TEXTURE_2D, 0, settings.internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        if (settings.generateMipmaps) {
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -155,7 +173,7 @@ void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat, GLint offsetX, 
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat)
-{
+void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat) {
+
     updateData2D(imageData, dataFormat, 0, 0, m_size.x, m_size.y);
 }

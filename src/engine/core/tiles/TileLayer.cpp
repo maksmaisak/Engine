@@ -8,9 +8,7 @@ using namespace en;
 
 TileLayerChunk::TileLayerChunk() {
 
-    Tile tile;
-    tile.atlasCoordinates = {1, 5};
-    tiles.fill(tile);
+    tiles.fill({});
 }
 
 Tile& TileLayer::at(const Coordinates& coordinates) {

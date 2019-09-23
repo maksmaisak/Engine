@@ -31,7 +31,9 @@ namespace en {
 
     struct Tile final {
 
-        glm::vec<2, int32_t> atlasCoordinates = {0, 0};
+        using AtlasCoordinates = glm::vec<2, uint8_t>;
+
+        AtlasCoordinates atlasCoordinates = {0, 0};
         bool testData = false;
     };
 

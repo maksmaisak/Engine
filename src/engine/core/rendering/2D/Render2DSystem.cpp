@@ -18,22 +18,40 @@
 
 using namespace en;
 
-static constexpr std::size_t MapDataTextureResolution = 256;
+namespace {
+
+    constexpr std::size_t MapDataTextureResolution = 256;
+    // TODO load the tile layout in atlas from file
+    const glm::vec2 AtlasSize = {8, 8};
+
+    uint32_t pack(const Tile::AtlasCoordinates& atlasCoordinates) {
+        return ((uint32_t)atlasCoordinates.x << 24) | ((uint32_t)atlasCoordinates.y << 24 >> 8);
+    }
+}
 
 Render2DSystem::Render2DSystem() :
     m_quad(Mesh::makeQuad()),
     m_mapData(MapDataTextureResolution * MapDataTextureResolution),
-    m_tileset(Textures::get(config::TEXTURE_PATH + "TileSet.png")),
     m_tileLayerMaterial(std::make_unique<Material>("tileLayer")),
     m_debugVolumeRenderer(std::make_unique<DebugVolumeRenderer>())
 {
-    Texture::CreationSettings settings;
-    settings.internalFormat = GL_RGBA;
-    settings.wrapS = GL_CLAMP_TO_BORDER;
-    settings.wrapT = GL_CLAMP_TO_BORDER;
-    settings.minFilter = GL_NEAREST;
-    settings.magFilter = GL_NEAREST;
-    m_mapDataTexture = std::make_shared<Texture>(Texture::Size(MapDataTextureResolution), settings);
+    {
+        Texture::CreationSettings settings;
+        settings.minFilter = GL_LINEAR;
+        settings.magFilter = GL_LINEAR;
+        settings.generateMipmaps = false;
+        m_tileset = Textures::get(config::TEXTURE_PATH + "checkerboard.png", settings);
+    }
+
+    {
+        Texture::CreationSettings settings;
+        settings.internalFormat = GL_RGBA;
+        settings.wrapS = GL_CLAMP_TO_BORDER;
+        settings.wrapT = GL_CLAMP_TO_BORDER;
+        settings.minFilter = GL_NEAREST;
+        settings.magFilter = GL_NEAREST;
+        m_mapDataTexture = std::make_shared<Texture>(Texture::Size(MapDataTextureResolution), settings);
+    }
 
     {
         assert(m_tileLayerMaterial);
@@ -41,12 +59,13 @@ Render2DSystem::Render2DSystem() :
         m_tileLayerMaterial->setUniformValue("mapDataTexture", m_mapDataTexture);
         m_tileLayerMaterial->setUniformValue("tileAtlas", m_tileset);
 
-        const glm::vec2 dataTextureResolution = glm::vec2(MapDataTextureResolution);
-        m_tileLayerMaterial->setUniformValue("mapDataTextureResolution", dataTextureResolution);
-        m_tileLayerMaterial->setUniformValue("invMapDataTextureResolution", 1.f / dataTextureResolution);
-
-        // TODO load the tile layout in atlas from file
-        m_tileLayerMaterial->setUniformValue("invNumTilesInAtlas", 1.f / glm::vec2(11, 6));
+        using vec2D = glm::vec<2, double>;
+        const vec2D atlasSizeDouble = vec2D(AtlasSize);
+        const vec2D dataTextureResolution = vec2D(MapDataTextureResolution);
+        m_tileLayerMaterial->setUniformValue("mapDataTextureResolution", glm::vec2(dataTextureResolution));
+        m_tileLayerMaterial->setUniformValue("invMapDataTextureResolution", glm::vec2(1.0 / dataTextureResolution));
+        m_tileLayerMaterial->setUniformValue("invNumTilesInAtlas", glm::vec2(1.0 / atlasSizeDouble));
+        m_tileLayerMaterial->setUniformValue("atlasPixelSizeInUVSpaceRelativeToTile", glm::vec2(atlasSizeDouble / vec2D(m_tileset->getSize())));
     }
 
     assert(m_mapDataTexture->isValid());
@@ -66,7 +85,7 @@ void Render2DSystem::start() {
                 glm::sin(theta) * radius
             };
 
-            layer.at(position).atlasCoordinates = {1, 3};
+            layer.at(position).atlasCoordinates = {7, 7};
         }
     }
 
@@ -113,9 +132,9 @@ void Render2DSystem::draw() {
         for (std::size_t y = 0; y < visibleTileRangeSize.y; ++y) {
             for (std::size_t x = 0; x < visibleTileRangeSize.x; ++x) {
                 if (x < MapDataTextureResolution && y < MapDataTextureResolution) {
+
                     const Tile& tile = tileLayer.at({visibleTileIndicesMin.x + x, visibleTileIndicesMin.y + y});
-                    const glm::vec<2, uint32_t> altasCoordinates = tile.atlasCoordinates;
-                    m_mapData[mapDataIndex++] = (altasCoordinates.x << 24) | (altasCoordinates.y << 24 >> 8);
+                    m_mapData[mapDataIndex++] = pack(tile.atlasCoordinates);
                 }
             }
         }
@@ -127,7 +146,6 @@ void Render2DSystem::draw() {
 
     m_debugVolumeRenderer->addAABB(glm::vec3(cameraCenter, 0.f), glm::vec3(orthographicHalfSize, 1.f));
     m_debugVolumeRenderer->addAABBMinMax(glm::vec3(visibleTileIndicesMin, -1.f), glm::vec3(visibleTileIndicesMax,  1.f));
-
     m_debugVolumeRenderer->addAABB(glm::vec3(0.5f), glm::vec3(0.5f), glm::vec4(1.f));
     m_debugVolumeRenderer->render(matrixProjection * matrixView);
 
