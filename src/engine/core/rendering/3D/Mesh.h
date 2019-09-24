@@ -6,6 +6,7 @@
 #include <assimp/matrix4x4.h>
 #include <assimp/mesh.h>
 #include "glm.h"
+#include "Resources.h"
 
 namespace en {
 
@@ -16,10 +17,10 @@ namespace en {
 
 	public:
 
-	    static Mesh makeQuad();
+	    static std::shared_ptr<Mesh> getQuad();
 
 		/// Imports the mesh data using Assimp
-		Mesh(const aiMesh* aiMesh, const aiMatrix4x4& transform = {});
+		explicit Mesh(const aiMesh* aiMesh, const aiMatrix4x4& transform = {});
 
         Mesh() = default;
         Mesh(const Mesh&) = delete;

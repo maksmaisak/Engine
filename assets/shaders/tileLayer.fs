@@ -11,7 +11,8 @@ uniform vec2 mapDataTextureResolution;
 uniform vec2 invMapDataTextureResolution;
 uniform vec2 numTilesInAtlas;
 uniform vec2 invNumTilesInAtlas;
-uniform vec2 atlasPixelSizeInUVSpaceRelativeToTile;
+// The size of the padding relative to the total size of a padded tile
+uniform vec2 paddingRelativeToTileSize;
 
 in vec2 texCoord;
 out vec4 fragmentColor;
@@ -25,8 +26,7 @@ vec2 getTileAtlasUV() {
     vec2 tileIndexOriginInAtlas = floor(255.f * tileOriginInAtlas);
 
     vec2 tileIndexOffsetInAtlas = indicesInMapDataTexture - indicesInMapDataTextureFloored;
-    // Prevent texture bleed in a tightly packed atlas.
-    tileIndexOffsetInAtlas = atlasPixelSizeInUVSpaceRelativeToTile * 0.5f + tileIndexOffsetInAtlas * (1.f - atlasPixelSizeInUVSpaceRelativeToTile);
+    tileIndexOffsetInAtlas = paddingRelativeToTileSize * 0.5f + tileIndexOffsetInAtlas * (1.f - paddingRelativeToTileSize);
 
     return (tileIndexOriginInAtlas + tileIndexOffsetInAtlas) * invNumTilesInAtlas;
 }

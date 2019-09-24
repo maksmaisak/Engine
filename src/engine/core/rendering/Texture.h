@@ -31,6 +31,7 @@ namespace en {
 
 	        Kind kind;
 	        bool generateMipmaps;
+            GLint numMipmapLevels;
 
 	        GLint internalFormat;
 	        GLint wrapS;
@@ -43,7 +44,7 @@ namespace en {
         explicit Texture(const std::string& path, const CreationSettings& settings = {});
         /// Deprecated
 		explicit Texture(const std::string& path, GLint internalFormat);
-		explicit Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat = GL_SRGB_ALPHA);
+		explicit Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat = GL_SRGB8_ALPHA8);
 
 		~Texture();
 		Texture(const Texture&) = delete;

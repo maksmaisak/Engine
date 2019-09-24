@@ -22,7 +22,7 @@ namespace {
 
     constexpr std::size_t MapDataTextureResolution = 256;
     // TODO load the tile layout in atlas from file
-    const glm::vec2 AtlasSize = {8, 8};
+    constexpr std::size_t AtlasSize = 8;
 
     uint32_t pack(const Tile::AtlasCoordinates& atlasCoordinates) {
         return ((uint32_t)atlasCoordinates.x << 24) | ((uint32_t)atlasCoordinates.y << 24 >> 8);
@@ -30,16 +30,13 @@ namespace {
 }
 
 Render2DSystem::Render2DSystem() :
-    m_quad(Mesh::makeQuad()),
     m_mapData(MapDataTextureResolution * MapDataTextureResolution),
     m_tileLayerMaterial(std::make_unique<Material>("tileLayer")),
     m_debugVolumeRenderer(std::make_unique<DebugVolumeRenderer>())
 {
     {
         Texture::CreationSettings settings;
-        settings.minFilter = GL_LINEAR;
-        settings.magFilter = GL_LINEAR;
-        settings.generateMipmaps = false;
+        settings.numMipmapLevels = 5;
         m_tileset = Textures::get(config::TEXTURE_PATH + "checkerboard.png", settings);
     }
 
@@ -62,10 +59,12 @@ Render2DSystem::Render2DSystem() :
         using vec2D = glm::vec<2, double>;
         const vec2D atlasSizeDouble = vec2D(AtlasSize);
         const vec2D dataTextureResolution = vec2D(MapDataTextureResolution);
+
+        const double numPaddingPixelsPerTile = 48.0;
         m_tileLayerMaterial->setUniformValue("mapDataTextureResolution", glm::vec2(dataTextureResolution));
         m_tileLayerMaterial->setUniformValue("invMapDataTextureResolution", glm::vec2(1.0 / dataTextureResolution));
         m_tileLayerMaterial->setUniformValue("invNumTilesInAtlas", glm::vec2(1.0 / atlasSizeDouble));
-        m_tileLayerMaterial->setUniformValue("atlasPixelSizeInUVSpaceRelativeToTile", glm::vec2(atlasSizeDouble / vec2D(m_tileset->getSize())));
+        m_tileLayerMaterial->setUniformValue("paddingRelativeToTileSize",  glm::vec2((numPaddingPixelsPerTile + 1.0) * atlasSizeDouble / vec2D(m_tileset->getSize())));
     }
 
     assert(m_mapDataTexture->isValid());
@@ -80,6 +79,7 @@ void Render2DSystem::start() {
 
         const float radius = 20.f;
         for (float theta = 0.f; theta < glm::two_pi<float>(); theta += 0.001f) {
+
             const TileLayer::Coordinates position = {
                 glm::cos(theta) * radius,
                 glm::sin(theta) * radius
@@ -141,7 +141,7 @@ void Render2DSystem::draw() {
         m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, glm::min(visibleTileRangeSize.x, MapDataTextureResolution), glm::min(visibleTileRangeSize.y, MapDataTextureResolution));
 
         const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, 0.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
-        m_tileLayerMaterial->render(&m_quad, m_engine, nullptr, matrixModel, matrixView, matrixProjection);
+        m_tileLayerMaterial->render(Mesh::getQuad().get(), m_engine, nullptr, matrixModel, matrixView, matrixProjection);
     }
 
     m_debugVolumeRenderer->addAABB(glm::vec3(cameraCenter, 0.f), glm::vec3(orthographicHalfSize, 1.f));

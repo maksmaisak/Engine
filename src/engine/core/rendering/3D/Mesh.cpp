@@ -26,13 +26,19 @@ namespace {
 	}
 }
 
-Mesh Mesh::makeQuad() {
+std::shared_ptr<Mesh> Mesh::getQuad() {
 
-    Mesh quad;
-    quad.m_indices = {0, 3, 1, 0, 2, 3};
-    quad.m_vertices = {{0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {1, 1, 0}};
-    quad.m_uvs = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-    quad.buffer();
+    static std::shared_ptr<Mesh> quad;
+
+    if (!quad) {
+
+        quad = std::make_shared<Mesh>();
+        quad->m_indices = {0, 3, 1, 0, 2, 3};
+        quad->m_vertices = {{0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {1, 1, 0}};
+        quad->m_uvs = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+        quad->buffer();
+    }
+
     return quad;
 }
 
