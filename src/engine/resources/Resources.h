@@ -31,7 +31,7 @@ namespace en {
 
         /// Gets a resource by given key.
         /// If not already present, tries create one using a load function.
-        /// The load function is one of these, in order of priority:
+        /// The load function is one of these, in descending priority:
         /// - load in ResourceLoader<TResource> template specialization.
         /// - static TResource::load, returning a shared_ptr or a raw pointer to TResource.
         /// - the constructor of TResource, if exists.
@@ -41,25 +41,28 @@ namespace en {
         inline static std::shared_ptr<TResource> get(const std::string& key, Args&&... args) {
 
             const auto foundIterator = m_resources.find(key);
-            if (foundIterator != m_resources.end())
+            if (foundIterator != m_resources.end()) {
                 return foundIterator->second;
+            }
 
             std::shared_ptr<TResource> resource;
 
             if constexpr (!std::is_base_of_v<NoLoader, TLoader>) {
 
-                if constexpr (sizeof...(Args) > 0 || canLoadWithNoArgs_v<TLoader>)
+                if constexpr (sizeof...(Args) > 0 || canLoadWithNoArgs_v<TLoader>) {
                     resource = TLoader::load(std::forward<Args>(args)...);
-                else
+                } else {
                     resource = TLoader::load(key);
+                }
 
             } else {
 
                 // Fall back to constructor if there is no valid loader.
-                if constexpr (std::is_constructible_v<TResource, Args...>)
+                if constexpr (std::is_constructible_v<TResource, Args...>) {
                     resource = std::make_shared<TResource>(std::forward<Args>(args)...);
-                else
+                } else {
                     resource = std::make_shared<TResource>(key, std::forward<Args>(args)...);
+                }
             }
 
             const auto [it, didAdd] = m_resources.emplace(key, std::move(resource));

@@ -39,78 +39,74 @@ Texture::Texture(const Size& size, const CreationSettings& settings) :
     m_size(size),
     m_kind(settings.kind)
 {
-    createOpenGlTexture2D(settings);
+    setUpOpenGLTexture2D(settings);
 }
 
 Texture::Texture(const std::string& filename, const CreationSettings& settings) :
-    m_kind(settings.kind)
+    m_kind(Kind::Texture2D)
 {
+    assert(m_kind == settings.kind);
+
     // Load from file using sf::Image, then put the data in an openGL buffer.
     sf::Image image;
-    if (!image.loadFromFile(filename))
+    if (!image.loadFromFile(filename)) {
         return;
+    }
 
     auto temp = image.getSize();
     m_size = {temp.x, temp.y};
 
     // 0, 0 in sf::Image is top left, but openGL expects 0,0 to be bottom left, flip to compensate.
     image.flipVertically();
-
-    createOpenGlTexture2D(settings, image.getPixelsPtr());
-
-    m_kind = Kind::Texture2D;
+    setUpOpenGLTexture2D(settings, image.getPixelsPtr());
 }
 
-Texture::Texture(const std::string& filename, GLint internalFormat) :
-    Texture(filename, makeSettingsFromInternalFormat(internalFormat))
-{}
-
-Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat) {
+Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const CreationSettings& settings) {
 
     std::array<sf::Image, 6> images;
     for (GLuint i = 0; i < images.size(); ++i)
         if (!images[i].loadFromFile(cubeSidePaths[i]))
             return;
 
-    glGenTextures(1, &m_id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
+    m_glTexture.bind(GL_TEXTURE_CUBE_MAP);
     {
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, settings.wrapS);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, settings.wrapT);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, settings.minFilter);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, settings.magFilter);
 
         for (GLuint i = 0; i < 6; ++i) {
             const sf::Image& image = images[i];
             const auto temp = image.getSize();
             m_size = {temp.x, temp.y};
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, settings.internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
         }
 
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+        if (settings.generateMipmaps) {
+            glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+        }
     }
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    m_glTexture.unbind(GL_TEXTURE_CUBE_MAP);
 
     m_kind = Kind::TextureCube;
 }
 
-Texture::Texture(Texture&& other) noexcept : m_id(std::exchange(other.m_id, 0)) {}
+/// DEPRECATED
+Texture::Texture(const std::string& filename, GLint internalFormat) :
+    Texture(filename, makeSettingsFromInternalFormat(internalFormat))
+{}
 
-Texture& Texture::operator=(Texture&& other) noexcept {
-    m_id = std::exchange(other.m_id, 0);
-    return *this;
-}
-
-Texture::~Texture() {
-	glDeleteTextures(1, &m_id);
-}
+/// DEPRECATED
+Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat) :
+    Texture(cubeSidePaths, makeSettingsFromInternalFormat(internalFormat))
+{}
 
 GLuint Texture::getId() const {
-	return m_id;
+	return m_glTexture.getId();
 }
 
 bool Texture::isValid() const {
-    return m_id != 0 && m_kind != Kind::None;
+    return m_glTexture.isValid() && m_kind != Kind::None;
 }
 
 Texture::Kind Texture::getKind() const {
@@ -121,16 +117,14 @@ Texture::Size Texture::getSize() const {
     return m_size;
 }
 
-void Texture::createOpenGlTexture2D(const CreationSettings& settings, const GLvoid* imageData) {
+void Texture::setUpOpenGLTexture2D(const CreationSettings& settings, const GLvoid* imageData) {
 
-    assert(m_id == 0);
     assert(settings.kind == Kind::Texture2D);
 
     constexpr GLenum Target = GL_TEXTURE_2D;
 
     glCheckError();
-    glGenTextures(1, &m_id);
-    glBindTexture(Target, m_id);
+    m_glTexture.bind(Target);
     {
         glTexParameteri(Target, GL_TEXTURE_WRAP_S, settings.wrapS);
         glTexParameteri(Target, GL_TEXTURE_WRAP_T, settings.wrapT);
@@ -160,7 +154,7 @@ void Texture::createOpenGlTexture2D(const CreationSettings& settings, const GLvo
             glTexParameteri(Target, GL_TEXTURE_MAX_LEVEL, DefaultMaxMipmapLevel);
         }
     }
-    glBindTexture(Target, 0);
+    m_glTexture.unbind(Target);
 }
 
 void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height) {
@@ -172,9 +166,10 @@ void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat, GLint offsetX, 
     assert(0 <= offsetX + width && offsetX + width <= m_size.x);
     assert(0 <= offsetY + height && offsetY + height <= m_size.y);
 
-    glBindTexture(GL_TEXTURE_2D, m_id);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, offsetX, offsetY, width, height, GL_RGBA, dataFormat, imageData);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    constexpr GLenum Target = GL_TEXTURE_2D;
+    m_glTexture.bind(Target);
+    glTexSubImage2D(Target, 0, offsetX, offsetY, width, height, GL_RGBA, dataFormat, imageData);
+    m_glTexture.unbind(Target);
 }
 
 void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat) {

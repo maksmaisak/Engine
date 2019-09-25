@@ -285,8 +285,8 @@ void Material::setCustomUniformsOfType(const Material::LocationToUniformValue<T>
 template<>
 void Material::setCustomUniformsOfType<std::shared_ptr<Texture>>(const Material::LocationToUniformValue<std::shared_ptr<Texture>>& values) {
 
-    for (auto& [location, value] : values) {
-        if (!setUniformTexture(location, value->getId()))
+    for (auto& [location, texture] : values) {
+        if (!setUniformTexture(location, texture->getId()))
             break;
     }
 }

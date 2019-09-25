@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <array>
 #include "glm.h"
+#include "GLWrappers.h"
 #include "Resources.h"
 #include "config.hpp"
 
@@ -42,15 +43,11 @@ namespace en {
 
 		explicit Texture(const Size& size, const CreationSettings& settings = {});
         explicit Texture(const std::string& path, const CreationSettings& settings = {});
+        explicit Texture(const std::array<std::string, 6>& cubeSidePaths, const CreationSettings& settings = {});
         /// Deprecated
 		explicit Texture(const std::string& path, GLint internalFormat);
-		explicit Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat = GL_SRGB8_ALPHA8);
-
-		~Texture();
-		Texture(const Texture&) = delete;
-		Texture& operator=(const Texture&) = delete;
-		Texture(Texture&&) noexcept;
-		Texture& operator=(Texture&&) noexcept;
+        /// Deprecated
+        explicit Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat);
 
 		void updateData2D(GLvoid* pixelData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height);
         void updateData2D(GLvoid* pixelData, GLenum dataFormat = GL_UNSIGNED_BYTE);
@@ -62,10 +59,9 @@ namespace en {
 
 	private:
 
-	    void createOpenGlTexture2D(const CreationSettings& settings = {}, const GLvoid* imageData = nullptr);
+	    void setUpOpenGLTexture2D(const CreationSettings& settings = {}, const GLvoid* imageData = nullptr);
 
-		// ID of the OpenGL Texture object
-		GLuint m_id = 0;
+		gl::TextureObject m_glTexture = {};
 		Kind m_kind = Kind::None;
 		Size m_size = {0, 0};
 	};
