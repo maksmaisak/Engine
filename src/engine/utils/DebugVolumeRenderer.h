@@ -8,6 +8,7 @@
 #include <vector>
 #include <GL/glew.h>
 #include "glm.h"
+#include "GLWrappers.h"
 #include "Engine.h"
 #include "Resources.h"
 #include "ShaderProgram.hpp"
@@ -30,8 +31,8 @@ namespace en {
 
         std::shared_ptr<ShaderProgram> m_wireframeShader;
 
-        GLuint m_vao = 0;
-        GLuint m_vbo = 0;
+        gl::VertexArrayObject m_vao;
+        gl::VertexBufferObject m_vbo;
 
         std::vector<float> m_vertexData;
     };
