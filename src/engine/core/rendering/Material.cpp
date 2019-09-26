@@ -380,6 +380,7 @@ Material::BuiltinUniformLocations Material::cacheBuiltinUniformLocations() {
 
         m_numSupportedDirectionalLights = i + 1;
     }
+
     // Spot lights
     u.numSpotLights = m_shader->getUniformLocation("numSpotLights");
     for (int i = 0; i < MAX_NUM_SPOT_LIGHTS; ++i) {
@@ -410,11 +411,11 @@ Material::AttributeLocations Material::cacheAttributeLocations() {
 
     AttributeLocations a;
 
-    a.vertex    = m_shader->getAttribLocation("vertex");
-    a.normal    = m_shader->getAttribLocation("normal");
-    a.uv        = m_shader->getAttribLocation("uv");
-    a.tangent   = m_shader->getAttribLocation("tangent");
-    a.bitangent = m_shader->getAttribLocation("bitangent");
+    a.vertex    = m_shader->getAttributeLocation("vertex");
+    a.normal    = m_shader->getAttributeLocation("normal");
+    a.uv        = m_shader->getAttributeLocation("uv");
+    a.tangent   = m_shader->getAttributeLocation("tangent");
+    a.bitangent = m_shader->getAttributeLocation("bitangent");
 
     return a;
 }

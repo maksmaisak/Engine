@@ -39,8 +39,8 @@ namespace en {
 		ShaderProgram();
 		ShaderProgram(const ShaderProgram& other) = delete;
 		ShaderProgram& operator=(const ShaderProgram& other) = delete;
-		ShaderProgram(ShaderProgram&& other) = default;
-		ShaderProgram& operator=(ShaderProgram&& other) = default;
+		ShaderProgram(ShaderProgram&& other);
+		ShaderProgram& operator=(ShaderProgram&& other);
 		virtual ~ShaderProgram();
 
 		/// Add a shader of a specific type (eg GL_VERTEX_SHADER / GL_FRAGMENT_SHADER)
@@ -50,8 +50,8 @@ namespace en {
 
 		void use() const;
 
-		GLint getUniformLocation(const std::string& pName) const;
-		GLint getAttribLocation (const std::string& pName) const;
+		GLint getUniformLocation(const std::string& uniformName) const;
+		GLint getAttributeLocation (const std::string& attributeLocation) const;
 
 		template<typename T>
 		void setUniformValue(const std::string& name, T&& value);
@@ -68,9 +68,10 @@ namespace en {
 	template<typename T>
 	inline void ShaderProgram::setUniformValue(const std::string& name, T&& value) {
 
-		GLint location = getUniformLocation(name);
-		if (location == -1)
-			throw utils::Exception("Material: No such uniform: " + name);
+		const GLint location = getUniformLocation(name);
+		if (location == -1) {
+            throw utils::Exception("ShaderProgram: No such uniform: " + name);
+        }
 
 		gl::setUniform(location, std::forward<T>(value));
 	}
@@ -111,7 +112,7 @@ namespace en {
         	const PreprocessorDefinitions& preprocessorDefinitions = {}
 		) {
 
-        	std::string prefix = config::SHADER_PATH + name;
+        	const std::string prefix = config::SHADER_PATH + name;
             return load(
                 prefix + ".vs",
                 prefix + ".fs",
