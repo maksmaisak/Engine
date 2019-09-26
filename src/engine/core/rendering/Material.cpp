@@ -309,7 +309,7 @@ bool Material::setUniformTexture(GLint uniformLocation, GLuint textureId, GLenum
 
     if (m_numTexturesInUse >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
 
-        // TODO have materials (and maybe other resources) have a name to display in these error messages.
+        // TODO have materials (and other objects) have a name to display in these error messages.
         std::cout << "Too many textures for this material: " << m_numTexturesInUse << "/" << GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS << std::endl;
         return false;
     }

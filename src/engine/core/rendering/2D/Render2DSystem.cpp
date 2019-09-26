@@ -27,6 +27,15 @@ namespace {
     uint32_t pack(const Tile::AtlasCoordinates& atlasCoordinates) {
         return ((uint32_t)atlasCoordinates.x << 24) | ((uint32_t)atlasCoordinates.y << 24 >> 8);
     }
+
+    glm::mat4 getViewMatrix(const Transform& transform) {
+
+        const glm::mat4 viewMatrix = glm::inverse(transform.getWorldTransform());
+
+        return utils::KeyboardHelper::isHeld("o") ?
+            glm::scale(glm::vec3(0.6f)) *  viewMatrix :
+            viewMatrix;
+    }
 }
 
 Render2DSystem::Render2DSystem() :
@@ -60,7 +69,7 @@ Render2DSystem::Render2DSystem() :
         const vec2D atlasSizeDouble = vec2D(AtlasSize);
         const vec2D dataTextureResolution = vec2D(MapDataTextureResolution);
 
-        const double numPaddingPixelsPerTile = 48.0;
+        constexpr double numPaddingPixelsPerTile = 48.0;
         m_tileLayerMaterial->setUniformValue("mapDataTextureResolution", glm::vec2(dataTextureResolution));
         m_tileLayerMaterial->setUniformValue("invMapDataTextureResolution", glm::vec2(1.0 / dataTextureResolution));
         m_tileLayerMaterial->setUniformValue("invNumTilesInAtlas", glm::vec2(1.0 / atlasSizeDouble));
@@ -75,7 +84,7 @@ void Render2DSystem::start() {
 
     if (!m_registry->with<TileLayer>().tryGetOne()) {
 
-        TileLayer& layer = m_engine->makeActor("Test tile layer").add<TileLayer>();
+        auto& layer = m_engine->makeActor("Test tile layer").add<TileLayer>();
 
         const float radius = 20.f;
         for (float theta = 0.f; theta < glm::two_pi<float>(); theta += 0.001f) {
@@ -116,12 +125,12 @@ void Render2DSystem::draw() {
     const glm::vec2 cameraCenter = cameraTransform.getWorldPosition();
     const glm::vec2 orthographicHalfSize = camera.getOrthographicExtents(*m_engine);
 
-    const glm::vec2 viewBottomLeftCornerPosition = cameraCenter - orthographicHalfSize;
-    const glm::vec<2, int64_t> visibleTileIndicesMin = glm::floor(viewBottomLeftCornerPosition);
+    const glm::vec<2, int64_t> visibleTileIndicesMin = glm::floor(cameraCenter - orthographicHalfSize);
     const glm::vec<2, int64_t> visibleTileIndicesMax = glm::ceil(cameraCenter + orthographicHalfSize);
     const glm::vec<2, std::size_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
+    const glm::vec<2, std::size_t> finalTileRangeSize = glm::min(visibleTileRangeSize, MapDataTextureResolution);
 
-    const glm::mat4 matrixView = (utils::KeyboardHelper::isHeld("o") ? glm::scale(glm::vec3(0.6f)) : glm::mat4(1.f)) * glm::inverse(cameraTransform.getWorldTransform());
+    const glm::mat4 matrixView = getViewMatrix(cameraTransform);
     const glm::mat4 matrixProjection = cameraActor.get<Camera>().getCameraProjectionMatrix(*m_engine);
 
     for (Entity e : m_registry->with<TileLayer>()) {
@@ -129,16 +138,13 @@ void Render2DSystem::draw() {
         auto& tileLayer = m_registry->get<TileLayer>(e);
 
         std::size_t mapDataIndex = 0;
-        for (std::size_t y = 0; y < visibleTileRangeSize.y; ++y) {
-            for (std::size_t x = 0; x < visibleTileRangeSize.x; ++x) {
-                if (x < MapDataTextureResolution && y < MapDataTextureResolution) {
-
-                    const Tile& tile = tileLayer.at({visibleTileIndicesMin.x + x, visibleTileIndicesMin.y + y});
-                    m_mapData[mapDataIndex++] = pack(tile.atlasCoordinates);
-                }
+        for (std::size_t y = 0; y < finalTileRangeSize.y; ++y) {
+            for (std::size_t x = 0; x < finalTileRangeSize.x; ++x) {
+                const Tile& tile = tileLayer.at({visibleTileIndicesMin.x + x, visibleTileIndicesMin.y + y});
+                m_mapData[mapDataIndex++] = pack(tile.atlasCoordinates);
             }
         }
-        m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, glm::min(visibleTileRangeSize.x, MapDataTextureResolution), glm::min(visibleTileRangeSize.y, MapDataTextureResolution));
+        m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, finalTileRangeSize.x, finalTileRangeSize.y);
 
         const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, 0.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
         m_tileLayerMaterial->render(Mesh::getQuad().get(), m_engine, nullptr, matrixModel, matrixView, matrixProjection);
