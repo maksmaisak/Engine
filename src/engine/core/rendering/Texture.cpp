@@ -61,13 +61,16 @@ Texture::Texture(const std::string& filename, const CreationSettings& settings) 
     setUpOpenGLTexture2D(settings, image.getPixelsPtr());
 }
 
-Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const CreationSettings& settings) {
+Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const CreationSettings& settings) :
+    m_kind(Kind::TextureCube)
+{
 
     std::array<sf::Image, 6> images;
     for (GLuint i = 0; i < images.size(); ++i)
         if (!images[i].loadFromFile(cubeSidePaths[i]))
             return;
 
+    m_glTexture.create();
     m_glTexture.bind(GL_TEXTURE_CUBE_MAP);
     {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, settings.wrapS);
@@ -87,8 +90,6 @@ Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const Creation
         }
     }
     m_glTexture.unbind(GL_TEXTURE_CUBE_MAP);
-
-    m_kind = Kind::TextureCube;
 }
 
 /// DEPRECATED
@@ -123,7 +124,7 @@ void Texture::setUpOpenGLTexture2D(const CreationSettings& settings, const GLvoi
 
     constexpr GLenum Target = GL_TEXTURE_2D;
 
-    glCheckError();
+    m_glTexture.create();
     m_glTexture.bind(Target);
     {
         glTexParameteri(Target, GL_TEXTURE_WRAP_S, settings.wrapS);

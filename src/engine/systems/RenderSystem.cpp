@@ -502,8 +502,9 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         const auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (!renderInfo.isEnabled || !renderInfo.model)
+        if (!renderInfo.isEnabled || !renderInfo.model) {
             continue;
+        }
 
         // If not in range of any lights, skip.
         const glm::mat4& modelTransform = m_registry->get<Transform>(e).getWorldTransform();

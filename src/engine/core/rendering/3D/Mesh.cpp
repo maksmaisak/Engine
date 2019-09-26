@@ -1,13 +1,15 @@
+#include "Mesh.h"
+
 #include <iostream>
 #include <map>
 #include <string>
 #include <fstream>
 #include <assimp/mesh.h>
 #include <assimp/matrix4x4.h>
+#include <assert.h>
 #include <functional>
-#include <utils/Meta.h>
 
-#include "Mesh.h"
+#include "utils/Meta.h"
 #include "GLHelpers.h"
 #include "Demangle.h"
 
@@ -67,14 +69,18 @@ Mesh::Mesh(const aiMesh* aiMesh, const aiMatrix4x4& aiTransform) :
 	const auto toGlmNormal = [&normalTransform](const aiVector3D& vec) {return normalTransform * glm::vec3(vec.x, vec.y, vec.z);};
 	static const auto toGlmUV = [](const aiVector3D& vec) {return glm::vec2(vec.x, vec.y);};
 
-	if (aiMesh->HasPositions())
-		std::transform(aiMesh->mVertices, aiMesh->mVertices + aiMesh->mNumVertices, m_vertices.begin(), toGlmPosition);
+	if (aiMesh->HasPositions()) {
+        std::transform(aiMesh->mVertices, aiMesh->mVertices + aiMesh->mNumVertices, m_vertices.begin(), toGlmPosition);
+    }
 
-	if (aiMesh->HasNormals())
-		std::transform(aiMesh->mNormals , aiMesh->mNormals + aiMesh->mNumVertices , m_normals.begin(), toGlmNormal);
+	if (aiMesh->HasNormals()) {
+        std::transform(aiMesh->mNormals, aiMesh->mNormals + aiMesh->mNumVertices, m_normals.begin(), toGlmNormal);
+    }
 
-	if (aiMesh->HasTextureCoords(0))
-		std::transform(aiMesh->mTextureCoords[0], aiMesh->mTextureCoords[0] + aiMesh->mNumVertices, m_uvs.begin(), toGlmUV);
+	if (aiMesh->HasTextureCoords(0)) {
+	    const aiVector3D* uv0 = aiMesh->mTextureCoords[0];
+        std::transform(uv0, uv0 + aiMesh->mNumVertices, m_uvs.begin(), toGlmUV);
+    }
 
 	if (aiMesh->HasTangentsAndBitangents()) {
 		std::transform(aiMesh->mTangents  , aiMesh->mTangents   + aiMesh->mNumVertices, m_tangents.begin()  , toGlmNormal);
@@ -86,87 +92,34 @@ Mesh::Mesh(const aiMesh* aiMesh, const aiMatrix4x4& aiTransform) :
 	buffer();
 }
 
-Mesh::Mesh(Mesh&& other) noexcept :
-
-    m_indexBufferId(std::exchange(other.m_indexBufferId, 0)),
-
-    m_vertexBufferId   (std::exchange(other.m_vertexBufferId,    0)),
-    m_normalBufferId   (std::exchange(other.m_normalBufferId,    0)),
-    m_uvBufferId       (std::exchange(other.m_uvBufferId,        0)),
-    m_tangentBufferId  (std::exchange(other.m_tangentBufferId,   0)),
-    m_bitangentBufferId(std::exchange(other.m_bitangentBufferId, 0)),
-
-    m_vao(std::exchange(other.m_vao, 0)),
-
-    m_indices   (std::move(other.m_indices)),
-    m_vertices  (std::move(other.m_vertices)),
-    m_normals   (std::move(other.m_normals)),
-    m_uvs       (std::move(other.m_uvs)),
-    m_tangents  (std::move(other.m_tangents)),
-    m_bitangents(std::move(other.m_bitangents))
-{}
-
-Mesh& Mesh::operator=(Mesh&& other) noexcept {
-
-    m_indexBufferId = std::exchange(other.m_indexBufferId, 0);
-
-    m_vertexBufferId    = std::exchange(other.m_vertexBufferId,    0);
-    m_normalBufferId    = std::exchange(other.m_normalBufferId,    0);
-    m_uvBufferId        = std::exchange(other.m_uvBufferId,        0);
-    m_tangentBufferId   = std::exchange(other.m_tangentBufferId,   0);
-    m_bitangentBufferId = std::exchange(other.m_bitangentBufferId, 0);
-
-    m_vao = std::exchange(other.m_vao, 0);
-
-    m_indices    = std::move(other.m_indices);
-    m_vertices   = std::move(other.m_vertices);
-    m_normals    = std::move(other.m_normals);
-    m_uvs        = std::move(other.m_uvs);
-    m_tangents   = std::move(other.m_tangents);
-    m_bitangents = std::move(other.m_bitangents);
-
-    return *this;
-}
-
-Mesh::~Mesh() {
-
-    deleteBuffers();
-    glDeleteVertexArrays(1, &m_vao);
-}
-
 void Mesh::render(GLint verticesAttrib, GLint normalsAttrib, GLint uvsAttrib, GLint tangentsAttrib, GLint bitangentsAttrib) const {
 
-    assert(m_vao != 0);
+    m_vao.bind();
 
-	glCheckError();
-	glBindVertexArray(m_vao);
-	glCheckError();
-
-	static const auto tryEnableVertexAttribArray = [](GLint attributeLocation, GLuint bufferId, GLint numComponents, bool normalize) {
+	static const auto tryEnableVertexAttribArray = [](GLint attributeLocation, const gl::VertexBufferObject& buffer, GLint numComponents, bool normalize) {
 
 		if (attributeLocation > -1) {
 
-		    assert(bufferId != 0 && "Mesh: no data for given vertex attribbute");
+		    assert(buffer.isValid() && "Mesh: no data for given vertex attribute");
 
             const auto location = static_cast<GLuint>(attributeLocation);
 
-            glBindBuffer(GL_ARRAY_BUFFER, bufferId);
+            buffer.bind(GL_ARRAY_BUFFER);
             glEnableVertexAttribArray(location);
             glVertexAttribPointer(location, numComponents, GL_FLOAT, normalize ? GL_TRUE : GL_FALSE, 0, nullptr);
             glCheckError();
         }
 	};
 
-	tryEnableVertexAttribArray(verticesAttrib  , m_vertexBufferId   , 3, false);
-	tryEnableVertexAttribArray(normalsAttrib   , m_normalBufferId   , 3, true );
-	tryEnableVertexAttribArray(uvsAttrib       , m_uvBufferId       , 2, false);
-	tryEnableVertexAttribArray(tangentsAttrib  , m_tangentBufferId  , 3, false);
-	tryEnableVertexAttribArray(bitangentsAttrib, m_bitangentBufferId, 3, false);
-	assert(m_indexBufferId != 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBufferId);
+	tryEnableVertexAttribArray(verticesAttrib  , m_vertexBuffer   , 3, false);
+	tryEnableVertexAttribArray(normalsAttrib   , m_normalBuffer   , 3, true );
+	tryEnableVertexAttribArray(uvsAttrib       , m_uvBuffer       , 2, false);
+	tryEnableVertexAttribArray(tangentsAttrib  , m_tangentBuffer  , 3, false);
+	tryEnableVertexAttribArray(bitangentsAttrib, m_bitangentBuffer, 3, false);
+	m_indexBuffer.bind(GL_ELEMENT_ARRAY_BUFFER);
 
 	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, nullptr);
-	glCheckError();
+    glCheckError();
 
 	if (bitangentsAttrib > -1) glDisableVertexAttribArray(static_cast<GLuint>(bitangentsAttrib));
 	if (tangentsAttrib   > -1) glDisableVertexAttribArray(static_cast<GLuint>(tangentsAttrib  ));
@@ -174,7 +127,7 @@ void Mesh::render(GLint verticesAttrib, GLint normalsAttrib, GLint uvsAttrib, GL
 	if (normalsAttrib    > -1) glDisableVertexAttribArray(static_cast<GLuint>(normalsAttrib   ));
 	if (verticesAttrib   > -1) glDisableVertexAttribArray(static_cast<GLuint>(verticesAttrib  ));
 
-	glBindVertexArray(0);
+	m_vao.unbind();
 }
 
 void Mesh::add(const Mesh& mesh, const glm::mat4& transform) {
@@ -197,14 +150,14 @@ void Mesh::add(const Mesh& mesh, const glm::mat4& transform) {
 
 bool Mesh::updateBuffers() {
 
-    if (!m_buffersNeedUpdating)
-        return false;
+    if (m_buffersNeedUpdating) {
 
-    deleteBuffers();
-    buffer();
+        buffer();
+        m_buffersNeedUpdating = false;
+        return true;
+    }
 
-    m_buffersNeedUpdating = false;
-    return true;
+    return false;
 }
 
 
@@ -274,38 +227,27 @@ void Mesh::generateTangentsAndBitangents() {
 
 void Mesh::buffer() {
 
-    static const auto bufferVector = [](GLuint& bufferId, const auto& vec, GLenum bufferKind = GL_ARRAY_BUFFER) {
+    static const auto bufferVector = [](gl::VertexBufferObject& buffer, const auto& vec, GLenum bufferKind = GL_ARRAY_BUFFER) {
 
-        using T = typename utils::remove_cvref_t<decltype(vec)>::value_type;
+        using TElement = typename utils::remove_cvref_t<decltype(vec)>::value_type;
 
-        glGenBuffers(1, &bufferId);
-        glBindBuffer(bufferKind, bufferId);
-        glBufferData(bufferKind, vec.size() * sizeof(T), vec.data(), GL_STATIC_DRAW);
-        glCheckError();
+        buffer = {};
+        buffer.create();
+        buffer.bind(bufferKind);
+        glBufferData(bufferKind, vec.size() * sizeof(TElement), vec.data(), GL_STATIC_DRAW);
     };
 
-    bufferVector(m_indexBufferId, m_indices, GL_ELEMENT_ARRAY_BUFFER);
+    bufferVector(m_indexBuffer, m_indices, GL_ELEMENT_ARRAY_BUFFER);
 
-    bufferVector(m_vertexBufferId   , m_vertices  );
-    bufferVector(m_normalBufferId   , m_normals   );
-    bufferVector(m_uvBufferId       , m_uvs       );
-    bufferVector(m_tangentBufferId  , m_tangents  );
-    bufferVector(m_bitangentBufferId, m_bitangents);
+    bufferVector(m_vertexBuffer   , m_vertices  );
+    bufferVector(m_normalBuffer   , m_normals   );
+    bufferVector(m_uvBuffer       , m_uvs       );
+    bufferVector(m_tangentBuffer  , m_tangents  );
+    bufferVector(m_bitangentBuffer, m_bitangents);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    if (m_vao == 0) {
-        glGenVertexArrays(1, &m_vao);
-        glCheckError();
+    if (!m_vao) {
+        m_vao.create();
     }
-}
-
-void Mesh::deleteBuffers() {
-
-    glDeleteBuffers(1, &m_indexBufferId);
-
-    glDeleteBuffers(1, &m_vertexBufferId);
-    glDeleteBuffers(1, &m_normalBufferId);
-    glDeleteBuffers(1, &m_uvBufferId);
-    glDeleteBuffers(1, &m_tangentBufferId);
-    glDeleteBuffers(1, &m_bitangentBufferId);
 }

@@ -7,6 +7,7 @@
 #include <assimp/mesh.h>
 #include "glm.h"
 #include "Resources.h"
+#include "GLWrappers.h"
 
 namespace en {
 
@@ -19,15 +20,9 @@ namespace en {
 
 	    static std::shared_ptr<Mesh> getQuad();
 
-		/// Imports the mesh data using Assimp
-		explicit Mesh(const aiMesh* aiMesh, const aiMatrix4x4& transform = {});
-
         Mesh() = default;
-        Mesh(const Mesh&) = delete;
-		Mesh& operator=(const Mesh&) = delete;
-		Mesh(Mesh&& other) noexcept;
-		Mesh& operator=(Mesh&& other) noexcept;
-		~Mesh();
+        /// Imports the mesh data using Assimp
+		explicit Mesh(const aiMesh* aiMesh, const aiMatrix4x4& transform = {});
 
         /// Activates attributes at given attribute locations and assigns vertex attribute buffers to them.
         /// Then performs a draw call.
@@ -53,22 +48,20 @@ namespace en {
 
 		void generateTangentsAndBitangents();
 		void buffer();
-		void deleteBuffers();
 
 		bool m_buffersNeedUpdating = false;
 
-		// ID of its Vertex Array Object
-		GLuint m_vao = 0;
+		gl::VertexArrayObject m_vao;
 
-		// IDs of vertex attribute buffers
-		GLuint m_indexBufferId     = 0;
-		GLuint m_vertexBufferId    = 0;
-		GLuint m_normalBufferId    = 0;
-		GLuint m_uvBufferId        = 0;
-		GLuint m_tangentBufferId   = 0;
-		GLuint m_bitangentBufferId = 0;
+		// OpenGL vertex attribute buffers
+		gl::VertexBufferObject m_indexBuffer;
+		gl::VertexBufferObject m_vertexBuffer;
+		gl::VertexBufferObject m_normalBuffer;
+		gl::VertexBufferObject m_uvBuffer;
+		gl::VertexBufferObject m_tangentBuffer;
+		gl::VertexBufferObject m_bitangentBuffer;
 
-        // CPU-side Vertex data
+        // CPU-side vertex data
         std::vector<unsigned>  m_indices;
         std::vector<glm::vec3> m_vertices;
         std::vector<glm::vec3> m_normals;

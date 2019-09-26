@@ -18,6 +18,7 @@ void gl::deleteVBO(GLuint id) {
     glDeleteBuffers(1, &id);
 }
 
+
 GLuint gl::createTexture() {
 
     GLuint id;
@@ -30,6 +31,7 @@ void gl::deleteTexture(GLuint id) {
     glDeleteTextures(1, &id);
 }
 
+
 GLuint gl::createVAO() {
 
     GLuint id;
@@ -37,16 +39,17 @@ GLuint gl::createVAO() {
     return id;
 }
 
-void deleteVAO(GLuint id) {
+void gl::deleteVAO(GLuint id) {
 
     glDeleteVertexArrays(1, &id);
 }
 
-void VertexBufferObject::bind(GLenum target) {assert(m_id); glBindBuffer(target, m_id);}
-void VertexBufferObject::unbind(GLenum target) {glBindBuffer(target, 0);}
 
-void TextureObject::bind(GLenum target) {assert(m_id); glBindTexture(target, m_id);}
-void TextureObject::unbind(GLenum target) {glBindTexture(target, 0);}
+void VertexBufferObject::bind(GLenum target) const {assert(isValid()); glBindBuffer(target, m_id);}
+void VertexBufferObject::unbind(GLenum target) const {glBindBuffer(target, 0);}
 
-void VertexArrayObject::bind() {assert(m_id); glBindVertexArray(m_id);}
-void VertexArrayObject::unbind() {glBindVertexArray(0);}
+void TextureObject::bind(GLenum target) const {assert(isValid()); glBindTexture(target, m_id);}
+void TextureObject::unbind(GLenum target) const {glBindTexture(target, 0);}
+
+void VertexArrayObject::bind() const {assert(isValid()); glBindVertexArray(m_id);}
+void VertexArrayObject::unbind() const {glBindVertexArray(0);}
