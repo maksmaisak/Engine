@@ -15,14 +15,14 @@
 #include "Transform.h"
 #include "Camera.h"
 #include "Name.h"
-#include "Sprite.h"
-#include "Text.h"
 #include "GLHelpers.h"
 #include "GameTime.h"
 #include "Resources.h"
 #include "Material.h"
 #include "Exception.h"
-#include "UIRect.h"
+#include "Render2DSystem.h"
+#include "RenderSkyboxSystem.h"
+#include "RenderUISystem.h"
 
 using namespace en;
 
@@ -30,11 +30,12 @@ namespace {
 
     inline void checkRenderingError(const Actor& actor) {
 
-        if (glCheckError() == GL_NO_ERROR)
+        if (glCheckError() == GL_NO_ERROR) {
             return;
+        }
 
         const en::Name* const namePtr = actor.tryGet<en::Name>();
-        std::string name = namePtr ? namePtr->value : "unnamed";
+        const std::string name = namePtr ? namePtr->value : "unnamed";
         std::cerr << "Error while rendering " << name << std::endl;
     }
 
@@ -63,40 +64,6 @@ namespace {
         glDebugMessageCallback(messageCallback, 0);
     }
 
-    std::shared_ptr<Texture> getDefaultSkybox(LuaState& lua) {
-
-        lua_getglobal(lua, "Config");
-        auto popConfig = PopperOnDestruct(lua);
-        if (lua_isnil(lua, -1))
-            return nullptr;
-
-        lua_getfield(lua, -1, "defaultSkybox");
-        auto popSkybox = PopperOnDestruct(lua);
-        if (lua_isnil(lua, -1))
-            return nullptr;
-
-        static std::string keys[] = {
-            "right",
-            "left",
-            "top",
-            "bottom",
-            "front",
-            "back"
-        };
-
-        std::array<std::string, 6> imagePaths;
-        for (int i = 0; i < 6; ++i) {
-
-            std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
-            if (!path)
-                return nullptr;
-
-            imagePaths[i] = "assets/" + *path;
-        }
-
-        return Resources<Texture>::get("defaultSkybox", imagePaths);
-    }
-
     const float MAX_SHADOW_DISTANCE = 300.f;
     const glm::vec3 SHADOW_CASTERS_BOUNDS_PADDING = {5, 5, 5};
 }
@@ -104,15 +71,59 @@ namespace {
 RenderSystem::RenderSystem() :
     m_directionalDepthShader(Resources<ShaderProgram>::get("depthDirectional")),
     m_positionalDepthShader (Resources<ShaderProgram>::get("depthPositional")),
-    m_depthMaps(4, {1024, 1024}, 10, {64, 64}),
-    m_vertexRenderer(4096),
-    m_referenceResolution(1920, 1080),
     m_enableStaticBatching(true),
     m_enableDebugOutput(false),
     m_shadowReceiversBounds()
 {}
 
 void RenderSystem::start() {
+
+    getConfigFromLua();
+
+    setOpenGLSettings();
+
+    m_debugHud = std::make_unique<DebugHud>(*m_engine, m_renderingSharedState.vertexRenderer);
+
+    addSystem<RenderSkyboxSystem>();
+    addSystem<Render2DSystem>();
+    addSystem<RenderUISystem>(m_renderingSharedState);
+    CompoundSystem::start();
+}
+
+void RenderSystem::draw() {
+
+    if (glCheckError() != GL_NO_ERROR) {
+        std::cerr << "Uncaught openGL error(s) before rendering." << std::endl;
+    }
+
+    if (m_enableStaticBatching) {
+        updateBatches();
+    }
+
+    updateShadowCastersBounds();
+    updateDepthMaps();
+    renderEntities();
+    CompoundSystem::draw();
+
+    if (m_enableDebugOutput) {
+        renderDebug();
+    }
+}
+
+void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
+
+    m_batches.clear();
+}
+
+void RenderSystem::receive(const sf::Event& event) {
+
+    if (event.type == sf::Event::EventType::Resized) {
+        // Make viewport match window size.
+        glViewport(0, 0, event.size.width, event.size.height);
+    }
+}
+
+void RenderSystem::setOpenGLSettings() {
 
     glEnable(GL_DEPTH_TEST);
 
@@ -136,88 +147,18 @@ void RenderSystem::start() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+}
 
-    m_debugHud = std::make_unique<DebugHud>(*m_engine, m_vertexRenderer);
+void RenderSystem::getConfigFromLua() {
 
     auto& lua = m_engine->getLuaState();
     {
         lua_getglobal(lua, "Config");
         auto popConfig = lua::PopperOnDestruct(lua);
 
-        m_referenceResolution  = lua.tryGetField<glm::vec2>("referenceResolution").value_or(m_referenceResolution);
+        m_renderingSharedState.referenceResolution = lua.tryGetField<glm::vec2>("referenceResolution").value_or(m_renderingSharedState.referenceResolution);
         m_enableStaticBatching = lua.tryGetField<bool>("enableStaticBatching").value_or(m_enableStaticBatching);
         m_enableDebugOutput    = lua.tryGetField<bool>("enableDebugOutput").value_or(m_enableDebugOutput);
-        m_defaultSkybox        = getDefaultSkybox(lua);
-    }
-
-    {
-        lua_getglobal(lua, "Game");
-        auto popGame = lua::PopperOnDestruct(lua);
-        lua.setField("getUIScaleFactor", [this](){return getUIScaleFactor();});
-    }
-}
-
-namespace {
-
-    glm::mat4 getCameraProjectionMatrix(Engine& engine, Camera& camera, std::optional<float> rangeLimit = std::nullopt) {
-
-        const auto size = engine.getWindow().getSize();
-        const float aspectRatio = (float)size.x / size.y;
-
-        const float farPlaneDistance = std::min(rangeLimit.value_or(camera.farPlaneDistance), camera.farPlaneDistance);
-
-        if (camera.isOrthographic) {
-
-            const glm::vec2 halfSize = {
-                camera.orthographicHalfSize * aspectRatio,
-                camera.orthographicHalfSize
-            };
-
-            return glm::ortho(
-                -halfSize.x, halfSize.x,
-                -halfSize.y, halfSize.y,
-                camera.nearPlaneDistance, farPlaneDistance
-            );
-        }
-
-        return glm::perspective(
-            glm::radians(camera.fov),
-            aspectRatio,
-            camera.nearPlaneDistance,
-            farPlaneDistance
-        );
-    }
-}
-
-void RenderSystem::draw() {
-
-    if (glCheckError() != GL_NO_ERROR) {
-        std::cerr << "Uncaught openGL error(s) before rendering." << std::endl;
-    }
-
-    if (m_enableStaticBatching)
-        updateBatches();
-
-    updateShadowCastersBounds();
-    updateDepthMaps();
-    renderEntities();
-    renderSkybox();
-    renderUI();
-
-    if (m_enableDebugOutput)
-        renderDebug();
-}
-
-void RenderSystem::receive(const SceneManager::OnSceneClosed& info) {
-
-    m_batches.clear();
-}
-
-void RenderSystem::receive(const sf::Event& event) {
-
-    if (event.type == sf::Event::EventType::Resized) {
-        // Make viewport match window size.
-        glViewport(0, 0, event.size.width, event.size.height);
     }
 }
 
@@ -226,8 +167,9 @@ void RenderSystem::updateBatches() {
     const auto findBatchMesh = [&batches = m_batches](const std::shared_ptr<en::Material>& material) -> en::Mesh& {
 
         const auto foundIt = batches.find(material);
-        if (foundIt != batches.end())
+        if (foundIt != batches.end()) {
             return foundIt->second;
+        }
 
         const auto [it, didEmplace] = batches.emplace(std::make_pair(material, Mesh{}));
         assert(didEmplace);
@@ -237,19 +179,20 @@ void RenderSystem::updateBatches() {
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (renderInfo.isInBatch || !renderInfo.isBatchingStatic || !renderInfo.material || !renderInfo.model)
+        if (renderInfo.isInBatch || !renderInfo.isBatchingStatic || !renderInfo.material || !renderInfo.model) {
             continue;
+        }
 
         en::Mesh& batchMesh = findBatchMesh(renderInfo.material);
         const glm::mat4& worldMatrix = m_registry->get<Transform>(e).getWorldTransform();
-        for (const en::Mesh& mesh : renderInfo.model->getMeshes())
+        for (const en::Mesh& mesh : renderInfo.model->getMeshes()) {
             batchMesh.add(mesh, worldMatrix);
+        }
 
         renderInfo.isInBatch = true;
     }
 
     for (auto& [material, batch] : m_batches) {
-
         batch.updateBuffers();
     }
 }
@@ -258,19 +201,18 @@ void RenderSystem::updateDepthMaps() {
 
     std::vector<Entity> directionalLights;
     std::vector<Entity> pointLights;
-
     for (Entity lightEntity : m_registry->with<Transform, Light>()) {
-
-        auto& light = m_registry->get<Light>(lightEntity);
-        if (light.kind == Light::Kind::DIRECTIONAL)
+        if (m_registry->get<Light>(lightEntity).kind == Light::Kind::DIRECTIONAL) {
             directionalLights.push_back(lightEntity);
-        else
+        } else {
             pointLights.push_back(lightEntity);
+        }
     }
 
     updateDepthMapsDirectionalLights(directionalLights);
     updateDepthMapsPositionalLights(pointLights);
 
+    // Reset viewport back to the window size.
     const auto size = m_engine->getWindow().getSize();
     glViewport(0, 0, size.x, size.y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -279,181 +221,53 @@ void RenderSystem::updateDepthMaps() {
 
 void RenderSystem::renderEntities() {
 
+    DepthMaps& depthMaps = m_renderingSharedState.depthMaps;
+
     Actor mainCamera = getMainCamera();
-    if (!mainCamera)
+    if (!mainCamera) {
         return;
+    }
+
     const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
-    const glm::mat4 matrixProjection = getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>());
+    const glm::mat4 matrixProjection = mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine);
 
     // Render batches
     for (const auto& [material, mesh] : m_batches) {
-        material->render(&mesh, m_engine, &m_depthMaps, glm::mat4(1), matrixView, matrixProjection);
+        material->render(&mesh, m_engine, &depthMaps, glm::mat4(1), matrixView, matrixProjection);
     }
 
     // Render entities
-    int numBatched = 0;
-    Material* previousMaterial = nullptr;
+    int numSavedByBatching = 0;
+    const Material* previousMaterial = nullptr;
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         const auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (!renderInfo.isEnabled || !renderInfo.material || !renderInfo.model)
+        if (!renderInfo.isEnabled || !renderInfo.material || !renderInfo.model) {
             continue;
+        }
 
         if (renderInfo.isInBatch) {
-            numBatched += renderInfo.model->getMeshes().size();
+            numSavedByBatching += renderInfo.model->getMeshes().size();
             continue;
         }
 
         const glm::mat4& matrixModel = m_registry->get<Transform>(e).getWorldTransform();
-        if (renderInfo.material.get() != previousMaterial)
-            renderInfo.material->use(m_engine, &m_depthMaps, matrixModel, matrixView, matrixProjection);
-        else
+        if (renderInfo.material.get() != previousMaterial) {
+            renderInfo.material->use(m_engine, &depthMaps, matrixModel, matrixView, matrixProjection);
+        } else {
             renderInfo.material->updateModelMatrix(matrixModel);
+        }
 
-        for (const Mesh& mesh : renderInfo.model->getMeshes())
+        for (const Mesh& mesh : renderInfo.model->getMeshes()) {
             renderInfo.material->setAttributesAndDraw(&mesh);
+        }
 
         previousMaterial = renderInfo.material.get();
 
         checkRenderingError(m_engine->actor(e));
     }
 
-    //std::cout << "Draw calls saved by batching: " << numBatched - m_batches.size() << '\n';
-}
-
-void RenderSystem::renderSkybox() {
-
-    Actor mainCamera = getMainCamera();
-    if (!mainCamera)
-        return;
-
-    Scene* scene = m_engine->getSceneManager().getCurrentScene();
-    if (!scene)
-        return;
-
-    const auto& renderSettings = scene->getRenderSettings();
-    if (!renderSettings.useSkybox)
-        return;
-
-    const std::shared_ptr<Texture>& skyboxTexture = renderSettings.skyboxTexture ? renderSettings.skyboxTexture : m_defaultSkybox;
-    if (!skyboxTexture || !skyboxTexture->isValid() || skyboxTexture->getKind() != Texture::Kind::TextureCube)
-        return;
-
-    const glm::mat4 matrixView = glm::mat4(glm::inverse(mainCamera.get<Transform>().getWorldRotation()));
-
-    const auto& camera = mainCamera.get<Camera>();
-    const auto size = m_engine->getWindow().getSize();
-    const float aspectRatio = (float) size.x / size.y;
-    const glm::mat4 matrixProjection = glm::perspective(
-        glm::radians(camera.isOrthographic ? 90.f : camera.fov),
-        aspectRatio,
-        camera.nearPlaneDistance,
-        camera.farPlaneDistance
-    );
-    m_skyboxRenderer.draw(*skyboxTexture, matrixProjection * matrixView);
-}
-
-namespace {
-
-    void updateUIRect(Engine& engine, EntityRegistry& registry, Entity e, const glm::vec2& parentSize, const glm::vec2& parentPivot, float scaleFactor) {
-
-        auto* rect = registry.tryGet<UIRect>(e);
-        if (!rect)
-            return;
-
-        auto* tf = registry.tryGet<Transform>(e);
-        if (!tf)
-            return;
-
-        const glm::vec2 parentMinToLocalMin = parentSize * rect->anchorMin + rect->offsetMin * scaleFactor;
-        const glm::vec2 parentMinToLocalMax = parentSize * rect->anchorMax + rect->offsetMax * scaleFactor;
-        rect->computedSize = parentMinToLocalMax - parentMinToLocalMin;
-
-        const glm::vec2 parentMinToLocalPivot = glm::lerp(parentMinToLocalMin, parentMinToLocalMax, rect->pivot);
-        const glm::vec2 parentPivotToParentMin = -parentSize * parentPivot;
-        const glm::vec2 parentPivotToLocalPivot = parentPivotToParentMin + parentMinToLocalPivot;
-        tf->setLocalPosition(glm::vec3(parentPivotToLocalPivot, tf->getLocalPosition().z));
-
-        for (Entity child : tf->getChildren())
-            updateUIRect(engine, registry, child, rect->computedSize, rect->pivot, scaleFactor);
-    }
-}
-
-void RenderSystem::renderUI() {
-
-    glDisable(GL_DEPTH_TEST);
-
-    for (Entity e : m_registry->with<Transform, UIRect>())
-        if (!m_registry->get<Transform>(e).getParent())
-            updateUIRect(*m_engine, *m_registry, e, getWindowSize(), {0, 0}, getUIScaleFactor());
-
-    for (Entity e : m_registry->with<Transform, UIRect>())
-        if (!m_registry->get<Transform>(e).getParent())
-            renderUIRect(e, m_registry->get<UIRect>(e));
-
-    glEnable(GL_DEPTH_TEST);
-}
-
-void RenderSystem::renderUIRect(Entity e, UIRect& rect) {
-
-    if (!rect.isEnabled)
-        return;
-
-    auto* tf = m_registry->tryGet<Transform>(e);
-    if (!tf)
-        return;
-
-    const glm::vec2 windowSize = getWindowSize();
-    const glm::mat4 matrixProjection = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y);
-
-    auto* sprite = m_registry->tryGet<Sprite>(e);
-    if (sprite && sprite->isEnabled && sprite->material) {
-
-        const glm::mat4& transform = tf->getWorldTransform();
-        const glm::vec2 localMin = -rect.computedSize * rect.pivot;
-        const glm::vec2 localMax =  rect.computedSize * (1.f - rect.pivot);
-        const glm::vec3 corners[] = {
-            transform * glm::vec4(localMin              , 0, 1),
-            transform * glm::vec4(localMin.x, localMax.y, 0, 1),
-            transform * glm::vec4(localMax.x, localMin.y, 0, 1),
-            transform * glm::vec4(localMax              , 0, 1)
-        };
-        const std::vector<Vertex> vertices = {
-            {corners[1], {0, 1}},
-            {corners[0], {0, 0}},
-            {corners[2], {1, 0}},
-
-            {corners[1], {0, 1}},
-            {corners[2], {1, 0}},
-            {corners[3], {1, 1}},
-        };
-
-        sprite->material->use(m_engine, &m_depthMaps, glm::mat4(1), glm::mat4(1), matrixProjection);
-        m_vertexRenderer.renderVertices(vertices);
-    }
-
-    auto* text = m_registry->tryGet<Text>(e);
-    if (text && text->getMaterial()) {
-
-        const std::vector<Vertex>& vertices = text->getVertices();
-
-        const glm::vec2& alignment = text->getAlignment();
-        const glm::vec2 boundsAlignPoint = glm::lerp(text->getBoundsMin(), text->getBoundsMax(), alignment);
-        const glm::vec2 offsetInRect = rect.computedSize * (alignment - rect.pivot);
-
-        // Scale the bounds by the scale factor and bring them to the rect's position.
-        glm::mat4 matrix = glm::translate(glm::vec3(-boundsAlignPoint, 0.f));
-        matrix = glm::scale(glm::vec3(getUIScaleFactor())) * matrix;
-        matrix = glm::translate(glm::vec3(offsetInRect, 0.f)) * matrix;
-        matrix = tf->getWorldTransform() * matrix;
-
-        text->getMaterial()->use(m_engine, &m_depthMaps, glm::mat4(1), glm::mat4(1), matrixProjection * matrix);
-        m_vertexRenderer.renderVertices(vertices);
-    }
-
-    for (Entity child : tf->getChildren())
-        if (auto* childRect = m_registry->tryGet<UIRect>(child))
-            renderUIRect(child, *childRect);
+    //std::cout << "Draw calls saved by batching: " << numSavedByBatching - m_batches.size() << '\n';
 }
 
 void RenderSystem::renderDebug() {
@@ -471,11 +285,12 @@ Actor RenderSystem::getMainCamera() {
 utils::Bounds RenderSystem::getCameraFrustumBounds() {
 
     const Actor mainCamera = getMainCamera();
-    if (!mainCamera)
+    if (!mainCamera) {
         return {glm::vec3(-100.f), glm::vec3(100.f)};
+    }
 
     const glm::mat4 viewToWorld = mainCamera.get<Transform>().getWorldTransform();
-    const glm::mat4 clipToView  = glm::inverse(getCameraProjectionMatrix(*m_engine, mainCamera.get<Camera>(), MAX_SHADOW_DISTANCE));
+    const glm::mat4 clipToView  = glm::inverse(mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine, MAX_SHADOW_DISTANCE));
     const glm::mat4 clipToWorld = viewToWorld * clipToView;
     const std::array<glm::vec4, 8> corners = {
         clipToWorld * glm::vec4(-1, -1, -1, 1),
@@ -564,8 +379,10 @@ namespace {
 
 void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& directionalLights) {
 
-    glViewport(0, 0, m_depthMaps.getDirectionalMapResolution().x, m_depthMaps.getDirectionalMapResolution().y);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_depthMaps.getDirectionalMapsFramebufferId());
+    DepthMaps& depthMaps = m_renderingSharedState.depthMaps;
+
+    glViewport(0, 0, depthMaps.getDirectionalMapResolution().x, depthMaps.getDirectionalMapResolution().y);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMaps.getDirectionalMapsFramebufferId());
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_directionalDepthShader->use();
@@ -574,8 +391,9 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
     int numLights = 0;
     for (Entity e : directionalLights) {
 
-        if (numLights >= m_depthMaps.getMaxNumDirectionalLights())
+        if (numLights >= depthMaps.getMaxNumDirectionalLights()) {
             break;
+        }
 
         auto& light = m_registry->get<Light>(e);
         const auto& tf = m_registry->get<Transform>(e);
@@ -596,13 +414,15 @@ void RenderSystem::updateDepthMapsDirectionalLights(const std::vector<Entity>& d
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (renderInfo.isInBatch || !renderInfo.isEnabled || !renderInfo.model)
+        if (renderInfo.isInBatch || !renderInfo.isEnabled || !renderInfo.model) {
             continue;
+        }
 
         const glm::mat4& modelTransform = m_registry->get<Transform>(e).getWorldTransform();
         m_directionalDepthShader->setUniformValue("matrixModel", modelTransform);
-        for (const Mesh& mesh : renderInfo.model->getMeshes())
+        for (const Mesh& mesh : renderInfo.model->getMeshes()) {
             mesh.render(0, -1, -1);
+        }
 
         checkRenderingError(m_engine->actor(e));
     }
@@ -642,8 +462,10 @@ namespace {
 
 void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& pointLights) {
 
-    glViewport(0, 0, m_depthMaps.getCubemapResolution().x, m_depthMaps.getCubemapResolution().y);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_depthMaps.getCubemapsFramebufferId());
+    DepthMaps& depthMaps = m_renderingSharedState.depthMaps;
+
+    glViewport(0, 0, depthMaps.getCubemapResolution().x, depthMaps.getCubemapResolution().y);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMaps.getCubemapsFramebufferId());
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_positionalDepthShader->use();
@@ -660,17 +482,19 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
 
         const auto& light = m_registry->get<Light>(e);
         const auto& tf = m_registry->get<Transform>(e);
-        const auto [farPlaneDistance, lightPosition, pvMatrices] = getPointLightUniforms(m_depthMaps, light, tf);
+        const auto [farPlaneDistance, lightPosition, pvMatrices] = getPointLightUniforms(depthMaps, light, tf);
         lightSpheres.push_back({light.range, lightPosition});
 
-        for (unsigned int face = 0; face < 6; ++face)
+        for (unsigned int face = 0; face < 6; ++face) {
             m_positionalDepthShader->setUniformValue("matrixPV[" + std::to_string(i * 6 + face) + "]", pvMatrices[face]);
+        }
         std::string prefix = "lights[" + std::to_string(i) + "].";
         m_positionalDepthShader->setUniformValue(prefix + "position", lightPosition);
         m_positionalDepthShader->setUniformValue(prefix + "farPlaneDistance", farPlaneDistance);
 
-        if (++i >= m_depthMaps.getMaxNumPositionalLights())
+        if (++i >= depthMaps.getMaxNumPositionalLights()) {
             break;
+        }
     }
     m_positionalDepthShader->setUniformValue("numLights", i);
 
@@ -678,8 +502,9 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         const auto& renderInfo = m_registry->get<RenderInfo>(e);
-        if (!renderInfo.isEnabled || !renderInfo.model)
+        if (!renderInfo.isEnabled || !renderInfo.model) {
             continue;
+        }
 
         // If not in range of any lights, skip.
         const glm::mat4& modelTransform = m_registry->get<Transform>(e).getWorldTransform();
@@ -689,21 +514,10 @@ void RenderSystem::updateDepthMapsPositionalLights(const std::vector<Entity>& po
             continue;
 
         m_positionalDepthShader->setUniformValue("matrixModel", modelTransform);
-        for (const Mesh& mesh : renderInfo.model->getMeshes())
+        for (const Mesh& mesh : renderInfo.model->getMeshes()) {
             mesh.render(0);
+        }
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-glm::vec2 RenderSystem::getWindowSize() {
-
-    sf::Vector2u windowSizeSf = m_engine->getWindow().getSize();
-    return glm::vec2(windowSizeSf.x, windowSizeSf.y);
-}
-
-float RenderSystem::getUIScaleFactor() {
-
-    const glm::vec2 scale = getWindowSize() / m_referenceResolution;
-    return std::sqrt(scale.x * scale.y);
 }

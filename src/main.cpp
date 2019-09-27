@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <core/rendering/2D/Render2DSystem.h>
 
 #include "Engine.h"
 #include "Actor.h"
@@ -7,6 +8,7 @@
 #include "DestroySystem.h"
 #include "DestroyByTimerSystem.h"
 #include "RenderSystem.h"
+#include "Render2DSystem.h"
 #include "PhysicsSystem.h"
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
 #include "PhysicsSystemFlatGrid.h"
@@ -23,6 +25,8 @@
 #include "LuaScene.h"
 
 #include "TestComponentPool.h"
+
+#include "CameraControls2DSystem.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -41,11 +45,12 @@ int main() {
 
     auto engine = std::make_unique<en::Engine>();
     engine->initialize();
+
     {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
 
-        engine->addSystem<en::PhysicsStressTestingSystem>(10s);
+        //engine->addSystem<en::PhysicsStressTestingSystem>(10s);
         //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
         //engine->addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
@@ -58,6 +63,10 @@ int main() {
         engine->addSystem<en::TweenSystem>();
         engine->addSystem<en::DestroyByTimerSystem>();
         engine->addSystem<en::DestroySystem>();
+    }
+
+    {
+        engine->addSystem<CameraControls2DSystem>();
     }
 
     //openStartLuaScene(*engine);

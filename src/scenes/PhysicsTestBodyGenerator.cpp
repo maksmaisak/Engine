@@ -10,7 +10,7 @@
 #include <utility>
 #include "Engine.h"
 #include "Model.h"
-#include "Texture.hpp"
+#include "Texture.h"
 #include "Resources.h"
 #include "KeyboardHelper.h"
 #include "config.hpp"

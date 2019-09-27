@@ -5,7 +5,7 @@
 #ifndef ENGINE_HIT_H
 #define ENGINE_HIT_H
 
-#include "glm.hpp"
+#include "glm.h"
 
 namespace en {
 

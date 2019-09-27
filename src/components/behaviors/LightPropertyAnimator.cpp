@@ -4,7 +4,7 @@
 
 #include "LightPropertyAnimator.h"
 #include "Light.h"
-#include "glm.hpp"
+#include "glm.h"
 
 void LightPropertyAnimator::start() {
 

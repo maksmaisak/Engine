@@ -12,6 +12,7 @@ namespace {
 
         std::ifstream file(filepath, std::ios::in);
         if (!file.is_open()) {
+
             std::cout << "Error reading shader " << filepath << std::endl;
             return std::nullopt;
         }
@@ -21,18 +22,21 @@ namespace {
 
         std::string line;
         if (getline(file, line)) {
-            text << line;
 
+            text << line;
             for (const auto& definition : preprocessorDefinitions) {
 
                 text << "\n" << "#define " << definition.name;
-                if (definition.value)
+                if (definition.value) {
                     text << *definition.value;
+                }
             }
         }
 
-        while (getline(file, line))
+        while (getline(file, line)) {
+
             text << "\n" << line;
+        }
 
         file.close();
 
@@ -71,15 +75,31 @@ ShaderProgram::~ShaderProgram() {
     glDeleteProgram(m_programId);
 }
 
+ShaderProgram::ShaderProgram(ShaderProgram&& other) :
+    m_programId(std::exchange(other.m_programId, 0))
+{}
+
+ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) {
+
+    if (m_programId && this != &other) {
+        glDeleteProgram(m_programId);
+    }
+
+    m_programId = std::exchange(other.m_programId, 0);
+    return *this;
+}
+
 bool ShaderProgram::addShader(GLuint shaderType, const std::string& filepath, const PreprocessorDefinitions& preprocessorDefinitions) {
 
     std::optional<std::string> shaderCode = getSource(filepath, preprocessorDefinitions);
-    if (!shaderCode)
+    if (!shaderCode) {
         return false;
+    }
 
     GLuint shaderId = compileShader(shaderType, *shaderCode);
-    if (shaderId == 0)
+    if (shaderId == 0) {
         return false;
+    }
 
     m_shaderIds.push_back(shaderId);
     return true;
@@ -87,8 +107,10 @@ bool ShaderProgram::addShader(GLuint shaderType, const std::string& filepath, co
 
 void ShaderProgram::finalize() {
 
-    for (GLuint shaderId : m_shaderIds)
+    for (GLuint shaderId : m_shaderIds) {
         glAttachShader(m_programId, shaderId);
+    }
+
     glLinkProgram(m_programId);
 
     // Check the program
@@ -102,8 +124,9 @@ void ShaderProgram::finalize() {
         printProgramError(m_programId);
     }
 
-    for (GLuint shaderId : m_shaderIds)
+    for (GLuint shaderId : m_shaderIds) {
         glDeleteShader(shaderId);
+    }
 }
 
 void ShaderProgram::use() const {
@@ -114,8 +137,8 @@ GLint ShaderProgram::getUniformLocation(const std::string& uniformName) const {
     return glGetUniformLocation(m_programId, uniformName.c_str());
 }
 
-GLint ShaderProgram::getAttribLocation(const std::string& attributeName) const {
-    return glGetAttribLocation(m_programId, attributeName.c_str());
+GLint ShaderProgram::getAttributeLocation(const std::string& attributeLocation) const {
+    return glGetAttribLocation(m_programId, attributeLocation.c_str());
 }
 
 // compile the code, and detect errors.

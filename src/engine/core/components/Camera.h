@@ -6,7 +6,7 @@
 #define ENGINE_CAMERA_H
 
 #include <utility>
-#include "glm.hpp"
+#include "glm.h"
 #include "ComponentsToLua.h"
 
 namespace en {
@@ -21,11 +21,12 @@ namespace en {
 
         bool isOrthographic = false;
         float fov = 60.f;
-        float orthographicHalfSize = 5;
+        float orthographicHalfSize = 5.f;
         float nearPlaneDistance = 0.1f;
         float farPlaneDistance  = 1000.f;
 
-        glm::mat4 getCameraProjectionMatrix(Engine& engine, std::optional<float> rangeLimit = std::nullopt);
+        glm::vec2 getOrthographicExtents(Engine& engine) const;
+        glm::mat4 getCameraProjectionMatrix(Engine& engine, std::optional<float> rangeLimit = std::nullopt) const;
     };
 }
 

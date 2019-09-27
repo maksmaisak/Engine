@@ -8,7 +8,8 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include "Mesh.hpp"
+#include "Mesh.h"
+#include "Resources.h"
 
 namespace en {
 
@@ -27,6 +28,8 @@ namespace en {
         std::string m_filepath;
         std::vector<Mesh> m_meshes;
     };
+
+    using Models = Resources<Model>;
 }
 
 #endif //ENGINE_MODEL_H

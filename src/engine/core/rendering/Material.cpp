@@ -10,7 +10,7 @@
 #include "Light.h"
 #include "Material.h"
 #include "Resources.h"
-#include "Mesh.hpp"
+#include "Mesh.h"
 #include "DepthMaps.h"
 #include "GLHelpers.h"
 #include "GLSetUniform.h"
@@ -285,8 +285,8 @@ void Material::setCustomUniformsOfType(const Material::LocationToUniformValue<T>
 template<>
 void Material::setCustomUniformsOfType<std::shared_ptr<Texture>>(const Material::LocationToUniformValue<std::shared_ptr<Texture>>& values) {
 
-    for (auto& [location, value] : values) {
-        if (!setUniformTexture(location, value->getId()))
+    for (auto& [location, texture] : values) {
+        if (!setUniformTexture(location, texture->getId()))
             break;
     }
 }
@@ -309,7 +309,7 @@ bool Material::setUniformTexture(GLint uniformLocation, GLuint textureId, GLenum
 
     if (m_numTexturesInUse >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
 
-        // TODO have materials (and maybe other resources) have a name to display in these error messages.
+        // TODO have materials (and other objects) have a name to display in these error messages.
         std::cout << "Too many textures for this material: " << m_numTexturesInUse << "/" << GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS << std::endl;
         return false;
     }
@@ -380,6 +380,7 @@ Material::BuiltinUniformLocations Material::cacheBuiltinUniformLocations() {
 
         m_numSupportedDirectionalLights = i + 1;
     }
+
     // Spot lights
     u.numSpotLights = m_shader->getUniformLocation("numSpotLights");
     for (int i = 0; i < MAX_NUM_SPOT_LIGHTS; ++i) {
@@ -410,11 +411,11 @@ Material::AttributeLocations Material::cacheAttributeLocations() {
 
     AttributeLocations a;
 
-    a.vertex    = m_shader->getAttribLocation("vertex");
-    a.normal    = m_shader->getAttribLocation("normal");
-    a.uv        = m_shader->getAttribLocation("uv");
-    a.tangent   = m_shader->getAttribLocation("tangent");
-    a.bitangent = m_shader->getAttribLocation("bitangent");
+    a.vertex    = m_shader->getAttributeLocation("vertex");
+    a.normal    = m_shader->getAttributeLocation("normal");
+    a.uv        = m_shader->getAttributeLocation("uv");
+    a.tangent   = m_shader->getAttributeLocation("tangent");
+    a.bitangent = m_shader->getAttributeLocation("bitangent");
 
     return a;
 }

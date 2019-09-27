@@ -6,7 +6,7 @@
 #define ENGINE_LIGHT_H
 
 #include "ComponentsToLua.h"
-#include "glm.hpp"
+#include "glm.h"
 #include <GL/glew.h>
 
 namespace en {

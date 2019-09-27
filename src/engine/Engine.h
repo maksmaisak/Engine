@@ -20,6 +20,7 @@
 #include "SceneManager.h"
 #include "CompoundSystem.h"
 #include "KeyboardHelper.h"
+#include "MouseHelper.h"
 
 namespace en {
 
@@ -60,6 +61,7 @@ namespace en {
         Actor makeActor();
         Actor makeActor(const std::string& name);
         Actor findByName(const std::string& name) const;
+        Actor getMainCamera() const;
 
         template<typename TSystem, typename... Args>
         TSystem& addSystem(Args&&... args);
@@ -75,6 +77,15 @@ namespace en {
         virtual void initializeWindow(sf::RenderWindow& window);
 
     private:
+
+        void printGLContextVersionInfo();
+        void initializeGlew();
+        void initializeLua();
+
+        void update(float dt);
+        void draw();
+        void processWindowEvents();
+
         std::unique_ptr<LuaState> m_lua;
         EntityRegistry m_registry;
         Scheduler m_scheduler;
@@ -86,20 +97,13 @@ namespace en {
         utils::CustomTypeMap<struct Dummy, bool> m_behaviorSystemPresence;
 
         utils::KeyboardHelper m_keyboardHelper;
+        utils::MouseHelper m_mouseHelper;
 
         std::uint32_t m_framerateCap = 240;
         double m_fps = 0.f;
         std::int64_t m_frameTimeMicroseconds = 0;
 
         bool m_shouldExit = false;
-
-        void printGLContextVersionInfo();
-        void initializeGlew();
-        void initializeLua();
-
-        void update(float dt);
-        void draw();
-        void processWindowEvents();
     };
 
     template<typename TSystem, typename... Args>

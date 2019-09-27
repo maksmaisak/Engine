@@ -4,7 +4,7 @@
 
 #include "CameraOrbitBehavior.h"
 #include <SFML/Window.hpp>
-#include "glm.hpp"
+#include "glm.h"
 #include <glm/gtc/epsilon.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/quaternion.hpp>

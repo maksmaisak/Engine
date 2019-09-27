@@ -9,7 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <SFML/Window.hpp>
-#include "glm.hpp"
+#include "glm.h"
 #include "Entity.h"
 #include "System.h"
 #include "Engine.h"
@@ -18,23 +18,17 @@
 #include "ComponentPool.h"
 #include "Receiver.h"
 #include "SceneManager.h"
-#include "SkyboxRenderer.h"
 #include "DebugHud.hpp"
 #include "Bounds.h"
+#include "RenderingSharedState.h"
 
 namespace en {
-
-    class ShaderProgram;
-    class Material;
-    class Mesh;
-    class DebugHud;
-	struct UIRect;
 
 	/// Renders (in this order):
 	/// * Entities with both a Transform and a RenderInfo.
 	/// * Skybox
 	/// * Entities with both a Transform and a UIRect.
-    class RenderSystem : public System, Receiver<SceneManager::OnSceneClosed, sf::Event> {
+    class RenderSystem : public CompoundSystem, Receiver<SceneManager::OnSceneClosed, sf::Event> {
 
     public:
         RenderSystem();
@@ -48,9 +42,10 @@ namespace en {
         void updateBatches();
         void updateDepthMaps();
         void renderEntities();
-        void renderSkybox();
-        void renderUI();
         void renderDebug();
+
+        void setOpenGLSettings();
+        void getConfigFromLua();
 
         Actor getMainCamera();
         void updateDepthMapsDirectionalLights(const std::vector<Entity>& directionalLights);
@@ -58,12 +53,9 @@ namespace en {
         void updateShadowCastersBounds();
         utils::Bounds getCameraFrustumBounds();
 
-        void renderUIRect(Entity entity, UIRect& rect);
-        glm::vec2 getWindowSize();
-        float getUIScaleFactor();
+        RenderingSharedState m_renderingSharedState;
 
         // Shadowmapping
-        DepthMaps m_depthMaps;
         std::shared_ptr<ShaderProgram> m_directionalDepthShader;
         std::shared_ptr<ShaderProgram> m_positionalDepthShader;
         utils::Bounds m_shadowReceiversBounds;
@@ -71,14 +63,6 @@ namespace en {
         // Static batching
         bool m_enableStaticBatching;
         std::unordered_map<std::shared_ptr<Material>, Mesh> m_batches;
-
-        // Skybox
-        SkyboxRenderer m_skyboxRenderer;
-        std::shared_ptr<Texture> m_defaultSkybox;
-
-        // UI rendering
-        VertexRenderer m_vertexRenderer;
-        glm::vec2 m_referenceResolution;
 
         // Debug
         bool m_enableDebugOutput;

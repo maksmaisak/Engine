@@ -31,4 +31,6 @@ inline GLenum glCheckError_(const char *file, int line) {
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
+#define checkBeforeAfter(e) glCheckError(); e; glCheckError();
+
 #endif //SAXION_Y2Q1_RENDERING_GLHELPERS_H

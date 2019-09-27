@@ -8,7 +8,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/matrix4x4.h>
-#include "Mesh.hpp"
+#include "Mesh.h"
 
 using namespace en;
 

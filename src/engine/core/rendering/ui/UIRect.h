@@ -5,7 +5,7 @@
 #ifndef ENGINE_UIRECT_H
 #define ENGINE_UIRECT_H
 
-#include "glm.hpp"
+#include "glm.h"
 #include "ComponentsToLua.h"
 
 namespace en {

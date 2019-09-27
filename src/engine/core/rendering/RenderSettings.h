@@ -7,11 +7,12 @@
 
 #include <memory>
 #include "config.hpp"
-#include "glm.hpp"
-#include "Texture.hpp"
+#include "glm.h"
+#include "Texture.h"
 
 namespace en {
 
+    /// Render settings of a scene.
     struct RenderSettings {
 
         glm::vec3 ambientColor = {0, 0, 0};

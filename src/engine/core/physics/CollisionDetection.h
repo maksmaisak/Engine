@@ -6,7 +6,7 @@
 #define ENGINE_COLLISIONDETECTION_H
 
 #include <optional>
-#include "glm.hpp"
+#include "glm.h"
 #include "Hit.h"
 
 namespace en {

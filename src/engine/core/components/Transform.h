@@ -6,7 +6,7 @@
 #define ENGINE_TRANSFORMABLE_H
 
 #include <vector>
-#include "glm.hpp"
+#include "glm.h"
 #include <glm/gtc/quaternion.hpp>
 
 #include "Entity.h"

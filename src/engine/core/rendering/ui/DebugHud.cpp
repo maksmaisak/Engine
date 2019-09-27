@@ -29,8 +29,8 @@ void DebugHud::draw() {
     m_text.getMaterial()->use(
         m_engine,
         nullptr,
-        glm::mat4(1),
-        glm::mat4(1),
+        glm::mat4(1.f),
+        glm::mat4(1.f),
         glm::ortho(0.f, (float)size.x, 0.f, (float)size.y) * glm::translate(glm::vec3(-boundsMin, 0.f))
     );
     m_vertexRenderer->renderVertices(vertices);

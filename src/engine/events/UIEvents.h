@@ -20,8 +20,8 @@ namespace en {
     struct MouseLeave : public UIEvent {};
 
     struct MouseDown : MouseButtonEvent {};
-    struct MouseHold  : MouseButtonEvent {};
-    struct MouseUp    : MouseButtonEvent {};
+    struct MouseHold : MouseButtonEvent {};
+    struct MouseUp   : MouseButtonEvent {};
 }
 
 #endif //ENGINE_UIEVENTS_H

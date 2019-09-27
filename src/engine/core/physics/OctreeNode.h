@@ -10,7 +10,7 @@
 #include <functional>
 #include <array>
 #include <ostream>
-#include "glm.hpp"
+#include "glm.h"
 #include "Entity.h"
 #include "Bounds.h"
 

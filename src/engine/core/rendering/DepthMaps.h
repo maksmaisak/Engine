@@ -6,11 +6,11 @@
 #define ENGINE_DEPTHMAPS_H
 
 #include <GL/glew.h>
-#include "glm.hpp"
+#include "glm.h"
 
 namespace en {
 
-    /// Owns the shadowmaps.
+    /// Owns depth maps from light sources, used for shadowmapping.
     class DepthMaps final {
 
     public:
