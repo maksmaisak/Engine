@@ -33,7 +33,7 @@ namespace {
         const glm::mat4 viewMatrix = glm::inverse(transform.getWorldTransform());
 
         return utils::KeyboardHelper::isHeld("o") ?
-            glm::scale(glm::vec3(0.6f)) *  viewMatrix :
+            glm::scale(glm::vec3(0.6f)) * viewMatrix :
             viewMatrix;
     }
 }
@@ -98,7 +98,7 @@ void Render2DSystem::start() {
         }
     }
 
-    if (!m_registry->with<Camera, Transform>().tryGetOne()) {
+    if (!m_engine->getMainCamera()) {
 
         Actor cameraActor = m_engine->makeActor("Test camera");
         cameraActor.add<Camera>().isOrthographic = true;
@@ -125,10 +125,11 @@ void Render2DSystem::draw() {
     const glm::vec2 cameraCenter = cameraTransform.getWorldPosition();
     const glm::vec2 orthographicHalfSize = camera.getOrthographicExtents(*m_engine);
 
-    const glm::vec<2, int64_t> visibleTileIndicesMin = glm::floor(cameraCenter - orthographicHalfSize);
-    const glm::vec<2, int64_t> visibleTileIndicesMax = glm::ceil(cameraCenter + orthographicHalfSize);
+    const TileLayer::Coordinates visibleTileIndicesMin = glm::floor(cameraCenter - orthographicHalfSize);
+    const TileLayer::Coordinates visibleTileIndicesMax = glm::ceil(cameraCenter + orthographicHalfSize);
     const glm::vec<2, std::size_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
     const glm::vec<2, std::size_t> finalTileRangeSize = glm::min(visibleTileRangeSize, MapDataTextureResolution);
+    const TileLayer::Coordinates finalTileIndicesMax = visibleTileIndicesMin + TileLayer::Coordinates(finalTileRangeSize);
 
     const glm::mat4 matrixView = getViewMatrix(cameraTransform);
     const glm::mat4 matrixProjection = cameraActor.get<Camera>().getCameraProjectionMatrix(*m_engine);
@@ -138,12 +139,13 @@ void Render2DSystem::draw() {
         auto& tileLayer = m_registry->get<TileLayer>(e);
 
         std::size_t mapDataIndex = 0;
-        for (std::size_t y = 0; y < finalTileRangeSize.y; ++y) {
-            for (std::size_t x = 0; x < finalTileRangeSize.x; ++x) {
-                const Tile& tile = tileLayer.at({visibleTileIndicesMin.x + x, visibleTileIndicesMin.y + y});
-                m_mapData[mapDataIndex++] = pack(tile.atlasCoordinates);
+        using index_t = TileLayer::Coordinates::value_type;
+        for (index_t y = visibleTileIndicesMin.y; y < finalTileIndicesMax.y; ++y) {
+            for (index_t x = visibleTileIndicesMin.x; x < finalTileIndicesMax.x; ++x) {
+                m_mapData[mapDataIndex++] = pack(tileLayer.at({x, y}).atlasCoordinates);
             }
         }
+
         m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, finalTileRangeSize.x, finalTileRangeSize.y);
 
         const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, 0.f)) * glm::scale(glm::vec3(MapDataTextureResolution));

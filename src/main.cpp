@@ -26,6 +26,8 @@
 
 #include "TestComponentPool.h"
 
+#include "CameraControls2DSystem.h"
+
 using namespace std::literals::chrono_literals;
 
 void openStartLuaScene(en::Engine& engine) {
@@ -43,6 +45,7 @@ int main() {
 
     auto engine = std::make_unique<en::Engine>();
     engine->initialize();
+
     {
         engine->addSystem<en::TransformHierarchySystem>();
         engine->addSystem<en::RenderSystem>();
@@ -62,7 +65,11 @@ int main() {
         engine->addSystem<en::DestroySystem>();
     }
 
-    openStartLuaScene(*engine);
+    {
+        engine->addSystem<CameraControls2DSystem>();
+    }
+
+    //openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{20, 0, glm::vec3(20.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});

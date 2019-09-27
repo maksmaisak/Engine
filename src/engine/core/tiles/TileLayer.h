@@ -54,7 +54,8 @@ namespace en {
 
     public:
 
-        using Coordinates = glm::vec<2, int64_t>;
+        using Coordinate = int64_t;
+        using Coordinates = glm::vec<2, Coordinate>;
 
         Tile& at(const Coordinates& coordinates);
 

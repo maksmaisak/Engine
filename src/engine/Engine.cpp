@@ -27,6 +27,7 @@
 #include "Sound.h"
 #include "MusicIntegration.h"
 #include "Ease.h"
+#include "Camera.h"
 
 using namespace en;
 
@@ -36,6 +37,15 @@ const unsigned int MAX_FIXED_UPDATES_PER_FRAME = 3;
 Engine::Engine() :
     m_sceneManager(this),
     m_lua(std::make_unique<LuaState>()) {}
+
+Engine::~Engine() {
+
+    // If sf::SoundBuffer is being destroyed when statics are destroyed when the app quits,
+    // that causes OpenAL to throw an error. This prevents that.
+    Resources<Sound>::clear();
+    Resources<sf::SoundBuffer>::clear();
+    Resources<sf::Music>::clear();
+}
 
 void Engine::initialize() {
 
@@ -431,11 +441,7 @@ Actor Engine::findByName(const std::string& name) const {
     return actor(m_registry.findByName(name));
 }
 
-Engine::~Engine() {
+Actor Engine::getMainCamera() const {
 
-    // If sf::SoundBuffer is being destroyed when statics are destroyed when the app quits,
-    // that causes OpenAL to throw an error. This prevents that.
-    Resources<Sound>::clear();
-    Resources<sf::SoundBuffer>::clear();
-    Resources<sf::Music>::clear();
+    return actor(m_registry.with<Camera, Transform>().tryGetOne());
 }
