@@ -22,7 +22,7 @@ namespace en {
         explicit Behavior(const Actor& actor);
         virtual ~Behavior() = default;
 
-        inline Actor& actor() { return m_actor; }
+        inline Actor& getActor() { return m_actor; }
         inline Engine& engine() { return *m_engine; }
         inline EntityRegistry& registry() { return *m_registry; }
 

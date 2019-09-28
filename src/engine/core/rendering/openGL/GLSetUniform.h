@@ -9,11 +9,9 @@
 #include <GL/glew.h>
 #include "Texture.h"
 
-/// Template wrapper around some of the glUniform* functions.
-
+/// A wrapper around some of the glUniform* functions.
 namespace gl {
 
-    // Default case, no implementation
     template<typename T>
     void setUniform(GLint location, const T& value);
 

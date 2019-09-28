@@ -54,8 +54,10 @@ namespace en {
         inline sf::RenderWindow& getWindow()   { return m_window; }
         inline SceneManager& getSceneManager() { return m_sceneManager; }
         inline LuaState& getLuaState()         { return *m_lua; }
-        inline double getFps()                 { return m_fps; }
-        inline std::int64_t getFrameTimeMicroseconds() { return m_frameTimeMicroseconds; }
+
+        inline double getFps() const { return m_fps; }
+        inline std::int64_t getFrameTimeMicroseconds() const { return m_frameTimeMicroseconds; }
+        inline float getDeltaTime() const { return m_deltaTime; }
 
         Actor actor(Entity entity) const;
         Actor makeActor();
@@ -102,6 +104,7 @@ namespace en {
         std::uint32_t m_framerateCap = 240;
         double m_fps = 0.f;
         std::int64_t m_frameTimeMicroseconds = 0;
+        float m_deltaTime = 0.f;
 
         bool m_shouldExit = false;
     };

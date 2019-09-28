@@ -68,15 +68,14 @@ Render2DSystem::Render2DSystem() :
         m_tileLayerMaterial->setUniformValue("mapDataTexture", m_mapDataTexture);
         m_tileLayerMaterial->setUniformValue("tileAtlas", m_tileset);
 
-        using vec2D = glm::vec<2, double>;
-        const vec2D atlasSizeDouble = vec2D(AtlasSize);
-        const vec2D dataTextureResolution = vec2D(MapDataTextureResolution);
+        const glm::dvec2 atlasSizeDouble = glm::dvec2(AtlasSize);
+        const glm::dvec2 dataTextureResolution = glm::dvec2(MapDataTextureResolution);
 
         constexpr double numPaddingPixelsPerTile = 48.0;
         m_tileLayerMaterial->setUniformValue("mapDataTextureResolution", glm::vec2(dataTextureResolution));
         m_tileLayerMaterial->setUniformValue("invMapDataTextureResolution", glm::vec2(1.0 / dataTextureResolution));
         m_tileLayerMaterial->setUniformValue("invNumTilesInAtlas", glm::vec2(1.0 / atlasSizeDouble));
-        m_tileLayerMaterial->setUniformValue("paddingRelativeToTileSize",  glm::vec2((numPaddingPixelsPerTile + 1.0) * atlasSizeDouble / vec2D(m_tileset->getSize())));
+        m_tileLayerMaterial->setUniformValue("paddingRelativeToTileSize",  glm::vec2((numPaddingPixelsPerTile + 1.0) * atlasSizeDouble / glm::dvec2(m_tileset->getSize())));
     }
 
     assert(m_mapDataTexture->isValid());
@@ -116,8 +115,6 @@ void Render2DSystem::draw() {
         return;
     }
 
-    glDisable(GL_DEPTH_TEST);
-
     const Camera& camera = cameraActor.get<Camera>();
     const Transform& cameraTransform = cameraActor.get<Transform>();
     const glm::mat4 matrixView = getViewMatrix(cameraTransform);
@@ -125,8 +122,6 @@ void Render2DSystem::draw() {
     renderLayers(cameraTransform.getWorldPosition(), camera.getOrthographicExtents(*m_engine), matrixView, matrixProjection);
     renderSprites(matrixView, matrixProjection);
     m_debugVolumeRenderer->render(matrixProjection * matrixView);
-
-    glEnable(GL_DEPTH_TEST);
 }
 
 void Render2DSystem::renderLayers(const glm::vec2& cameraCenter, const glm::vec2& orthographicHalfSize, const glm::mat4& matrixView, const glm::mat4& matrixProjection) {
@@ -134,6 +129,8 @@ void Render2DSystem::renderLayers(const glm::vec2& cameraCenter, const glm::vec2
     if (!m_tileset) {
         return;
     }
+
+    glDisable(GL_DEPTH_TEST);
 
     const std::shared_ptr<const Mesh> quad = Mesh::getQuad();
 
@@ -157,13 +154,15 @@ void Render2DSystem::renderLayers(const glm::vec2& cameraCenter, const glm::vec2
 
         m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, finalTileRangeSize.x, finalTileRangeSize.y);
 
-        const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, 0.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
+        const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, -1.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
         m_tileLayerMaterial->render(quad.get(), m_engine, nullptr, matrixModel, matrixView, matrixProjection);
     }
 
     m_debugVolumeRenderer->addAABB(glm::vec3(cameraCenter, 0.f), glm::vec3(orthographicHalfSize, 1.f));
     m_debugVolumeRenderer->addAABBMinMax(glm::vec3(visibleTileIndicesMin, -1.f), glm::vec3(visibleTileIndicesMax,  1.f));
     m_debugVolumeRenderer->addAABB(glm::vec3(0.5f), glm::vec3(0.5f), glm::vec4(1.f));
+
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Render2DSystem::renderSprites(const glm::mat4& matrixView, const glm::mat4& matrixProjection) {
@@ -190,7 +189,7 @@ void Render2DSystem::renderSprites(const glm::mat4& matrixView, const glm::mat4&
             const glm::mat4& matrixModel = m_registry->get<Transform>(e).getWorldTransform();
             gl::setUniform(matrixUniformLocation, matrixProjection * matrixView * matrixModel);
 
-            gl::setUniform(spriteColorUniformLocation, glm::vec4(1.f));
+            gl::setUniform(spriteColorUniformLocation, sprite.color);
 
             quad->render(0, -1, 1);
         }

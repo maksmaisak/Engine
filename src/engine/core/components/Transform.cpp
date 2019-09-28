@@ -14,6 +14,19 @@
 
 using namespace en;
 
+Transform::Transform(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale) :
+    m_position(position),
+    m_rotation(rotation),
+    m_scale(scale)
+{}
+
+Transform::Transform(const glm::mat4& localTransform) {
+
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose(localTransform, m_scale, m_rotation, m_position, skew, perspective);
+}
+
 const glm::mat4& Transform::getLocalTransform() const {
 
     if (m_matrixLocalDirty) {
@@ -48,6 +61,21 @@ Transform& Transform::setLocalPosition(const glm::vec3& localPosition) {
     return *this;
 }
 
+Transform& Transform::setLocalPosition(float x, float y, float z) {
+
+    return setLocalPosition({x, y, z});
+}
+
+Transform& Transform::setLocalPosition2D(const glm::vec2& localPosition) {
+
+    return setLocalPosition(glm::vec3(localPosition, m_position.z));
+}
+
+Transform& Transform::setLocalPosition2D(float x, float y) {
+
+    return setLocalPosition2D({x, y});
+}
+
 Transform& Transform::setLocalRotation(const glm::quat& localRotation) {
 
     m_rotation = localRotation;
@@ -60,6 +88,11 @@ Transform& Transform::setLocalScale(const glm::vec3& localScale) {
     m_scale = localScale;
     markDirty();
     return *this;
+}
+
+Transform& Transform::setLocalScale(float localScale) {
+
+    return setLocalScale(glm::vec3(localScale));
 }
 
 // TODO Make this optionally preserve world position
@@ -118,6 +151,11 @@ Transform& Transform::move(const glm::vec3& offset) {
     return *this;
 }
 
+Transform& Transform::move(float x, float y, float z) {
+
+    return move({x, y, z});
+}
+
 Transform& Transform::rotate(const glm::quat& offset) {
 
     m_rotation = offset * m_rotation;
@@ -131,11 +169,16 @@ Transform& Transform::rotate(float angle, const glm::vec3& axis) {
     return *this;
 }
 
-Transform& Transform::scale(const glm::vec3& scale) {
+Transform& Transform::scale(const glm::vec3& scaleMultiplier) {
 
-    m_scale *= scale;
+    m_scale *= scaleMultiplier;
     markDirty();
     return *this;
+}
+
+Transform& Transform::scale(float scaleMultiplier) {
+
+    return scale(glm::vec3(scaleMultiplier));
 }
 
 glm::vec3 Transform::getWorldPosition() const {

@@ -70,7 +70,7 @@ int main() {
         engine->addSystem<CameraControls2DSystem>();
     }
 
-    AIController::create(*engine);
+    ai::AIController::create(*engine);
 
     //openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
