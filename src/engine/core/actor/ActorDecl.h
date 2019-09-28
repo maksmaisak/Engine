@@ -32,13 +32,19 @@ namespace en {
         TComponent& add(Args&&... args);
 
         template<typename TComponent, typename... Args>
-        TComponent& getOrAdd(Args&&... args) {return m_registry->getOrAdd<TComponent>(m_entity);}
+        inline TComponent& getOrAdd(Args&&... args) {return m_registry->getOrAdd<TComponent>(m_entity);}
 
         template<typename TComponent>
-        inline TComponent& get() const {return m_registry->get<TComponent>(m_entity);}
+        inline TComponent& get() {return m_registry->get<TComponent>(m_entity);}
 
         template<typename TComponent>
-        inline TComponent* tryGet() const {return m_registry->tryGet<TComponent>(m_entity);}
+        inline const TComponent& get() const {return m_registry->get<TComponent>(m_entity);}
+
+        template<typename TComponent>
+        inline TComponent* tryGet() {return m_registry->tryGet<TComponent>(m_entity);}
+
+        template<typename TComponent>
+        inline const TComponent* tryGet() const {return m_registry->tryGet<TComponent>(m_entity);}
 
         template<typename TComponent>
         inline bool remove() {return m_registry->remove<TComponent>(m_entity);}

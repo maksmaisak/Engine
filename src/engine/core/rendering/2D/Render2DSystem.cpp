@@ -5,8 +5,10 @@
 #include "Render2DSystem.h"
 #include "Actor.h"
 #include "TileLayer.h"
+#include "Sprite.h"
 #include "Mesh.h"
 #include "Texture.h"
+#include "ShaderProgram.h"
 #include "Resources.h"
 #include "Material.h"
 #include "GameTime.h"
@@ -41,6 +43,7 @@ namespace {
 Render2DSystem::Render2DSystem() :
     m_mapData(MapDataTextureResolution * MapDataTextureResolution),
     m_tileLayerMaterial(std::make_unique<Material>("tileLayer")),
+    m_spriteShader(Resources<ShaderProgram>::get("sprite")),
     m_debugVolumeRenderer(std::make_unique<DebugVolumeRenderer>())
 {
     {
@@ -108,11 +111,7 @@ void Render2DSystem::start() {
 
 void Render2DSystem::draw() {
 
-    if (!m_tileset) {
-        return;
-    }
-
-    Actor cameraActor = m_engine->actor(m_registry->with<Camera, Transform>().tryGetOne());
+    Actor cameraActor = m_engine->getMainCamera();
     if (!cameraActor) {
         return;
     }
@@ -121,18 +120,28 @@ void Render2DSystem::draw() {
 
     const Camera& camera = cameraActor.get<Camera>();
     const Transform& cameraTransform = cameraActor.get<Transform>();
+    const glm::mat4 matrixView = getViewMatrix(cameraTransform);
+    const glm::mat4 matrixProjection = camera.getCameraProjectionMatrix(*m_engine);
+    renderLayers(cameraTransform.getWorldPosition(), camera.getOrthographicExtents(*m_engine), matrixView, matrixProjection);
+    renderSprites(matrixView, matrixProjection);
+    m_debugVolumeRenderer->render(matrixProjection * matrixView);
 
-    const glm::vec2 cameraCenter = cameraTransform.getWorldPosition();
-    const glm::vec2 orthographicHalfSize = camera.getOrthographicExtents(*m_engine);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void Render2DSystem::renderLayers(const glm::vec2& cameraCenter, const glm::vec2& orthographicHalfSize, const glm::mat4& matrixView, const glm::mat4& matrixProjection) {
+
+    if (!m_tileset) {
+        return;
+    }
+
+    const std::shared_ptr<const Mesh> quad = Mesh::getQuad();
 
     const TileLayer::Coordinates visibleTileIndicesMin = glm::floor(cameraCenter - orthographicHalfSize);
     const TileLayer::Coordinates visibleTileIndicesMax = glm::ceil(cameraCenter + orthographicHalfSize);
     const glm::vec<2, std::size_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
     const glm::vec<2, std::size_t> finalTileRangeSize = glm::min(visibleTileRangeSize, MapDataTextureResolution);
     const TileLayer::Coordinates finalTileIndicesMax = visibleTileIndicesMin + TileLayer::Coordinates(finalTileRangeSize);
-
-    const glm::mat4 matrixView = getViewMatrix(cameraTransform);
-    const glm::mat4 matrixProjection = cameraActor.get<Camera>().getCameraProjectionMatrix(*m_engine);
 
     for (Entity e : m_registry->with<TileLayer>()) {
 
@@ -149,13 +158,41 @@ void Render2DSystem::draw() {
         m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, finalTileRangeSize.x, finalTileRangeSize.y);
 
         const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, 0.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
-        m_tileLayerMaterial->render(Mesh::getQuad().get(), m_engine, nullptr, matrixModel, matrixView, matrixProjection);
+        m_tileLayerMaterial->render(quad.get(), m_engine, nullptr, matrixModel, matrixView, matrixProjection);
     }
 
     m_debugVolumeRenderer->addAABB(glm::vec3(cameraCenter, 0.f), glm::vec3(orthographicHalfSize, 1.f));
     m_debugVolumeRenderer->addAABBMinMax(glm::vec3(visibleTileIndicesMin, -1.f), glm::vec3(visibleTileIndicesMax,  1.f));
     m_debugVolumeRenderer->addAABB(glm::vec3(0.5f), glm::vec3(0.5f), glm::vec4(1.f));
-    m_debugVolumeRenderer->render(matrixProjection * matrixView);
+}
 
-    glEnable(GL_DEPTH_TEST);
+void Render2DSystem::renderSprites(const glm::mat4& matrixView, const glm::mat4& matrixProjection) {
+
+    if (!m_spriteShader) {
+        return;
+    }
+
+    const std::shared_ptr<const Mesh> quad = Mesh::getQuad();
+
+    m_spriteShader->use();
+    const GLint textureUniformLocation = m_spriteShader->getUniformLocation("spriteTexture");
+    const GLint matrixUniformLocation = m_spriteShader->getUniformLocation("matrixProjection");
+    const GLint spriteColorUniformLocation = m_spriteShader->getUniformLocation("spriteColor");
+
+    for (Entity e : m_registry->with<Transform, Sprite>()) {
+
+        const Sprite& sprite = m_registry->get<Sprite>(e);
+        const Texture* const texture = sprite.texture.get();
+        if (texture && texture->isValid()) {
+
+            gl::setUniform(textureUniformLocation, texture, 0, GL_TEXTURE_2D);
+
+            const glm::mat4& matrixModel = m_registry->get<Transform>(e).getWorldTransform();
+            gl::setUniform(matrixUniformLocation, matrixProjection * matrixView * matrixModel);
+
+            gl::setUniform(spriteColorUniformLocation, glm::vec4(1.f));
+
+            quad->render(0, -1, 1);
+        }
+    }
 }

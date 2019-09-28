@@ -8,7 +8,7 @@
 #include <memory>
 #include <GL/glew.h>
 #include "glm.h"
-#include "ShaderProgram.hpp"
+#include "ShaderProgram.h"
 #include "System.h"
 
 namespace en {

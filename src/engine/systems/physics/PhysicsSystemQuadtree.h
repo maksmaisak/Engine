@@ -7,7 +7,7 @@
 
 #include "PhysicsSystemBase.h"
 #include <memory>
-#include "ShaderProgram.hpp"
+#include "ShaderProgram.h"
 #include "ComponentPool.h"
 #include "DebugVolumeRenderer.h"
 #include "QuadtreeNode.h"

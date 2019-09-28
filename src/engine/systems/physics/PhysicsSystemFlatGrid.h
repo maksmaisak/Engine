@@ -8,7 +8,7 @@
 #include "PhysicsSystemBase.h"
 #include <memory>
 #include <iostream>
-#include "ShaderProgram.hpp"
+#include "ShaderProgram.h"
 #include "ComponentPool.h"
 #include "DebugVolumeRenderer.h"
 

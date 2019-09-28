@@ -11,7 +11,7 @@
 #include "GLWrappers.h"
 #include "Engine.h"
 #include "Resources.h"
-#include "ShaderProgram.hpp"
+#include "ShaderProgram.h"
 
 namespace en {
 

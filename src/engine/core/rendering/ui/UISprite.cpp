@@ -2,7 +2,7 @@
 // Created by Maksym Maisak on 2019-02-13.
 //
 
-#include "Sprite.h"
+#include "UISprite.h"
 #include <memory>
 #include "Texture.h"
 
@@ -19,18 +19,18 @@ std::shared_ptr<Material> readMaterial(LuaState& lua) {
     return std::make_shared<Material>(lua);
 }
 
-Sprite& Sprite::addFromLua(Actor& actor, LuaState& lua) {
+UISprite& UISprite::addFromLua(Actor& actor, LuaState& lua) {
 
-    auto& sprite = actor.add<Sprite>();
+    auto& sprite = actor.add<UISprite>();
     sprite.material = readMaterial(lua);
     return sprite;
 }
 
-void Sprite::initializeMetatable(LuaState& lua) {
+void UISprite::initializeMetatable(LuaState& lua) {
 
-    lua::addProperty(lua, "isEnabled", lua::property(&Sprite::isEnabled));
+    lua::addProperty(lua, "isEnabled", lua::property(&UISprite::isEnabled));
 
-    lua::addProperty(lua, "textureSize", lua::readonlyProperty([](ComponentReference<Sprite>& ref) {
+    lua::addProperty(lua, "textureSize", lua::readonlyProperty([](ComponentReference<UISprite>& ref) {
 
         auto& material = ref->material;
         if (!material)

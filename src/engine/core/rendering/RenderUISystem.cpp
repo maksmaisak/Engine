@@ -7,7 +7,7 @@
 #include "Engine.h"
 #include "Transform.h"
 #include "UIRect.h"
-#include "Sprite.h"
+#include "UISprite.h"
 #include "Text.h"
 
 using namespace en;
@@ -79,7 +79,7 @@ void RenderUISystem::renderUIRect(Entity e, const UIRect& rect) {
     const glm::vec2 windowSize = getWindowSize();
     const glm::mat4 matrixProjection = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y);
 
-    auto* sprite = m_registry->tryGet<Sprite>(e);
+    auto* sprite = m_registry->tryGet<UISprite>(e);
     if (sprite && sprite->isEnabled && sprite->material) {
         renderSprite(*sprite, *transform, rect, matrixProjection);
     }
@@ -108,7 +108,7 @@ glm::vec2 RenderUISystem::getWindowSize() {
     return glm::vec2(windowSizeSf.x, windowSizeSf.y);
 }
 
-void RenderUISystem::renderSprite(const Sprite& sprite, const Transform& transform, const UIRect& rect, const glm::mat4& matrixProjection) {
+void RenderUISystem::renderSprite(const UISprite& sprite, const Transform& transform, const UIRect& rect, const glm::mat4& matrixProjection) {
 
     assert(sprite.isEnabled && sprite.material);
 
