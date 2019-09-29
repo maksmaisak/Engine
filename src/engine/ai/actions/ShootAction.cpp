@@ -7,6 +7,7 @@
 #include "Transform.h"
 #include "Sprite.h"
 #include "InlineBehavior.h"
+#include "TileLayer.h"
 
 using namespace ai;
 
@@ -23,10 +24,28 @@ ActionOutcome ShootAction::execute() {
 
     auto& sprite = bullet.add<en::Sprite>();
     sprite.color = {1,0,0,1};
-    //sprite.pivot = {0.5f, 0.5f};
 
-    bullet.add<en::InlineBehavior>([velocity = glm::vec2(10.f)](en::Actor& bullet, float dt) {
-        bullet.get<en::Transform>().move(velocity * dt);
+    bullet.add<en::InlineBehavior>([velocity = glm::vec2(10.f, 2.f)](en::Actor& bullet, float dt) {
+
+        auto& transform = bullet.get<en::Transform>();
+        transform.move(velocity * dt);
+        const en::TileLayer::Coordinates currentTilePosition = transform.getWorldPosition();
+
+        en::EntityRegistry& registry = bullet.getEngine().getRegistry();
+
+        bool isObstacle = false;
+        for (en::Entity e : registry.with<en::TileLayer>()) {
+
+            auto& tileLayer = registry.get<en::TileLayer>(e);
+            if (tileLayer.at(currentTilePosition).isObstacle) {
+                isObstacle = true;
+                break;
+            }
+        }
+
+        if (isObstacle) {
+            bullet.destroy();
+        }
     });
 
     return ActionOutcome::Success;

@@ -31,6 +31,7 @@ namespace en {
 
         en::Entity makeEntity();
         en::Entity makeEntity(const std::string& name);
+        /// Unsafe while iterating. Add a marker component like en::Destroy instead.
         void destroy(Entity entity);
         void destroyAll();
 

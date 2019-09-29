@@ -49,9 +49,14 @@ namespace en {
         using Coordinate = int64_t;
         using Coordinates = glm::vec<2, Coordinate>;
 
-        Tile& at(const Coordinates& coordinates);
+        Tile& at(const Coordinates& tileCoordinates);
+
+        static Coordinates getChunkCoordinates(const Coordinates& tileCoordinates);
 
     private:
+
+        TileLayerChunk& getOrMakeChunk(const Coordinates& chunkCoordinates);
+        TileLayerChunk& makeChunk(const Coordinates& chunkCoordinates);
 
         std::unordered_map<Coordinates, TileLayerChunk> m_chunks;
     };

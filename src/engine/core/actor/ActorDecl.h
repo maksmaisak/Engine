@@ -52,6 +52,7 @@ namespace en {
         inline bool isValid() const {return m_engine && !isNullEntity(m_entity) && m_registry->isAlive(m_entity);}
 
         void destroy();
+        void destroyImmediate();
 
         inline Engine& getEngine() const {return *m_engine;}
         std::string getName() const;

@@ -14,6 +14,7 @@ namespace en {
 
         std::shared_ptr<Texture> texture = Textures::white();
         glm::vec4 color = glm::vec4(1.f);
+        glm::vec2 pivot = glm::vec2(0.5f);
     };
 }
 

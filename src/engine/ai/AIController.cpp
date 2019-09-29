@@ -16,13 +16,13 @@ AIController& AIController::create(class en::Engine& engine) {
 
     en::Actor actor = engine.makeActor("AI Actor");
     actor.add<en::Transform>();
-    actor.add<en::Sprite>();
+    actor.add<en::Sprite>().pivot = glm::vec2(0.f);
     return actor.add<AIController>();
 }
 
 void AIController::start() {
 
-    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(10, 0 )));
+    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(10, 0)));
     enqueueAction(std::make_unique<ShootAction>(glm::vec2(10.5f, 10.5f)));
     enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(10, 10)));
     enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(0 , 10)));

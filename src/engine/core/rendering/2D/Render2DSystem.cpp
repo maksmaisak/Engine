@@ -30,13 +30,18 @@ namespace {
         return ((uint32_t)atlasCoordinates.x << 24) | ((uint32_t)atlasCoordinates.y << 24 >> 8);
     }
 
-    glm::mat4 getViewMatrix(const Transform& transform) {
+    glm::mat4 getViewMatrix(const Transform& cameraTransform) {
 
-        const glm::mat4 viewMatrix = glm::inverse(transform.getWorldTransform());
+        const glm::mat4 viewMatrix = glm::inverse(cameraTransform.getWorldTransform());
 
         return utils::KeyboardHelper::isHeld("o") ?
             glm::scale(glm::vec3(0.6f)) * viewMatrix :
             viewMatrix;
+    }
+
+    glm::mat4 getSpriteModelMatrix(const Transform& spriteTransform, const Sprite& sprite) {
+
+        return spriteTransform.getWorldTransform() * glm::translate(glm::vec3(-sprite.pivot, 0.f));
     }
 }
 
@@ -54,7 +59,7 @@ Render2DSystem::Render2DSystem() :
 
     {
         Texture::CreationSettings settings;
-        settings.internalFormat = GL_RGBA;
+        settings.internalFormat = GL_RGBA8;
         settings.wrapS = GL_CLAMP_TO_BORDER;
         settings.wrapT = GL_CLAMP_TO_BORDER;
         settings.minFilter = GL_NEAREST;
@@ -85,23 +90,10 @@ Render2DSystem::Render2DSystem() :
 void Render2DSystem::start() {
 
     if (!m_registry->with<TileLayer>().tryGetOne()) {
-
-        auto& layer = m_engine->makeActor("Test tile layer").add<TileLayer>();
-
-        const float radius = 20.f;
-        for (float theta = 0.f; theta < glm::two_pi<float>(); theta += 0.001f) {
-
-            const TileLayer::Coordinates position = {
-                glm::cos(theta) * radius,
-                glm::sin(theta) * radius
-            };
-
-            layer.at(position).atlasCoordinates = {7, 7};
-        }
+        m_engine->makeActor("Test tile layer").add<TileLayer>();
     }
 
     if (!m_engine->getMainCamera()) {
-
         Actor cameraActor = m_engine->makeActor("Test camera");
         cameraActor.add<Camera>().isOrthographic = true;
         cameraActor.add<Transform>().move({0, 0, 10.f});
@@ -173,11 +165,10 @@ void Render2DSystem::renderSprites(const glm::mat4& matrixView, const glm::mat4&
 
     const std::shared_ptr<const Mesh> quad = Mesh::getQuad();
 
-    m_spriteShader->use();
     const GLint textureUniformLocation = m_spriteShader->getUniformLocation("spriteTexture");
     const GLint matrixUniformLocation = m_spriteShader->getUniformLocation("matrixProjection");
     const GLint spriteColorUniformLocation = m_spriteShader->getUniformLocation("spriteColor");
-
+    m_spriteShader->use();
     for (Entity e : m_registry->with<Transform, Sprite>()) {
 
         const Sprite& sprite = m_registry->get<Sprite>(e);
@@ -185,10 +176,7 @@ void Render2DSystem::renderSprites(const glm::mat4& matrixView, const glm::mat4&
         if (texture && texture->isValid()) {
 
             gl::setUniform(textureUniformLocation, texture, 0, GL_TEXTURE_2D);
-
-            const glm::mat4& matrixModel = m_registry->get<Transform>(e).getWorldTransform();
-            gl::setUniform(matrixUniformLocation, matrixProjection * matrixView * matrixModel);
-
+            gl::setUniform(matrixUniformLocation, matrixProjection * matrixView * getSpriteModelMatrix(m_registry->get<Transform>(e), sprite));
             gl::setUniform(spriteColorUniformLocation, sprite.color);
 
             quad->render(0, -1, 1);

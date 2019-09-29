@@ -11,8 +11,8 @@ namespace {
 
     auto wasMouseButtonPressed = std::array<bool, sf::Mouse::ButtonCount>();
 
+    float previousScrollDelta = 0.f;
     float currentScrollDelta = 0.f;
-    bool didScrollLastFrame = false;
 }
 
 bool MouseHelper::isDown(sf::Mouse::Button button) {
@@ -35,7 +35,7 @@ glm::vec2 MouseHelper::getPosition(const sf::Window& window) {
 
 float MouseHelper::getScrollDelta() {
 
-    return currentScrollDelta;
+    return previousScrollDelta;
 }
 
 void MouseHelper::update() {
@@ -44,17 +44,13 @@ void MouseHelper::update() {
         wasMouseButtonPressed[i] = isHeld((sf::Mouse::Button)i);
     }
 
-    if (!didScrollLastFrame) {
-        currentScrollDelta = 0.f;
-    }
-    didScrollLastFrame = false;
+    previousScrollDelta = currentScrollDelta;
+    currentScrollDelta = 0.f;
 }
 
 void MouseHelper::receive(const sf::Event& info) {
 
     if (info.type == sf::Event::EventType::MouseWheelScrolled) {
-
-        currentScrollDelta = info.mouseWheelScroll.delta;
-        didScrollLastFrame = true;
+        currentScrollDelta += info.mouseWheelScroll.delta;
     }
 }

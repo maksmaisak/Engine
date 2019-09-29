@@ -22,8 +22,6 @@ ActionOutcome MoveAction::execute() {
         return ActionOutcome::Success;
     }
 
-    const glm::vec2 delta = glm::vec2(m_targetPosition) - position;
-
     constexpr float speed = 2.f;
     const glm::vec2 newPosition = glm::moveTowards(position, glm::vec2(m_targetPosition), speed * actor.getEngine().getDeltaTime());
     transform.setLocalPosition2D(newPosition);
