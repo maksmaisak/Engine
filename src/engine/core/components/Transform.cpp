@@ -61,19 +61,9 @@ Transform& Transform::setLocalPosition(const glm::vec3& localPosition) {
     return *this;
 }
 
-Transform& Transform::setLocalPosition(float x, float y, float z) {
-
-    return setLocalPosition({x, y, z});
-}
-
 Transform& Transform::setLocalPosition2D(const glm::vec2& localPosition) {
 
     return setLocalPosition(glm::vec3(localPosition, m_position.z));
-}
-
-Transform& Transform::setLocalPosition2D(float x, float y) {
-
-    return setLocalPosition2D({x, y});
 }
 
 Transform& Transform::setLocalRotation(const glm::quat& localRotation) {
@@ -149,6 +139,11 @@ Transform& Transform::move(const glm::vec3& offset) {
     m_matrixLocal[3] = {m_position, 1.f};
     markWorldDirty();
     return *this;
+}
+
+Transform& Transform::move(const glm::vec2& offset) {
+
+    return move(glm::vec3(offset, 0.f));
 }
 
 Transform& Transform::move(float x, float y, float z) {

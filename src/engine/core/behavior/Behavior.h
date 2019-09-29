@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <SFML/Graphics.hpp>
+#include <cassert>
 #include "Entity.h"
 #include "EntityRegistry.h"
 #include "ActorDecl.h"
@@ -23,8 +24,8 @@ namespace en {
         virtual ~Behavior() = default;
 
         inline Actor& getActor() { return m_actor; }
-        inline Engine& engine() { return *m_engine; }
-        inline EntityRegistry& registry() { return *m_registry; }
+        inline Engine& getEngine() { return assert(m_engine), *m_engine; }
+        inline EntityRegistry& getRegistry() { return assert(m_registry), *m_registry; }
 
         virtual void start() {};
         virtual void update(float dt) {};
@@ -32,11 +33,11 @@ namespace en {
         virtual void onCollision(Entity other) {};
 
         virtual void on(const MouseEnter&) {};
-        virtual void on(const MouseOver&)  {};
+        virtual void on(const MouseOver&) {};
         virtual void on(const MouseLeave&) {};
         virtual void on(const MouseDown&) {};
-        virtual void on(const MouseHold&)  {};
-        virtual void on(const MouseUp&)    {};
+        virtual void on(const MouseHold&) {};
+        virtual void on(const MouseUp&) {};
 
     protected:
         Actor m_actor;

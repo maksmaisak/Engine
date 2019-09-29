@@ -51,9 +51,7 @@ namespace en {
 
         // TODO add setWorldPosition/Rotation
         Transform& setLocalPosition(const glm::vec3& localPosition);
-        Transform& setLocalPosition(float x, float y, float z);
         Transform& setLocalPosition2D(const glm::vec2& localPosition);
-        Transform& setLocalPosition2D(float x, float y);
         Transform& setLocalRotation(const glm::quat& localRotation);
         Transform& setLocalScale(const glm::vec3& localScale);
         Transform& setLocalScale(float localScale);
@@ -61,6 +59,7 @@ namespace en {
         Transform& setParent(Entity newParent);
 
         Transform& move(const glm::vec3& offset);
+        Transform& move(const glm::vec2& offset);
         Transform& move(float x, float y, float z = 0.0f);
         Transform& rotate(const glm::quat& offset);
         Transform& rotate(float angle, const glm::vec3& axis);

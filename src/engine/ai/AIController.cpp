@@ -3,7 +3,7 @@
 //
 
 #include "AIController.h"
-#include <assert.h>
+#include <cassert>
 #include "Engine.h"
 #include "Transform.h"
 #include "Sprite.h"

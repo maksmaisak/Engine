@@ -13,7 +13,7 @@ namespace ai {
     class ShootAction : public Action {
 
     public:
-        ShootAction(const glm::vec2& targetPosition);
+        explicit ShootAction(const glm::vec2& targetPosition);
         ActionOutcome execute() override;
 
     private:
