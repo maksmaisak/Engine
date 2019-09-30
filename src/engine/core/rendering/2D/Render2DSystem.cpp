@@ -88,7 +88,7 @@ Render2DSystem::Render2DSystem() :
 }
 
 void Render2DSystem::start() {
-
+    
     if (!m_registry->with<TileLayer>().tryGetOne()) {
         m_engine->makeActor("Test tile layer").add<TileLayer>();
     }

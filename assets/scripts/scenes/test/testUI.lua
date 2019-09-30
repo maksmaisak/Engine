@@ -196,7 +196,7 @@ function scene:start()
                         offsetMin = {0, 0},
                         offsetMax = {0, -60}
                     },
-                    Sprite = {
+                    UISprite = {
                         material = {
                             shader = "sprite",
                             texture = "textures/transparent.png"
@@ -204,10 +204,10 @@ function scene:start()
                     },
                     LuaBehavior = {
                         onMouseEnter = function(self)
-                            self.actor:get("Sprite").isEnabled = false
+                            self.actor:get("UISprite").isEnabled = false
                         end,
                         onMouseLeave = function(self)
-                            self.actor:get("Sprite").isEnabled = true
+                            self.actor:get("UISprite").isEnabled = true
                         end
                     }
                 },
@@ -220,7 +220,7 @@ function scene:start()
                         offsetMin = {0, -60},
                         offsetMax = {0, 0}
                     },
-                    Sprite = {
+                    UISprite = {
                         material = {
                             shader = "sprite",
                             texture = "textures/white.png"
@@ -241,7 +241,7 @@ function scene:start()
             offsetMin = { 100,  200},
             offsetMax = {-100, -100}
         },
-        Sprite = {
+        UISprite = {
             material = {
                 shader = "sprite",
                 texture = "textures/black.png"
@@ -258,7 +258,7 @@ function scene:start()
             offsetMin = {50 , 0},
             offsetMax = {-50, 100}
         },
-        Sprite = {
+        UISprite = {
             material = {
                 shader = "sprite",
                 texture = "textures/black.png"

@@ -36,7 +36,7 @@ function Level:start()
 		Game.makeActor {
 			Transform = {},
 			UIRect = {},
-			Sprite = {material = {shader = "sprite", texture = "textures/phiGrid.png", color = {1,1,1,0.5}}}
+			UISprite = {material = {shader = "sprite", texture = "textures/phiGrid.png", color = {1,1,1,0.5}}}
 		}
 	end
 

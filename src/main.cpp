@@ -36,8 +36,9 @@ void openStartLuaScene(en::Engine& engine) {
     lua_getglobal(lua, "Config");
     const auto popConfig = lua::PopperOnDestruct(lua);
     const auto startScene = lua.tryGetField<std::string>("startScene");
-    if (startScene)
+    if (startScene) {
         engine.getSceneManager().setCurrentScene<en::LuaScene>(lua, *startScene);
+    }
     lua.pop();
 }
 

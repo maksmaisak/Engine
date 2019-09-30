@@ -16,6 +16,12 @@
 #include "Ease.h"
 #include "GameTime.h"
 #include "LuaScene.h"
+#include "Actor.h"
+
+#include "Transform.h"
+#include "LuaBehavior.h"
+#include "UIRect.h"
+#include "UISprite.h"
 
 using namespace en;
 
@@ -266,7 +272,6 @@ namespace {
 void ExposeToLua::expose(Engine& engine) {
 
     auto& lua = engine.getLuaState();
-
     exposeGame(engine, lua);
     exposeEase(engine, lua);
 }
