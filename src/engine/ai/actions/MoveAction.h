@@ -5,8 +5,10 @@
 #ifndef ENGINE_MOVEACTION_H
 #define ENGINE_MOVEACTION_H
 
+#include <optional>
 #include "Action.h"
 #include "glm.h"
+#include "PathfindingPath.h"
 
 namespace ai {
 
@@ -18,6 +20,7 @@ namespace ai {
 
     private:
         glm::i64vec2 m_targetPosition;
+        std::optional<PathfindingPath> m_pathfindingPath;
     };
 }
 

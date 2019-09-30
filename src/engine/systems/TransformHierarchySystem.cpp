@@ -7,7 +7,7 @@
 namespace en {
 
     void TransformHierarchySystem::receive(const ComponentAdded<Transform>& info) {
-        info.component.m_engine   = m_engine;
+        info.component.m_engine = m_engine;
         info.component.m_registry = m_registry;
         info.component.m_entity = info.entity;
     }

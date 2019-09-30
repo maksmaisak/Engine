@@ -22,9 +22,9 @@ AIController& AIController::create(class en::Engine& engine) {
 
 void AIController::start() {
 
-    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(10, 0)));
-    enqueueAction(std::make_unique<ShootAction>(glm::vec2(10.5f, 10.5f)));
-    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(10, 10)));
+    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(12, 5)));
+    enqueueAction(std::make_unique<ShootAction>(glm::vec2(20.5f, 10.5f)));
+    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(12, 10)));
     enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(0 , 10)));
 }
 
@@ -44,7 +44,8 @@ void AIController::update(float dt) {
             m_actionQueue.pop();
             break;
         case ActionOutcome::Fail:
-            decltype(m_actionQueue)().swap(m_actionQueue);
+            m_actionQueue = {};
+            std::cout << "Action failed." << std::endl;
             break;
         default:
             assert(false);

@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 27/9/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_ENGINE_H
-#define SAXION_Y2Q1_CPP_ENGINE_H
+#ifndef ENGINE_H
+#define ENGINE_H
 
 #include <SFML/Graphics.hpp>
 #include <memory>
@@ -71,7 +71,7 @@ namespace en {
         template<typename TSystem, typename... Args>
         std::unique_ptr<TSystem> makeSystem(Args&&... args);
 
-        /// Makes sure a system to handle a given behavior type is in place.
+        /// Makes sure there is a system to handle behaviors of a given type.
         template<typename TBehavior>
         bool ensureBehaviorSystem();
 
@@ -123,6 +123,7 @@ namespace en {
 
     template<typename TSystem, typename... Args>
     std::unique_ptr<TSystem> Engine::makeSystem(Args&&... args) {
+
         auto system = std::make_unique<TSystem>(std::forward<Args>(args)...);
         system->init(*this);
         return system;
@@ -133,11 +134,14 @@ namespace en {
 
         static_assert(std::is_base_of_v<Behavior, TBehavior>);
 
-        if (m_behaviorSystemPresence.get<TBehavior>())
+        if (m_behaviorSystemPresence.get<TBehavior>()) {
             return false;
+        }
 
-        if (!m_behaviors)
+        if (!m_behaviors) {
             addSystem<BehaviorsSystem>();
+        }
+
         m_behaviors->addSystem<BehaviorSystem<TBehavior>>();
         m_behaviorSystemPresence.set<TBehavior>(true);
         return true;
