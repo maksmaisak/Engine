@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <iostream>
 #include "EntityRegistry.h"
+#include "EngineSystems.h"
 #include "Entity.h"
 #include "System.h"
 #include "BehaviorSystem.h"
@@ -24,14 +25,12 @@
 
 namespace en {
 
-    class Behavior;
     class Actor;
     class LuaState;
 
-    class BehaviorsSystem : public CompoundSystem {};
-
-    /// The root object of the entire engine. Manages system execution and owns the various submodules of the engine:
+    /// The root object of the entire engine. Runs the mainloop and owns the various submodules of the engine:
     /// EntityRegistry: manages entities and their components.
+    /// EngineSystems: manages the collection of systems used in the game.
     /// sf::RenderWindow: the SFML window to which the game renders.
     /// SceneManager: keeps track of the current scene and loads/unloads new ones.
     /// LuaState: a wrapper around the lua_State through which interoperation with Lua scripts happens.
@@ -48,12 +47,14 @@ namespace en {
 
         void initialize();
         void run();
+        void quit();
 
-        inline EntityRegistry& getRegistry()   { return m_registry; }
-        inline Scheduler& getScheduler()       { return m_scheduler; }
-        inline sf::RenderWindow& getWindow()   { return m_window; }
+        inline EntityRegistry& getRegistry() { return m_registry; }
+        inline EngineSystems& getSystems() {return m_systems; }
+        inline Scheduler& getScheduler() { return m_scheduler; }
+        inline sf::RenderWindow& getWindow() { return m_window; }
         inline SceneManager& getSceneManager() { return m_sceneManager; }
-        inline LuaState& getLuaState()         { return *m_lua; }
+        inline LuaState& getLuaState() { return *m_lua; }
 
         inline double getFps() const { return m_fps; }
         inline std::int64_t getFrameTimeMicroseconds() const { return m_frameTimeMicroseconds; }
@@ -65,21 +66,10 @@ namespace en {
         Actor findByName(const std::string& name) const;
         Actor getMainCamera() const;
 
-        template<typename TSystem, typename... Args>
-        TSystem& addSystem(Args&&... args);
-
-        template<typename TSystem, typename... Args>
-        std::unique_ptr<TSystem> makeSystem(Args&&... args);
-
-        /// Makes sure there is a system to handle behaviors of a given type.
-        template<typename TBehavior>
-        bool ensureBehaviorSystem();
-
     protected:
         virtual void initializeWindow(sf::RenderWindow& window);
 
     private:
-
         void printGLContextVersionInfo();
         void initializeGlew();
         void initializeLua();
@@ -90,13 +80,10 @@ namespace en {
 
         std::unique_ptr<LuaState> m_lua;
         EntityRegistry m_registry;
+        EngineSystems m_systems;
         Scheduler m_scheduler;
         sf::RenderWindow m_window;
         SceneManager m_sceneManager;
-
-        CompoundSystem m_systems;
-        BehaviorsSystem* m_behaviors = nullptr;
-        utils::CustomTypeMap<struct Dummy, bool> m_behaviorSystemPresence;
 
         utils::KeyboardHelper m_keyboardHelper;
         utils::MouseHelper m_mouseHelper;
@@ -108,44 +95,6 @@ namespace en {
 
         bool m_shouldExit = false;
     };
-
-    template<typename TSystem, typename... Args>
-    inline TSystem& Engine::addSystem(Args&&... args) {
-        return m_systems.addSystem<TSystem>(std::forward<Args>(args)...);
-    }
-
-    template<>
-    inline BehaviorsSystem& Engine::addSystem<BehaviorsSystem>() {
-        auto& system = m_systems.addSystem<BehaviorsSystem>();
-        m_behaviors = &system;
-        return system;
-    }
-
-    template<typename TSystem, typename... Args>
-    std::unique_ptr<TSystem> Engine::makeSystem(Args&&... args) {
-
-        auto system = std::make_unique<TSystem>(std::forward<Args>(args)...);
-        system->init(*this);
-        return system;
-    }
-
-    template<typename TBehavior>
-    bool Engine::ensureBehaviorSystem() {
-
-        static_assert(std::is_base_of_v<Behavior, TBehavior>);
-
-        if (m_behaviorSystemPresence.get<TBehavior>()) {
-            return false;
-        }
-
-        if (!m_behaviors) {
-            addSystem<BehaviorsSystem>();
-        }
-
-        m_behaviors->addSystem<BehaviorSystem<TBehavior>>();
-        m_behaviorSystemPresence.set<TBehavior>(true);
-        return true;
-    }
 }
 
 #endif //SAXION_Y2Q1_CPP_ENGINE_H

@@ -1,6 +1,5 @@
 #include <iostream>
 #include <memory>
-#include <core/rendering/2D/Render2DSystem.h>
 
 #include "Engine.h"
 #include "Actor.h"
@@ -47,27 +46,29 @@ int main() {
     auto engine = std::make_unique<en::Engine>();
     engine->initialize();
 
+    en::EngineSystems& systems = engine->getSystems();
+
     {
-        engine->addSystem<en::TransformHierarchySystem>();
-        engine->addSystem<en::RenderSystem>();
+        systems.addSystem<en::TransformHierarchySystem>();
+        systems.addSystem<en::RenderSystem>();
 
-        //engine->addSystem<en::PhysicsStressTestingSystem>(10s);
-        //engine->addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
-        //engine->addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
-        //engine->addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
-        //engine->addSystem<en::PhysicsSystemQuadtree>().setGravity({0, -9.8, 0});
-        //engine->addSystem<en::PhysicsSystemOctree>().setGravity({0, -9.8, 0});
+        //systems.addSystem<en::PhysicsStressTestingSystem>(10s);
+        //systems.addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});
+        //systems.addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
+        //systems.addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
+        //systems.addSystem<en::PhysicsSystemQuadtree>().setGravity({0, -9.8, 0});
+        //systems.addSystem<en::PhysicsSystemOctree>().setGravity({0, -9.8, 0});
 
-        engine->addSystem<en::UIEventSystem>();
-        engine->addSystem<en::BehaviorsSystem>();
+        systems.addSystem<en::UIEventSystem>();
+        systems.addSystem<en::BehaviorsSystem>();
 
-        engine->addSystem<en::TweenSystem>();
-        engine->addSystem<en::DestroyByTimerSystem>();
-        engine->addSystem<en::DestroySystem>();
+        systems.addSystem<en::TweenSystem>();
+        systems.addSystem<en::DestroyByTimerSystem>();
+        systems.addSystem<en::DestroySystem>();
     }
 
     {
-        engine->addSystem<CameraControls2DSystem>();
+        systems.addSystem<CameraControls2DSystem>();
     }
 
     ai::AIController::create(*engine);

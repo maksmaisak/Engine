@@ -11,7 +11,7 @@
 namespace en {
 
     class CompoundSystem : public System {
-
+        
     public:
         void start() override;
         void update(float dt) override;

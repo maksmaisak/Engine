@@ -27,11 +27,11 @@ namespace {
     };
 
     const std::vector<SystemConfig> systemConfigs {
-        {"No optimizations"          , [](Engine& engine){return engine.makeSystem<PhysicsSystem>();}},
-        {"Bounding sphere pre-checks", [](Engine& engine){return engine.makeSystem<PhysicsSystemBoundingSphereNarrowphase>();}},
-        {"Flat grid"                 , [](Engine& engine){return engine.makeSystem<PhysicsSystemFlatGrid>();}},
-        {"Quadtree"                  , [](Engine& engine){return engine.makeSystem<PhysicsSystemQuadtree>();}},
-        {"Octree"                    , [](Engine& engine){return engine.makeSystem<PhysicsSystemOctree>();}}
+        {"No optimizations"          , [](Engine& engine){return engine.getSystems().makeSystem<PhysicsSystem>();}},
+        {"Bounding sphere pre-checks", [](Engine& engine){return engine.getSystems().makeSystem<PhysicsSystemBoundingSphereNarrowphase>();}},
+        {"Flat grid"                 , [](Engine& engine){return engine.getSystems().makeSystem<PhysicsSystemFlatGrid>();}},
+        {"Quadtree"                  , [](Engine& engine){return engine.getSystems().makeSystem<PhysicsSystemQuadtree>();}},
+        {"Octree"                    , [](Engine& engine){return engine.getSystems().makeSystem<PhysicsSystemOctree>();}}
     };
 
     const std::vector<PhysicsTestScene::Preset> scenePresets {
