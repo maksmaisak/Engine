@@ -21,7 +21,7 @@ end
 
 function UIUtilities.keepAspectRatio(actor, theight)
 
-    local sprite = actor:get("Sprite")
+    local sprite = actor:get("UISprite")
     if not sprite then return end
 
     local textureSize = sprite.textureSize
@@ -48,7 +48,7 @@ function UIUtilities.makeButton(name, parent, textString, anchorMin, anchorMax, 
             anchorMin = anchorMin,
             anchorMax = anchorMax,
         },
-        Sprite = {
+        UISprite = {
             material = {
                 shader	= "sprite",
                 texture = textureFilePath

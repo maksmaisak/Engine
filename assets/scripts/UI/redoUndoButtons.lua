@@ -40,7 +40,7 @@ function RedoUndoButtons:createButtons()
 			Name = name.."_Image",
 			Transform = {},
 			UIRect = {},
-			Sprite = {
+			UISprite = {
 				material = {
 					shader	= "sprite",
 					texture	= texturePath,

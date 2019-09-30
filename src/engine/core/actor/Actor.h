@@ -5,8 +5,7 @@
 #ifndef SAXION_Y2Q1_CPP_ACTOR_H
 #define SAXION_Y2Q1_CPP_ACTOR_H
 
-// The declaration is in ActorDecl.h to make it possible to include only the declaration,
-// in case you need just the non-templated stuff.
+// The declaration is in ActorDecl.h to prevent an include loop involving Engine.h
 #include "ActorDecl.h"
 #include <memory>
 #include <vector>
@@ -25,7 +24,7 @@ namespace en {
 
         } else {
 
-            m_engine->ensureBehaviorSystem<TComponent>();
+            m_engine->getSystems().ensureBehaviorSystem<TComponent>();
             return m_registry->add<TComponent>(m_entity, *this, std::forward<Args>(args)...);
         }
     }

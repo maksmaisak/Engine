@@ -8,6 +8,10 @@
 
 using namespace en;
 
+SceneManager::SceneManager(Engine& engine) :
+    m_engine(&engine)
+{}
+
 void SceneManager::update(float dt) {
 
     if (m_shouldCloseSceneNextUpdate)
@@ -40,7 +44,7 @@ void SceneManager::closeCurrentScene() {
     if (!m_currentScene)
         return;
 
-    m_shouldCloseSceneNextUpdate   = false;
+    m_shouldCloseSceneNextUpdate = false;
     m_shouldRestartSceneNextUpdate = false;
 
     close(*m_currentScene);
@@ -52,7 +56,7 @@ void SceneManager::restartCurrentScene() {
     if (!m_currentScene)
         return;
 
-    m_shouldCloseSceneNextUpdate   = false;
+    m_shouldCloseSceneNextUpdate = false;
     m_shouldRestartSceneNextUpdate = false;
 
     close(*m_currentScene);
