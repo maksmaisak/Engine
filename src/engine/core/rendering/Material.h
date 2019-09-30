@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <tuple>
 #include "glm.h"
-#include "ShaderProgram.hpp"
+#include "ShaderProgram.h"
 #include "Texture.h"
 #include "TupleUtils.h"
 #include "Light.h"

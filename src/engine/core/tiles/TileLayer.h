@@ -7,7 +7,7 @@
 
 #include <array>
 #include <unordered_map>
-#include "glm.h"
+#include "Tile.h"
 
 // Implementation of hash for vec2 so we can use it as key in unordered_map
 namespace std {
@@ -29,17 +29,9 @@ namespace std {
 
 namespace en {
 
-    struct Tile final {
-
-        using AtlasCoordinates = glm::vec<2, uint8_t>;
-
-        AtlasCoordinates atlasCoordinates = {0, 0};
-        bool testData = false;
-    };
-
     struct TileLayerChunk final {
 
-        static constexpr std::size_t ChunkSize = 16;
+        inline static constexpr std::size_t ChunkSize = 16;
 
         TileLayerChunk();
 
@@ -57,9 +49,14 @@ namespace en {
         using Coordinate = int64_t;
         using Coordinates = glm::vec<2, Coordinate>;
 
-        Tile& at(const Coordinates& coordinates);
+        Tile& at(const Coordinates& tileCoordinates);
+
+        static Coordinates getChunkCoordinates(const Coordinates& tileCoordinates);
 
     private:
+
+        TileLayerChunk& getOrMakeChunk(const Coordinates& chunkCoordinates);
+        TileLayerChunk& makeChunk(const Coordinates& chunkCoordinates);
 
         std::unordered_map<Coordinates, TileLayerChunk> m_chunks;
     };

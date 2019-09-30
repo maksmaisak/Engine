@@ -24,7 +24,7 @@ namespace en {
     private:
 
         void renderUIRect(Entity entity, const class UIRect& rect);
-        void renderSprite(const class Sprite& sprite, const class Transform& transform, const class UIRect& rect, const glm::mat4& matrixProjection);
+        void renderSprite(const class UISprite& sprite, const class Transform& transform, const class UIRect& rect, const glm::mat4& matrixProjection);
         void renderText(const class Text& text, const class Transform& transform, const class UIRect& rect, const glm::mat4& matrixProjection);
 
         float getUIScaleFactor();

@@ -120,7 +120,7 @@ LuaBehavior::LuaBehavior(Actor actor, LuaReference&& table) : LuaBehavior(actor)
     m_onMouseHold  = getFunctionFromTable(lua, "onMouseHold" );
     m_onMouseUp    = getFunctionFromTable(lua, "onMouseUp"   );
 
-    lua.setField("actor", actor);
+    lua.setField("getActor", actor);
 }
 
 template<typename... Args>

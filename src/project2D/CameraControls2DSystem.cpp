@@ -15,9 +15,10 @@ namespace {
 
     constexpr float MinCameraSize = 5.f;
     constexpr float MaxCameraSize = 40.f;
-
-    constexpr float MovementSpeed = 5.f;
     constexpr float ZoomSpeedMultiplier = 20.f;
+
+    constexpr float MinMovementSpeed = 3.f;
+    constexpr float MaxMovementSpeed = 24.f;
 
     using Key = sf::Keyboard::Key;
 
@@ -72,10 +73,13 @@ void CameraControls2DSystem::update(float dt) {
         return;
     }
 
-    auto& transform = cameraActor.get<en::Transform>();
-    transform.move(glm::vec3(getMoveInput() * (MovementSpeed * dt), 0.f));
-
     auto& camera = cameraActor.get<en::Camera>();
     camera.orthographicHalfSize += getZoomDelta() * ZoomSpeedMultiplier * dt;
     camera.orthographicHalfSize = glm::clamp(camera.orthographicHalfSize, MinCameraSize, MaxCameraSize);
+
+    const float t = (camera.orthographicHalfSize - MinCameraSize) / (MaxCameraSize - MinCameraSize);
+    float movementSpeed = glm::lerp(MinMovementSpeed, MaxMovementSpeed, t);
+
+    auto& transform = cameraActor.get<en::Transform>();
+    transform.move(glm::vec3(getMoveInput() * (movementSpeed * dt), 0.f));
 }

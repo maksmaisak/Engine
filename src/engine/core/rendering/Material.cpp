@@ -270,8 +270,10 @@ void Material::updateModelMatrix(const glm::mat4& modelMatrix) {
     const auto& u = m_builtinUniformLocations;
 
     gl::setUniform(u.model, modelMatrix);
-    if (valid(u.modelNormal))
+
+    if (valid(u.modelNormal)) {
         gl::setUniform(u.modelNormal, glm::mat3(glm::transpose(glm::inverse(modelMatrix))));
+    }
 }
 
 template<typename T>
@@ -437,8 +439,9 @@ void Material::setUniformsPointLight(
     const Light& light,
     const Transform& tf
 ) {
-    if (valid(locations.position))
+    if (valid(locations.position)) {
         gl::setUniform(locations.position, tf.getWorldPosition());
+    }
 
     gl::setUniform(locations.color       , light.color * light.intensity);
     gl::setUniform(locations.colorAmbient, light.colorAmbient);
@@ -454,8 +457,9 @@ void Material::setUniformDirectionalLight(
     const Light& light,
     const Transform& tf
 ) {
-    if (valid(locations.direction))
+    if (valid(locations.direction)) {
         gl::setUniform(locations.direction, tf.getForward());
+    }
 
     gl::setUniform(locations.color       , light.color * light.intensity);
     gl::setUniform(locations.colorAmbient, light.colorAmbient);
@@ -473,11 +477,13 @@ void Material::setUniformSpotLight(
     const Light& light,
     const Transform& tf
 ) {
-    if (valid(locations.position))
+    if (valid(locations.position)) {
         gl::setUniform(locations.position, tf.getWorldPosition());
+    }
 
-    if (valid(locations.direction))
+    if (valid(locations.direction)) {
         gl::setUniform(locations.direction, glm::normalize(glm::vec3(tf.getWorldTransform()[2])));
+    }
 
     gl::setUniform(locations.color       , light.color * light.intensity);
     gl::setUniform(locations.colorAmbient, light.colorAmbient);

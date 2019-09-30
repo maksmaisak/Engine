@@ -72,7 +72,8 @@ void Engine::run() {
         fixedUpdateLag += fixedUpdateClock.restart();
         fixedUpdateLag = std::min(fixedUpdateLag, TimestepFixed * static_cast<float>(MAX_FIXED_UPDATES_PER_FRAME));
         while (fixedUpdateLag >= TimestepFixed) {
-            update(timestepFixedSeconds);
+            m_deltaTime = timestepFixedSeconds;
+            update(m_deltaTime);
             fixedUpdateLag -= TimestepFixed;
         }
 

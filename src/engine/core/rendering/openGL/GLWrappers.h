@@ -6,7 +6,7 @@
 #define ENGINE_GLWRAPPERS_H
 
 #include <GL/glew.h>
-#include <assert.h>
+#include <cassert>
 #include "GLHelpers.h"
 #include "glm.h"
 

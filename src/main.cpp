@@ -27,6 +27,7 @@
 #include "TestComponentPool.h"
 
 #include "CameraControls2DSystem.h"
+#include "AIController.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -68,6 +69,8 @@ int main() {
     {
         engine->addSystem<CameraControls2DSystem>();
     }
+
+    ai::AIController::create(*engine);
 
     //openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();

@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-13.
 //
 
-#ifndef ENGINE_SPRITE_H
-#define ENGINE_SPRITE_H
+#ifndef ENGINE_UISPRITE_H
+#define ENGINE_UISPRITE_H
 
 #include <memory>
 #include "Material.h"
@@ -11,15 +11,15 @@
 
 namespace en {
 
-    struct Sprite {
+    struct UISprite {
 
-        LUA_TYPE(Sprite);
+        LUA_TYPE(UISprite);
         static void initializeMetatable(LuaState& lua);
-        static Sprite& addFromLua(Actor& actor, LuaState& lua);
+        static UISprite& addFromLua(Actor& actor, LuaState& lua);
 
         std::shared_ptr<Material> material;
         bool isEnabled = true;
     };
 }
 
-#endif //ENGINE_SPRITE_H
+#endif //ENGINE_UISPRITE_H

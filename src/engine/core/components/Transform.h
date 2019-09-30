@@ -15,11 +15,6 @@
 
 namespace en {
 
-    class Engine;
-    class EntityRegistry;
-    class LuaState;
-    class Actor;
-
     class Transform final {
 
         LUA_TYPE(Transform);
@@ -28,10 +23,17 @@ namespace en {
 
     public:
 
-        static void initializeMetatable(LuaState& lua);
-        static Transform& addFromLua(Actor& actor, LuaState& lua);
+        static void initializeMetatable(class LuaState& lua);
+        static Transform& addFromLua(class Actor& actor, class LuaState& lua);
 
-        Transform() = default;
+        explicit Transform(const glm::mat4& localTransform);
+        explicit Transform(const glm::vec3& position = glm::vec3(0.f), const glm::quat& rotation = glm::quat(1.f, 0.f, 0.f, 0.f), const glm::vec3& scale = glm::vec3(1.f));
+
+        Transform(const Transform& other) = delete;
+        Transform& operator=(const Transform& other) = delete;
+        Transform(Transform&& other) = default;
+        Transform& operator=(Transform&& other) = default;
+        ~Transform() = default;
 
         const glm::mat4& getLocalTransform() const;
         const glm::mat4& getWorldTransform() const;
@@ -39,7 +41,8 @@ namespace en {
         inline const glm::vec3& getLocalPosition() const {return m_position;}
         inline const glm::quat& getLocalRotation() const {return m_rotation;}
         inline const glm::vec3& getLocalScale   () const {return m_scale;}
-        inline       Entity     getParent       () const {return m_parent;}
+
+        inline Entity getParent() const {return m_parent;}
         inline const std::vector<Entity>& getChildren() const {return m_children;}
 
         glm::vec3 getWorldPosition() const;
@@ -48,22 +51,28 @@ namespace en {
 
         // TODO add setWorldPosition/Rotation
         Transform& setLocalPosition(const glm::vec3& localPosition);
+        Transform& setLocalPosition2D(const glm::vec2& localPosition);
         Transform& setLocalRotation(const glm::quat& localRotation);
-        Transform& setLocalScale   (const glm::vec3& localScale);
-        Transform& setParent       (Entity newParent);
+        Transform& setLocalScale(const glm::vec3& localScale);
+        Transform& setLocalScale(float localScale);
 
-        Transform& move  (const glm::vec3& offset);
+        Transform& setParent(Entity newParent);
+
+        Transform& move(const glm::vec3& offset);
+        Transform& move(const glm::vec2& offset);
+        Transform& move(float x, float y, float z = 0.0f);
         Transform& rotate(const glm::quat& offset);
         Transform& rotate(float angle, const glm::vec3& axis);
-        Transform& scale (const glm::vec3& scale);
+        Transform& scale(const glm::vec3& scaleMultiplier);
+        Transform& scale(float scaleMultiplier);
 
     private:
 
         void addChild(Entity child);
         void removeChild(Entity child);
 
-        EntityRegistry* m_registry = nullptr;
-        Engine* m_engine = nullptr;
+        class EntityRegistry* m_registry = nullptr;
+        class Engine* m_engine = nullptr;
         Entity m_entity = en::nullEntity;
         Entity m_parent = en::nullEntity;
         std::vector<Entity> m_children;

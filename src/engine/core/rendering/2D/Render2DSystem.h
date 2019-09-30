@@ -9,6 +9,7 @@
 #include "System.h"
 #include "Mesh.h"
 #include "DebugVolumeRenderer.h"
+#include "glm.h"
 
 namespace en {
 
@@ -22,11 +23,15 @@ namespace en {
 
     private:
 
+        void renderLayers(const glm::vec2& cameraCenter, const glm::vec2& orthographicHalfSize, const glm::mat4& matrixView, const glm::mat4& matrixProjection);
+        void renderSprites(const glm::mat4& matrixView, const glm::mat4& matrixProjection);
+
         std::unique_ptr<class Material> m_tileLayerMaterial;
         std::shared_ptr<class Texture> m_tileset;
 
         std::vector<uint32_t> m_mapData;
         std::shared_ptr<class Texture> m_mapDataTexture;
+        std::shared_ptr<class ShaderProgram> m_spriteShader;
 
         std::unique_ptr<DebugVolumeRenderer> m_debugVolumeRenderer;
     };
