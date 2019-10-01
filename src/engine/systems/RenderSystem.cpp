@@ -34,7 +34,7 @@ namespace {
             return;
         }
 
-        const en::Name* const namePtr = actor.tryGet<en::Name>();
+        const auto* const namePtr = actor.tryGet<en::Name>();
         const std::string name = namePtr ? namePtr->value : "unnamed";
         std::cerr << "Error while rendering " << name << std::endl;
     }

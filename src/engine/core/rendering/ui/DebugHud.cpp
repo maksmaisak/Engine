@@ -1,14 +1,17 @@
 
-#include "DebugHud.hpp"
+#include "DebugHud.h"
 #include <iostream>
 #include <sstream>
 #include <GL/glew.h>
+#include "Engine.h"
+#include "VertexRenderer.h"
 
 using namespace en;
 
 DebugHud::DebugHud(Engine& engine, VertexRenderer& vertexRenderer) :
     m_engine(&engine),
-    m_vertexRenderer(&vertexRenderer) {}
+    m_vertexRenderer(&vertexRenderer)
+{}
 
 void DebugHud::setDebugInfo(const Info& info) {
 

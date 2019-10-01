@@ -2,11 +2,8 @@
 #define DEBUGHUD_HPP
 
 #include <SFML/Graphics.hpp>
-#include <iostream>
 #include <utility>
-#include "Engine.h"
 #include "Text.h"
-#include "VertexRenderer.h"
 
 namespace en {
 
@@ -18,7 +15,7 @@ namespace en {
 			std::int64_t frameTimeMicroseconds = 0;
 		};
 
-		DebugHud(Engine& engine, VertexRenderer& vertexRenderer);
+		DebugHud(class Engine& engine, class VertexRenderer& vertexRenderer);
 		virtual ~DebugHud() = default;
 
 		void draw();

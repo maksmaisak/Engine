@@ -2,32 +2,27 @@
 // Created by Maksym Maisak on 22/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_RENDERSYSTEM_H
-#define SAXION_Y2Q1_CPP_RENDERSYSTEM_H
+#ifndef ENGINE_RENDERSYSTEM_H
+#define ENGINE_RENDERSYSTEM_H
 
 #include <memory>
-#include <vector>
 #include <unordered_map>
-#include <SFML/Window.hpp>
-#include "glm.h"
+#include "Bounds.h"
+#include "CompoundSystem.h"
+#include "DebugHud.h"
 #include "Entity.h"
-#include "System.h"
-#include "Engine.h"
-#include "DepthMaps.h"
-#include "VertexRenderer.h"
-#include "ComponentPool.h"
+#include "Mesh.h"
+#include "RenderingSharedState.h"
 #include "Receiver.h"
 #include "SceneManager.h"
-#include "DebugHud.hpp"
-#include "Bounds.h"
-#include "RenderingSharedState.h"
 
 namespace en {
 
-	/// Renders (in this order):
-	/// * Entities with both a Transform and a RenderInfo.
-	/// * Skybox
-	/// * Entities with both a Transform and a UIRect.
+    /// Renders (in this order):
+    /// * 3D Entities (Entities with both a Transform and a RenderInfo)
+    /// * Skybox (see RenderSkyboxSystem)
+    /// * 2D Entities (see Render2DSystem)
+    /// * UI (see RenderUISystem)
     class RenderSystem : public CompoundSystem, Receiver<SceneManager::OnSceneClosed, sf::Event> {
 
     public:
@@ -70,4 +65,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q1_CPP_RENDERSYSTEM_H
+#endif //ENGINE_RENDERSYSTEM_H
