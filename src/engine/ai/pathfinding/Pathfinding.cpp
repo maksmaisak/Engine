@@ -25,19 +25,6 @@ namespace {
         return false;
     }
 
-    const glm::i64vec2 neighborDeltas[] {
-        { 1,  0},
-        { 1,  1},
-        { 0,  1},
-        {-1,  1},
-        {-1,  0},
-        {-1, -1},
-        { 0, -1},
-        { 1, -1}
-    };
-
-    const float sqrt2 = glm::sqrt(2.f);
-
     using Coords = glm::i64vec2;
 
     enum NodeState {
@@ -58,9 +45,26 @@ namespace {
         }
     };
 
-    float manhattan(const Coords& a, const Coords& b) {
+    inline float manhattan(const Coords& a, const Coords& b) {
         return static_cast<float>(glm::abs(a.x - b.x) + glm::abs(a.y - b.y));
     }
+
+    inline float heuristic(const Coords& a, const Coords& b) {
+        return manhattan(a, b);
+    }
+
+    const glm::i64vec2 neighborDeltas[] {
+        { 1,  0},
+        { 1,  1},
+        { 0,  1},
+        {-1,  1},
+        {-1,  0},
+        {-1, -1},
+        { 0, -1},
+        { 1, -1}
+    };
+
+    const float sqrt2 = glm::sqrt(2.f);
 }
 
 std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Coords& start, const Coords& goal, std::size_t maxNumCheckedTiles) {
@@ -76,7 +80,7 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Co
     // TODO chunk-based node storage for performance.
     std::unordered_map<Coords, NodeInfo> nodes;
 
-    const auto reconstructPath = [&nodes, start](const Coords& coords){
+    const auto reconstructPath = [&nodes, start](const Coords& coords) {
 
         std::deque<Coords> reversePath;
 
@@ -90,12 +94,12 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Co
     };
 
     std::priority_queue<Coords, std::vector<Coords>, std::function<bool(const Coords&, const Coords&)>> frontier(
-        [&nodes](const Coords& lhs, const Coords& rhs){
+        [&nodes](const Coords& lhs, const Coords& rhs) {
             return nodes.at(lhs).totalDistance > nodes.at(rhs).totalDistance;
         }
     );
 
-    nodes[start] = {start, Open, 0.f, manhattan(start, goal)};
+    nodes[start] = {start, Open, 0.f, heuristic(start, goal)};
     frontier.push(start);
 
     std::size_t numCheckedTiles = 0;
@@ -124,11 +128,11 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Co
             if (neighborNode.state != Closed && !isObstacle(engine, neighborCoords)) {
 
                 const bool isDiagonal = i % 2;
-                const float distanceThroughCurrent = currentNode.distance + (isDiagonal ? 1.f : sqrt2);
+                const float distanceThroughCurrent = currentNode.distance + (isDiagonal ? sqrt2 : 1.f);
                 if (distanceThroughCurrent < neighborNode.distance) {
 
                     neighborNode.distance = distanceThroughCurrent;
-                    neighborNode.totalDistance = distanceThroughCurrent + manhattan(neighborCoords, goal);
+                    neighborNode.totalDistance = distanceThroughCurrent + heuristic(neighborCoords, goal);
                     neighborNode.previous = currentCoords;
 
                     if (neighborNode.state != Open) {

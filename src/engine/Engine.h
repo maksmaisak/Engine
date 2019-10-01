@@ -70,8 +70,6 @@ namespace en {
         virtual void initializeWindow(sf::RenderWindow& window);
 
     private:
-        void printGLContextVersionInfo();
-        void initializeGlew();
         void initializeLua();
 
         void update(float dt);
