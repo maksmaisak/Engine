@@ -5,7 +5,9 @@
 #ifndef ENGINE_RENDERINGSHAREDSTATE_H
 #define ENGINE_RENDERINGSHAREDSTATE_H
 
+#include <unordered_map>
 #include "DepthMaps.h"
+#include "Mesh.h"
 #include "VertexRenderer.h"
 
 namespace en {
@@ -17,6 +19,7 @@ namespace en {
 
         DepthMaps depthMaps;
         VertexRenderer vertexRenderer;
+        std::unordered_map<std::shared_ptr<class Material>, Mesh> batches;
 
         glm::vec2 referenceResolution;
     };

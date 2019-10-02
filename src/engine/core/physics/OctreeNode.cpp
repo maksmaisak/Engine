@@ -78,7 +78,7 @@ void OctreeNode::add(Entity entity, const utils::Bounds& bounds) {
 
         // TODO instead of checking against each child's bounds, efficiently set a bitmask with 8 bits in one go.
         for (int i = 0; i < 8; ++i)
-            if (getChildBounds(i).intersect(bounds))
+            if (getChildBounds(i).intersects(bounds))
                 ensureChildNode(i).add(entity, bounds);
 
     } else {
@@ -92,10 +92,10 @@ void OctreeNode::remove(Entity entity, const utils::Bounds& searchInBounds) {
     if (!isLeafNode()) {
 
         for (int i = 0; i < 8; ++i)
-            if (m_children[i] && getChildBounds(i).intersect(searchInBounds))
+            if (m_children[i] && getChildBounds(i).intersects(searchInBounds))
                 m_children[i]->remove(entity, searchInBounds);
 
-    } else if (getBounds().intersect(searchInBounds)) {
+    } else if (getBounds().intersects(searchInBounds)) {
 
         removeAndMergeParentIfNeeded(entity);
     }
@@ -112,8 +112,8 @@ void OctreeNode::update(Entity entity, const utils::Bounds& oldBounds, const uti
 
             const utils::Bounds& childBounds = getChildBounds(i);
 
-            const bool wasInChild      = m_children[i] && childBounds.intersect(oldBounds);
-            const bool shouldBeInChild = childBounds.intersect(newBounds);
+            const bool wasInChild      = m_children[i] && childBounds.intersects(oldBounds);
+            const bool shouldBeInChild = childBounds.intersects(newBounds);
 
             if (!wasInChild && !shouldBeInChild)
                 continue;
@@ -127,8 +127,8 @@ void OctreeNode::update(Entity entity, const utils::Bounds& oldBounds, const uti
     }
 
     const utils::Bounds& bounds = getBounds();
-    const bool wasHere = oldBounds.intersect(bounds);
-    const bool shouldBeHere = newBounds.intersect(bounds);
+    const bool wasHere = oldBounds.intersects(bounds);
+    const bool shouldBeHere = newBounds.intersects(bounds);
 
     if (!wasHere) {
         if (shouldBeHere) {
@@ -240,7 +240,7 @@ void OctreeNode::splitIfNeeded() {
         const utils::Bounds childBounds = getChildBounds(i);
 
         for (const auto& [e, entityBounds] : m_entities)
-            if (childBounds.intersect(entityBounds))
+            if (childBounds.intersects(entityBounds))
                 ensureChildNode(i).add(e, entityBounds);
     }
     m_entities.clear();

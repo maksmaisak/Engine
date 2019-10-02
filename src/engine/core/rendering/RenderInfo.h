@@ -20,6 +20,8 @@ namespace en {
         static RenderInfo& addFromLua(Actor& actor, LuaState& lua);
         static void initializeMetatable(LuaState& lua);
 
+        inline bool isValidForRendering() const {return isEnabled && model && material;}
+
         std::shared_ptr<Model> model;
         std::shared_ptr<Material> material;
 

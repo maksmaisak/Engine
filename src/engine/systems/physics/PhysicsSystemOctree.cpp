@@ -113,7 +113,7 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
 
             for (const std::unique_ptr<OctreeNode>& childNodePtr : node->getChildren())
                 if (childNodePtr)
-                    if (bounds.intersect(childNodePtr->getBounds()))
+                    if (bounds.intersects(childNodePtr->getBounds()))
                         nodes.push(childNodePtr.get());
         } else {
 

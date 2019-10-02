@@ -6,18 +6,15 @@
 #define ENGINE_RENDERUISYSTEM_H
 
 #include "System.h"
-
-#include "System.h"
-#include "Mesh.h"
-#include "DebugVolumeRenderer.h"
-#include "RenderingSharedState.h"
+#include "Entity.h"
+#include "glm.h"
 
 namespace en {
 
     class RenderUISystem : public System {
 
     public:
-        explicit RenderUISystem(RenderingSharedState& renderingSharedState);
+        explicit RenderUISystem(class RenderingSharedState& renderingSharedState);
         void start() override;
         void draw() override;
 

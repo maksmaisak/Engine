@@ -5,16 +5,12 @@
 #ifndef ENGINE_RENDERSYSTEM_H
 #define ENGINE_RENDERSYSTEM_H
 
-#include <memory>
-#include <unordered_map>
-#include "Bounds.h"
 #include "CompoundSystem.h"
 #include "DebugHud.h"
-#include "Entity.h"
-#include "Mesh.h"
-#include "RenderingSharedState.h"
 #include "Receiver.h"
+#include "RenderingSharedState.h"
 #include "SceneManager.h"
+#include "ShadowMapper.h"
 
 namespace en {
 
@@ -34,32 +30,17 @@ namespace en {
         void receive(const SceneManager::OnSceneClosed&) override;
         void receive(const sf::Event&) override;
 
+        static void setOpenGLSettings();
+        void getConfigFromLua();
+
         void updateBatches();
-        void updateDepthMaps();
         void renderEntities();
         void renderDebug();
 
-        void setOpenGLSettings();
-        void getConfigFromLua();
-
-        Actor getMainCamera();
-        void updateDepthMapsDirectionalLights(const std::vector<Entity>& directionalLights);
-        void updateDepthMapsPositionalLights (const std::vector<Entity>& pointLights);
-        void updateShadowCastersBounds();
-        utils::Bounds getCameraFrustumBounds();
-
         RenderingSharedState m_renderingSharedState;
 
-        // Shadowmapping
-        std::shared_ptr<ShaderProgram> m_directionalDepthShader;
-        std::shared_ptr<ShaderProgram> m_positionalDepthShader;
-        utils::Bounds m_shadowReceiversBounds;
-
-        // Static batching
+        std::unique_ptr<ShadowMapper> m_shadowMapper;
         bool m_enableStaticBatching;
-        std::unordered_map<std::shared_ptr<Material>, Mesh> m_batches;
-
-        // Debug
         bool m_enableDebugOutput;
         std::unique_ptr<DebugHud> m_debugHud;
     };

@@ -9,6 +9,7 @@
 #include "UIRect.h"
 #include "UISprite.h"
 #include "Text.h"
+#include "RenderingSharedState.h"
 
 using namespace en;
 

@@ -111,7 +111,7 @@ std::tuple<bool, float> PhysicsSystemQuadtree::move(Entity entity, Transform& tf
 
             for (const std::unique_ptr<QuadtreeNode>& childNodePtr : node->getChildren())
                 if (childNodePtr)
-                    if (bounds.intersect(childNodePtr->getBounds()))
+                    if (bounds.intersects(childNodePtr->getBounds()))
                         nodes.push(childNodePtr.get());
         } else {
 
