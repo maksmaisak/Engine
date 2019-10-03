@@ -19,7 +19,7 @@ namespace gl {
 
     public:
         inline Wrapper() : m_id(0) {}
-        inline Wrapper(CreateImmediately) : m_id(Create()) {}
+        inline explicit Wrapper(CreateImmediately) : m_id(Create()) {}
         inline ~Wrapper() {
 
             if (m_id) {

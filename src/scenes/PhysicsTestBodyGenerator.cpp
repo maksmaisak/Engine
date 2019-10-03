@@ -13,7 +13,7 @@
 #include "Texture.h"
 #include "Resources.h"
 #include "KeyboardHelper.h"
-#include "config.hpp"
+#include "Config.h"
 
 #include "Transform.h"
 #include "Camera.h"

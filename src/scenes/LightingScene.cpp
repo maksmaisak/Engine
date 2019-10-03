@@ -5,7 +5,7 @@
 #include "LightingScene.h"
 
 #include <memory>
-#include "config.hpp"
+#include "Config.h"
 #include "Camera.h"
 #include "Transform.h"
 #include "RenderInfo.h"

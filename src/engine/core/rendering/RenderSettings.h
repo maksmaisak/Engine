@@ -6,7 +6,7 @@
 #define ENGINE_RENDERSETTINGS_H
 
 #include <memory>
-#include "config.hpp"
+#include "Config.h"
 #include "glm.h"
 #include "Texture.h"
 

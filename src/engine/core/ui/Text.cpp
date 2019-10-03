@@ -4,7 +4,7 @@
 
 #include "Text.h"
 #include <tuple>
-#include "config.hpp"
+#include "Config.h"
 
 using namespace en;
 

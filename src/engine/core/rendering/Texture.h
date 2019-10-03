@@ -8,7 +8,7 @@
 #include "glm.h"
 #include "GLWrappers.h"
 #include "Resources.h"
-#include "config.hpp"
+#include "Config.h"
 
 namespace en {
 

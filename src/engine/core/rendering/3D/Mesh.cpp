@@ -1,12 +1,8 @@
 #include "Mesh.h"
 
-#include <iostream>
-#include <map>
-#include <string>
-#include <fstream>
 #include <assimp/mesh.h>
 #include <assimp/matrix4x4.h>
-#include <assert.h>
+#include <cassert>
 #include <functional>
 
 #include "utils/Meta.h"

@@ -7,6 +7,8 @@
 
 #include <GL/glew.h>
 #include "glm.h"
+#include "GLWrappers.h"
+#include "FramebufferObject.h"
 
 namespace en {
 
