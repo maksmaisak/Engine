@@ -10,7 +10,6 @@
 #include "Receiver.h"
 #include "RenderingSharedState.h"
 #include "SceneManager.h"
-#include "ShadowMapper.h"
 
 namespace en {
 
@@ -22,7 +21,6 @@ namespace en {
     class RenderSystem : public CompoundSystem, Receiver<SceneManager::OnSceneClosed, sf::Event> {
 
     public:
-        RenderSystem();
         void start() override;
         void draw() override;
 
@@ -32,16 +30,9 @@ namespace en {
 
         static void setOpenGLSettings();
         void getConfigFromLua();
-
-        void updateBatches();
-        void renderEntities();
         void renderDebug();
 
         RenderingSharedState m_renderingSharedState;
-
-        std::unique_ptr<ShadowMapper> m_shadowMapper;
-        bool m_enableStaticBatching;
-        bool m_enableDebugOutput;
         std::unique_ptr<DebugHud> m_debugHud;
     };
 }

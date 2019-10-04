@@ -8,5 +8,7 @@ using namespace en;
 
 RenderingSharedState::RenderingSharedState() :
     depthMaps(4, {1024, 1024}, 10, {64, 64}),
+    enableStaticBatching(true),
+    enableDebugOutput(false),
     referenceResolution(1920, 1080)
 {}

@@ -21,6 +21,8 @@ namespace en {
         VertexRenderer vertexRenderer;
         std::unordered_map<std::shared_ptr<class Material>, Mesh> batches;
 
+        bool enableStaticBatching;
+        bool enableDebugOutput;
         glm::vec2 referenceResolution;
     };
 }
