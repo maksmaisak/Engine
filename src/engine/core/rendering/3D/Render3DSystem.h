@@ -11,10 +11,13 @@
 
 namespace en {
 
+    /// Each frame:
+    /// * Updates static batches, if needed.
+    /// * Renders 3D entities (ones with both a Transform and a RenderInfo).
     class Render3DSystem : public System {
 
     public:
-        explicit Render3DSystem(class RenderingSharedState& renderingSharedState);
+        explicit Render3DSystem(std::shared_ptr<struct RenderingSharedState> renderingSharedState);
         void start() override;
         void draw() override;
 
@@ -22,7 +25,7 @@ namespace en {
         void updateBatches();
         void renderEntities();
 
-        RenderingSharedState* m_renderingSharedState;
+        std::shared_ptr<RenderingSharedState> m_renderingSharedState;
         std::unique_ptr<ShadowMapper> m_shadowMapper;
     };
 }

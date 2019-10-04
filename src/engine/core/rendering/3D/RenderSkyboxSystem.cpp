@@ -63,14 +63,16 @@ namespace {
     std::shared_ptr<Texture> getDefaultSkybox(LuaState& lua) {
 
         lua_getglobal(lua, "Config");
-        auto popConfig = PopperOnDestruct(lua);
-        if (lua_isnil(lua, -1))
+        const auto popConfig = PopperOnDestruct(lua);
+        if (lua_isnil(lua, -1)) {
             return nullptr;
+        }
 
         lua_getfield(lua, -1, "defaultSkybox");
-        auto popSkybox = PopperOnDestruct(lua);
-        if (lua_isnil(lua, -1))
+        const auto popSkybox = PopperOnDestruct(lua);
+        if (lua_isnil(lua, -1)) {
             return nullptr;
+        }
 
         static std::string keys[] = {
             "right",
@@ -85,8 +87,9 @@ namespace {
         for (int i = 0; i < 6; ++i) {
 
             std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
-            if (!path)
+            if (!path) {
                 return nullptr;
+            }
 
             imagePaths[i] = "assets/" + *path;
         }

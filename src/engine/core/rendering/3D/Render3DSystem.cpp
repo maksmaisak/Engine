@@ -16,23 +16,24 @@ namespace {
 
     inline void checkRenderingError(const Actor& actor) {
 
-        if (glCheckError() == GL_NO_ERROR) {
-            return;
-        }
+        if (glCheckError() != GL_NO_ERROR) {
 
-        const auto* const namePtr = actor.tryGet<Name>();
-        const std::string name = namePtr ? namePtr->value : "unnamed";
-        std::cerr << "Error while rendering " << name << std::endl;
+            const auto* const namePtr = actor.tryGet<Name>();
+            const std::string name = namePtr ? namePtr->value : "unnamed";
+            std::cerr << "Error while rendering " << name << std::endl;
+        }
     }
 }
 
-Render3DSystem::Render3DSystem(struct RenderingSharedState& renderingSharedState) :
-    m_renderingSharedState(&renderingSharedState)
-{}
+Render3DSystem::Render3DSystem(std::shared_ptr<RenderingSharedState> renderingSharedState) :
+    m_renderingSharedState(std::move(renderingSharedState))
+{
+    assert(m_renderingSharedState);
+}
 
 void Render3DSystem::start() {
 
-    m_shadowMapper = std::make_unique<ShadowMapper>(*m_engine, *m_renderingSharedState);
+    m_shadowMapper = std::make_unique<ShadowMapper>(*m_engine, m_renderingSharedState);
 }
 
 void Render3DSystem::draw() {

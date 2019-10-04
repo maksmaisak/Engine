@@ -5,7 +5,7 @@
 #include "TransformHierarchySystem.h"
 #include "DestroySystem.h"
 #include "DestroyByTimerSystem.h"
-#include "RenderSystem.h"
+#include "RenderSystems.h"
 #include "Render2DSystem.h"
 #include "PhysicsSystem.h"
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
@@ -50,7 +50,7 @@ int main() {
 
     {
         systems.addSystem<en::TransformHierarchySystem>();
-        systems.addSystem<en::RenderSystem>();
+        systems.addSystem<en::RenderSystems>();
 
         //systems.addSystem<en::PhysicsStressTestingSystem>(10s);
         //systems.addSystem<en::PhysicsSystem>().setGravity({0, -9.8, 0});

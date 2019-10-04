@@ -16,6 +16,7 @@ namespace en {
     struct RenderingSharedState {
 
         RenderingSharedState();
+        void loadConfigFromLua(class LuaState& lua);
 
         DepthMaps depthMaps;
         VertexRenderer vertexRenderer;

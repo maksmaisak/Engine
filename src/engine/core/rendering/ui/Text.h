@@ -32,7 +32,7 @@ namespace en {
         const std::shared_ptr<sf::Font>& getFont() const;
         Text& setFont(const std::shared_ptr<sf::Font>& font);
 
-        const unsigned int getCharacterSize() const;
+        unsigned int getCharacterSize() const;
         Text& setCharacterSize(unsigned int size);
 
         const glm::vec4& getColor() const;

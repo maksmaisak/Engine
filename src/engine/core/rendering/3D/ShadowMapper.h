@@ -16,7 +16,7 @@ namespace en {
     class ShadowMapper {
 
     public:
-        explicit ShadowMapper(class Engine& engine, struct RenderingSharedState& renderingSharedState);
+        explicit ShadowMapper(class Engine& engine, std::shared_ptr<struct RenderingSharedState> renderingSharedState);
         void updateDepthMaps();
 
     private:
@@ -24,7 +24,7 @@ namespace en {
         void updateDepthMapsPositionalLights(const std::vector<Entity>& lightEntities);
 
         Engine* m_engine;
-        RenderingSharedState* m_renderingSharedState;
+        std::shared_ptr<RenderingSharedState> m_renderingSharedState;
 
         std::shared_ptr<class ShaderProgram> m_directionalDepthShader;
         std::shared_ptr<class ShaderProgram> m_positionalDepthShader;

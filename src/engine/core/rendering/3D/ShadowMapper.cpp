@@ -5,6 +5,7 @@
 #include "ShadowMapper.h"
 
 #include <limits>
+#include <utility>
 #include "Camera.h"
 #include "Entity.h"
 #include "Transform.h"
@@ -138,12 +139,14 @@ namespace {
     }
 }
 
-ShadowMapper::ShadowMapper(Engine& engine, RenderingSharedState& renderingSharedState) :
+ShadowMapper::ShadowMapper(Engine& engine, std::shared_ptr<RenderingSharedState> renderingSharedState) :
     m_engine(&engine),
-    m_renderingSharedState(&renderingSharedState),
+    m_renderingSharedState(std::move(renderingSharedState)),
     m_directionalDepthShader(Resources<ShaderProgram>::get("depthDirectional")),
     m_positionalDepthShader (Resources<ShaderProgram>::get("depthPositional"))
-{}
+{
+    assert(m_renderingSharedState);
+}
 
 void ShadowMapper::updateDepthMaps() {
 

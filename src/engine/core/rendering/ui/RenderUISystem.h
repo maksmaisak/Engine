@@ -5,6 +5,7 @@
 #ifndef ENGINE_RENDERUISYSTEM_H
 #define ENGINE_RENDERUISYSTEM_H
 
+#include <memory>
 #include "System.h"
 #include "Entity.h"
 #include "glm.h"
@@ -14,7 +15,7 @@ namespace en {
     class RenderUISystem : public System {
 
     public:
-        explicit RenderUISystem(class RenderingSharedState& renderingSharedState);
+        explicit RenderUISystem(std::shared_ptr<struct RenderingSharedState> renderingSharedState);
         void start() override;
         void draw() override;
 
@@ -26,7 +27,7 @@ namespace en {
         float getUIScaleFactor();
         glm::vec2 getWindowSize();
 
-        RenderingSharedState* m_renderingSharedState;
+        std::shared_ptr<RenderingSharedState> m_renderingSharedState;
     };
 }
 
