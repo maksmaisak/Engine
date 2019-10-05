@@ -74,7 +74,7 @@ namespace {
             return nullptr;
         }
 
-        static std::string keys[] = {
+        static const std::string keys[] {
             "right",
             "left",
             "top",
@@ -86,7 +86,7 @@ namespace {
         std::array<std::string, 6> imagePaths;
         for (int i = 0; i < 6; ++i) {
 
-            std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
+            const std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
             if (!path) {
                 return nullptr;
             }
@@ -101,14 +101,12 @@ namespace {
 RenderSkyboxSystem::RenderSkyboxSystem() :
     m_shader(Resources<ShaderProgram>::get("skybox"))
 {
-    glGenBuffers(1, &m_bufferId);
-
     // Set up the VAO
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
+    m_vao.create();
+    m_vao.bind();
     {
-        glBindBuffer(GL_ARRAY_BUFFER, m_bufferId);
-        glCheckError();
+        m_buffer.create();
+        m_buffer.bind(GL_ARRAY_BUFFER);
         {
             glBufferData(GL_ARRAY_BUFFER, skyboxVertices.size() * sizeof(float), &skyboxVertices, GL_STATIC_DRAW);
             glCheckError();
@@ -117,18 +115,9 @@ RenderSkyboxSystem::RenderSkyboxSystem() :
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
             glCheckError();
         }
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glCheckError();
+        m_buffer.unbind(GL_ARRAY_BUFFER);
     }
-    glBindVertexArray(0);
-
-    glCheckError();
-}
-
-RenderSkyboxSystem::~RenderSkyboxSystem() {
-
-    glDeleteVertexArrays(1, &m_vao);
-    glDeleteBuffers(1, &m_bufferId);
+    m_vao.unbind();
 }
 
 void RenderSkyboxSystem::start()
@@ -138,21 +127,25 @@ void RenderSkyboxSystem::start()
 
 void RenderSkyboxSystem::draw() {
 
-    Actor mainCamera = m_engine->actor(m_registry->with<Transform, Camera>().tryGetOne());
-    if (!mainCamera)
+    Actor mainCamera = m_engine->getMainCamera();
+    if (!mainCamera) {
         return;
+    }
 
     Scene* scene = m_engine->getSceneManager().getCurrentScene();
-    if (!scene)
+    if (!scene) {
         return;
+    }
 
     const auto& renderSettings = scene->getRenderSettings();
-    if (!renderSettings.useSkybox)
+    if (!renderSettings.useSkybox) {
         return;
+    }
 
     const std::shared_ptr<Texture>& skyboxTexture = renderSettings.skyboxTexture ? renderSettings.skyboxTexture : m_defaultSkybox;
-    if (!skyboxTexture || !skyboxTexture->isValid() || skyboxTexture->getKind() != Texture::Kind::TextureCube)
+    if (!skyboxTexture || !skyboxTexture->isValid() || skyboxTexture->getKind() != Texture::Kind::TextureCube) {
         return;
+    }
 
     const glm::mat4 matrixView = glm::mat4(glm::inverse(mainCamera.get<Transform>().getWorldRotation()));
 
@@ -177,8 +170,7 @@ void RenderSkyboxSystem::renderSkyboxCubemap(const Texture& cubemap, const glm::
     glDepthFunc(GL_LEQUAL);
 
     m_shader->use();
-    glCheckError();
-    glBindVertexArray(m_vao);
+    m_vao.bind();
     {
         gl::setUniform(m_shader->getUniformLocation("matrixPV"), matrixPV);
 
@@ -186,10 +178,11 @@ void RenderSkyboxSystem::renderSkyboxCubemap(const Texture& cubemap, const glm::
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.getId());
         glUniform1i(m_shader->getUniformLocation("skyboxTexture"), 0);
 
+        glCheckError();
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glCheckError();
     }
-    glBindVertexArray(0);
+    m_vao.unbind();
 
     glDepthFunc(GL_LESS);
 }

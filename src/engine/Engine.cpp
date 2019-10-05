@@ -203,12 +203,8 @@ void Engine::processWindowEvents() {
     sf::Event event{};
     while (m_window.pollEvent(event)) {
 
-        switch (event.type) {
-            case sf::Event::Closed:
-                m_shouldExit = true;
-                break;
-            default:
-                break;
+        if (event.type == sf::Event::Closed) {
+            m_shouldExit = true;
         }
 
         Receiver<sf::Event>::broadcast(event);

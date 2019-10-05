@@ -8,10 +8,11 @@
 #include <vector>
 #include <GL/glew.h>
 #include "glm.h"
-#include "GLWrappers.h"
 #include "Engine.h"
 #include "Resources.h"
 #include "ShaderProgram.h"
+#include "VertexArrayObject.h"
+#include "VertexBufferObject.h"
 
 namespace en {
 
@@ -26,14 +27,10 @@ namespace en {
         void render(const glm::mat4& matrixPVM);
 
     private:
-
         std::size_t m_maxNumVerticesPerDrawCall = 0;
-
         std::shared_ptr<ShaderProgram> m_wireframeShader;
-
         gl::VertexArrayObject m_vao;
         gl::VertexBufferObject m_vbo;
-
         std::vector<float> m_vertexData;
     };
 }

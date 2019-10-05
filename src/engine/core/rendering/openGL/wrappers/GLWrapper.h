@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-09-24.
 //
 
-#ifndef ENGINE_GLWRAPPERS_H
-#define ENGINE_GLWRAPPERS_H
+#ifndef ENGINE_GLWRAPPER_H
+#define ENGINE_GLWRAPPER_H
 
 #include <GL/glew.h>
 #include <cassert>
@@ -14,6 +14,8 @@ namespace gl {
 
     struct CreateImmediately {};
 
+    /// An abstract RAII wrapper around an openGL object.
+    /// Destroys the object in its destructor.
     template<auto Create, auto Delete>
     class Wrapper {
 
@@ -60,39 +62,6 @@ namespace gl {
     protected:
         GLuint m_id;
     };
-
-
-    GLuint createVBO();
-    void deleteVBO(GLuint id);
-
-    class VertexBufferObject : public Wrapper<createVBO, deleteVBO> {
-    public:
-        using Wrapper::Wrapper;
-        void bind(GLenum target) const;
-        void unbind(GLenum target) const;
-    };
-
-
-    GLuint createTexture();
-    void deleteTexture(GLuint id);
-
-    class TextureObject : public Wrapper<createTexture, deleteTexture> {
-    public:
-        using Wrapper::Wrapper;
-        void bind(GLenum target) const;
-        void unbind(GLenum target) const;
-    };
-
-
-    GLuint createVAO();
-    void deleteVAO(GLuint id);
-
-    class VertexArrayObject : public Wrapper<createVAO, deleteVAO> {
-    public:
-        using Wrapper::Wrapper;
-        void bind() const;
-        void unbind() const;
-    };
 };
 
-#endif //ENGINE_GLWRAPPERS_H
+#endif //ENGINE_GLWRAPPER_H

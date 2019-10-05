@@ -5,7 +5,7 @@
 #ifndef ENGINE_FRAMEBUFFEROBJECT_H
 #define ENGINE_FRAMEBUFFEROBJECT_H
 
-#include "GLWrappers.h"
+#include "GLWrapper.h"
 
 namespace gl {
 
