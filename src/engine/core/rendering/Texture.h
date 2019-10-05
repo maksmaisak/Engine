@@ -28,7 +28,7 @@ namespace en {
 
 	    struct CreationSettings {
 
-	        static CreationSettings linearColorSettings;
+	        static const CreationSettings linearColorSettings;
 
             CreationSettings();
 

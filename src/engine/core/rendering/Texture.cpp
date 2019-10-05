@@ -39,7 +39,7 @@ Texture::CreationSettings::CreationSettings() :
     magFilter(GL_LINEAR)
 {}
 
-Texture::CreationSettings Texture::CreationSettings::linearColorSettings = makeLinearColorSettings();
+const Texture::CreationSettings Texture::CreationSettings::linearColorSettings = makeLinearColorSettings();
 
 Texture::Texture(const Size& size, const CreationSettings& settings) :
     m_size(size),

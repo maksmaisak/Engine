@@ -308,7 +308,7 @@ void Material::setCustomUniformsOfType<Material::FontAtlas>(const Material::Loca
     for (auto& [location, setting] : values) {
         if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getNativeHandle())) {
             break;
-        } 
+        }
     }
 }
 

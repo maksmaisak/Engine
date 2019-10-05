@@ -73,7 +73,7 @@ int main() {
 
     ai::AIController::create(*engine);
 
-    openStartLuaScene(*engine);
+    //openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{20, 0, glm::vec3(20.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});

@@ -6,6 +6,7 @@
 #define ENGINE_RENDER2DSYSTEM_H
 
 #include <vector>
+#include "Bounds.h"
 #include "System.h"
 #include "Mesh.h"
 #include "DebugVolumeRenderer.h"
@@ -23,9 +24,8 @@ namespace en {
         void draw() override;
 
     private:
-
-        void renderLayers(const glm::vec2& cameraCenter, const glm::vec2& orthographicHalfSize, const glm::mat4& matrixView, const glm::mat4& matrixProjection);
-        void renderSprites(const glm::mat4& matrixView, const glm::mat4& matrixProjection);
+        void renderLayers(const utils::Bounds2D& cameraBounds, const glm::mat4& matrixView, const glm::mat4& matrixProjection);
+        void renderSprites(const utils::Bounds2D& cameraBounds, const glm::mat4& matrixView, const glm::mat4& matrixProjection);
         void updateMapDataTexture(TileLayer& tileLayer, const TileLayer::Coordinates& min, const TileLayer::Coordinates& max);
 
         std::unique_ptr<class Material> m_tileLayerMaterial;
