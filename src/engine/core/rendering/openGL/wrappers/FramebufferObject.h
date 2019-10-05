@@ -12,7 +12,7 @@ namespace gl {
     GLuint makeFBO();
     void deleteFBO(GLuint id);
 
-    class FramebufferObject : Wrapper<makeFBO, deleteFBO> {
+    class FramebufferObject : public Wrapper<makeFBO, deleteFBO> {
     public:
         using Wrapper::Wrapper;
         void bind(GLenum target) const;

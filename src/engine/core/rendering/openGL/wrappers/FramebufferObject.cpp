@@ -4,14 +4,32 @@
 
 #include "FramebufferObject.h"
 
-using namespace gl;
+GLuint gl::makeFBO() {
 
-void FramebufferObject::bind(GLenum target) const {
-
-    glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+    GLuint id;
+    glGenFramebuffers(1, &id);
+    return id;
 }
 
-void FramebufferObject::unbind(GLenum target) const {
+void gl::deleteFBO(GLuint id) {
+
+    glDeleteFramebuffers(1, &id);
+}
+
+void gl::FramebufferObject::bind(GLenum target) const {
+
+    glCheckError();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+
+    glCheckError();
+}
+
+void gl::FramebufferObject::unbind(GLenum target) const {
+
+    glCheckError();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glCheckError();
 }

@@ -186,7 +186,7 @@ void ShadowMapper::updateDepthMapsDirectionalLights(const std::vector<Entity>& l
 
     // Bind framebuffer
     glViewport(0, 0, depthMaps.getDirectionalMapResolution().x, depthMaps.getDirectionalMapResolution().y);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMaps.getDirectionalMapsFramebufferId());
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMaps.getDirectionalMapsFramebuffer());
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_directionalDepthShader->use();
@@ -237,7 +237,7 @@ void ShadowMapper::updateDepthMapsPositionalLights(const std::vector<Entity>& li
 
     // Bind framebuffer
     glViewport(0, 0, depthMaps.getCubemapResolution().x, depthMaps.getCubemapResolution().y);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMaps.getCubemapsFramebufferId());
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMaps.getCubemapsFramebuffer());
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_positionalDepthShader->use();

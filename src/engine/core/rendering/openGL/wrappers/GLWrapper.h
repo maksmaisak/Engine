@@ -12,7 +12,7 @@
 
 namespace gl {
 
-    struct CreateImmediately {};
+    struct ForceCreate {};
 
     /// An abstract RAII wrapper around an openGL object.
     /// Destroys the object in its destructor.
@@ -21,7 +21,7 @@ namespace gl {
 
     public:
         inline Wrapper() : m_id(0) {}
-        inline explicit Wrapper(CreateImmediately) : m_id(Create()) {}
+        inline explicit Wrapper(ForceCreate) : m_id(Create()) {}
         inline ~Wrapper() {
 
             if (m_id) {

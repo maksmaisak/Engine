@@ -219,10 +219,10 @@ void Material::setBuiltinUniforms(
         gl::setUniform(u.ambientColor, getAmbientColor(*engine));
 
     if (depthMaps && valid(u.directionalDepthMaps))
-        setUniformTexture(u.directionalDepthMaps, depthMaps->getDirectionalMapsTextureId(), GL_TEXTURE_2D_ARRAY);
+        setUniformTexture(u.directionalDepthMaps, depthMaps->getDirectionalMapsTexture(), GL_TEXTURE_2D_ARRAY);
 
     if (depthMaps && valid(u.depthCubemaps))
-        setUniformTexture(u.depthCubemaps, depthMaps->getCubemapsTextureId(), GL_TEXTURE_CUBE_MAP_ARRAY);
+        setUniformTexture(u.depthCubemaps, depthMaps->getCubemapsTexture(), GL_TEXTURE_CUBE_MAP_ARRAY);
 
     auto& registry = engine->getRegistry();
 
