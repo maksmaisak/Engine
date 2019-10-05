@@ -6,6 +6,7 @@
 #include <iostream>
 #include <tuple>
 #include "GLHelpers.h"
+#include "ScopedBind.h"
 
 using namespace en;
 
@@ -17,8 +18,9 @@ namespace {
 
         gl::FramebufferObject fbo;
         fbo.create();
-        fbo.bind(GL_FRAMEBUFFER);
         {
+            const auto bindFBO = gl::ScopedBind<gl::FramebufferObject>(fbo, GL_FRAMEBUFFER);
+
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture, 0);
             glDrawBuffer(GL_NONE);
             glReadBuffer(GL_NONE);
@@ -28,7 +30,6 @@ namespace {
                 std::cerr << "Failed to create framebuffer" << std::endl;
             }
         }
-        fbo.unbind(GL_FRAMEBUFFER);
 
         return fbo;
     }
@@ -37,8 +38,9 @@ namespace {
 
         gl::TextureObject texture;
         texture.create();
-        texture.bind(GL_TEXTURE_2D_ARRAY);
         {
+            const auto bindTexture = gl::ScopedBind(texture, GL_TEXTURE_2D_ARRAY);
+
             glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, resolution.x, resolution.y, maxNumLights, 0,
                          GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
@@ -49,7 +51,6 @@ namespace {
             const float borderColor[] = {1, 1, 1, 1};
             glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
         }
-        texture.unbind(GL_TEXTURE_2D_ARRAY);
 
         gl::FramebufferObject fbo = makeFramebuffer(texture);
 
@@ -60,8 +61,9 @@ namespace {
 
         gl::TextureObject texture;
         texture.create();
-        texture.bind(GL_TEXTURE_CUBE_MAP_ARRAY);
         {
+            const auto bindTexture = gl::ScopedBind(texture, GL_TEXTURE_CUBE_MAP_ARRAY);
+
             glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, GL_DEPTH_COMPONENT, resolution.x, resolution.y, 6 * maxNumLights,
                          0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
             glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
@@ -71,7 +73,6 @@ namespace {
             glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
         }
-        texture.unbind(GL_TEXTURE_CUBE_MAP_ARRAY);
 
         gl::FramebufferObject fbo = makeFramebuffer(texture);
 

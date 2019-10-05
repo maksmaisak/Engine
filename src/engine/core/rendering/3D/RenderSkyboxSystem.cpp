@@ -11,6 +11,7 @@
 #include "Engine.h"
 #include "Transform.h"
 #include "Camera.h"
+#include "ScopedBind.h"
 
 using namespace en;
 
@@ -101,23 +102,20 @@ namespace {
 RenderSkyboxSystem::RenderSkyboxSystem() :
     m_shader(Resources<ShaderProgram>::get("skybox"))
 {
-    // Set up the VAO
     m_vao.create();
-    m_vao.bind();
+    const auto bindVAO = gl::ScopedBind(m_vao);
+
     {
         m_buffer.create();
-        m_buffer.bind(GL_ARRAY_BUFFER);
-        {
-            glBufferData(GL_ARRAY_BUFFER, skyboxVertices.size() * sizeof(float), &skyboxVertices, GL_STATIC_DRAW);
-            glCheckError();
-            glEnableVertexAttribArray(0);
-            glCheckError();
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-            glCheckError();
-        }
-        m_buffer.unbind(GL_ARRAY_BUFFER);
+        const auto bindBuffer = gl::ScopedBind(m_buffer, GL_ARRAY_BUFFER);
+
+        glBufferData(GL_ARRAY_BUFFER, skyboxVertices.size() * sizeof(float), &skyboxVertices, GL_STATIC_DRAW);
+        glCheckError();
+        glEnableVertexAttribArray(0);
+        glCheckError();
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+        glCheckError();
     }
-    m_vao.unbind();
 }
 
 void RenderSkyboxSystem::start()
@@ -169,20 +167,15 @@ void RenderSkyboxSystem::renderSkyboxCubemap(const Texture& cubemap, const glm::
 
     glDepthFunc(GL_LEQUAL);
 
-    m_shader->use();
-    m_vao.bind();
     {
+        const auto bindVAO = gl::ScopedBind(m_vao);
+
+        m_shader->use();
         gl::setUniform(m_shader->getUniformLocation("matrixPV"), matrixPV);
+        gl::setUniform(m_shader->getUniformLocation("skyboxTexture"), &cubemap, 0, GL_TEXTURE_CUBE_MAP);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.getId());
-        glUniform1i(m_shader->getUniformLocation("skyboxTexture"), 0);
-
-        glCheckError();
         glDrawArrays(GL_TRIANGLES, 0, 36);
-        glCheckError();
     }
-    m_vao.unbind();
 
     glDepthFunc(GL_LESS);
 }

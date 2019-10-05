@@ -3,9 +3,9 @@
 //
 
 #include "DebugVolumeRenderer.h"
-#include <algorithm>
 #include <cassert>
 #include "GLHelpers.h"
+#include "ScopedBind.h"
 
 using namespace en;
 
@@ -45,21 +45,18 @@ DebugVolumeRenderer::DebugVolumeRenderer(std::size_t maxNumVerticesPerDrawCall) 
 {
     m_vertexData.reserve(100 * 7);
 
-    m_vao.bind();
+    const auto bindVAO = gl::ScopedBind(m_vao);
     {
-        m_vbo.bind(GL_ARRAY_BUFFER);
-        {
-            glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 7 * m_maxNumVerticesPerDrawCall, nullptr, GL_DYNAMIC_DRAW);
+        const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
 
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, nullptr);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 7 * m_maxNumVerticesPerDrawCall, nullptr, GL_DYNAMIC_DRAW);
 
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, (void*)(sizeof(GLfloat) * 3));
-        }
-        m_vbo.unbind(GL_ARRAY_BUFFER);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, nullptr);
+
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 7, (void*)(sizeof(GLfloat) * 3));
     }
-    m_vao.unbind();
 }
 
 void DebugVolumeRenderer::addAABB(const glm::vec3& center, const glm::vec3& halfSize, const glm::vec4& color) {
@@ -97,16 +94,16 @@ void DebugVolumeRenderer::render(const glm::mat4& matrixPVM) {
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    m_vao.bind();
     {
-        m_vbo.bind(GL_ARRAY_BUFFER);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * m_vertexData.size(), m_vertexData.data());
-        m_vbo.unbind(GL_ARRAY_BUFFER);
+        const auto bindVAO = gl::ScopedBind(m_vao);
+        {
+            const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * m_vertexData.size(), m_vertexData.data());
 
-        glDrawArrays(GL_LINES, 0, (GLsizei)(m_vertexData.size() / 7));
-        glCheckError();
+            glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(m_vertexData.size() / 7));
+            glCheckError();
+        }
     }
-    m_vao.unbind();
 
     m_vertexData.clear();
 

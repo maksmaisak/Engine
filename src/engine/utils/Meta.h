@@ -77,11 +77,13 @@ namespace utils {
     struct functionTraitsBase {
 
         inline static constexpr bool isFunction = true;
+        inline static constexpr std::size_t numArgs = sizeof...(TArgs);
 
         using Result = TResult;
         using Owner  = TOwner;
         using Signature = TResult(TArgs...);
         using FunctionType = std::function<Signature>;
+        using ArgsTuple = std::tuple<TArgs...>;
     };
 
     template<typename T, bool = hasDeducibleSignature_v<T>>

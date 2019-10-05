@@ -5,7 +5,6 @@
 #include "ShadowMapper.h"
 
 #include <limits>
-#include <utility>
 #include "Camera.h"
 #include "Entity.h"
 #include "Transform.h"
@@ -13,6 +12,7 @@
 #include "RenderingSharedState.h"
 #include "Engine.h"
 #include "RenderInfo.h"
+#include "ScopedBind.h"
 
 using namespace en;
 
@@ -25,7 +25,7 @@ namespace {
 
         const Actor mainCamera = engine.getMainCamera();
         if (!mainCamera) {
-            return {glm::vec3(-100.f), glm::vec3(100.f)};
+            return {};
         }
 
         // Convert the 8 corners of the frustum from clipspace to worldspace.
@@ -179,7 +179,7 @@ void ShadowMapper::updateDepthMapsDirectionalLights(const std::vector<Entity>& l
     EntityRegistry& registry = m_engine->getRegistry();
 
     glViewport(0, 0, depthMaps.getDirectionalMapResolution().x, depthMaps.getDirectionalMapResolution().y);
-    depthMaps.getDirectionalMapsFramebuffer().bind(GL_FRAMEBUFFER);
+    const auto framebufferBind = gl::ScopedBind(depthMaps.getDirectionalMapsFramebuffer(), GL_FRAMEBUFFER);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_directionalDepthShader->use();
@@ -219,8 +219,6 @@ void ShadowMapper::updateDepthMapsDirectionalLights(const std::vector<Entity>& l
             mesh.render(0);
         }
     }
-
-    depthMaps.getDirectionalMapsFramebuffer().unbind(GL_FRAMEBUFFER);
 }
 
 void ShadowMapper::updateDepthMapsPositionalLights(const std::vector<Entity>& lightEntities) {
@@ -229,7 +227,7 @@ void ShadowMapper::updateDepthMapsPositionalLights(const std::vector<Entity>& li
     EntityRegistry& registry = m_engine->getRegistry();
 
     glViewport(0, 0, depthMaps.getCubemapResolution().x, depthMaps.getCubemapResolution().y);
-    depthMaps.getCubemapsFramebuffer().bind(GL_FRAMEBUFFER);
+    const auto framebufferBind = gl::ScopedBind(depthMaps.getCubemapsFramebuffer(), GL_FRAMEBUFFER);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_positionalDepthShader->use();
@@ -287,6 +285,4 @@ void ShadowMapper::updateDepthMapsPositionalLights(const std::vector<Entity>& li
             mesh.render(0);
         }
     }
-
-    depthMaps.getCubemapsFramebuffer().unbind(GL_FRAMEBUFFER);
 }
