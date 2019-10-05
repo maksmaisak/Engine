@@ -4,41 +4,44 @@
 
 #include "Text.h"
 #include <tuple>
-#include "config.hpp"
+#include "Config.h"
 
 using namespace en;
 
-std::tuple<glm::vec2, glm::vec2> addGlyphQuad(std::vector<Vertex>& vertices, const glm::vec2& position, const sf::Glyph& glyph, const glm::vec2& atlasSize) {
+namespace {
 
-    const float padding = 0.5f;
+    std::pair<glm::vec2, glm::vec2> addGlyphQuad(std::vector<Vertex>& vertices, const glm::vec2& position, const sf::Glyph& glyph, const glm::vec2& atlasSize) {
 
-    const float left   =  glyph.bounds.left - padding;
-    const float bottom = -glyph.bounds.top - glyph.bounds.height - padding;
-    const float right  =  glyph.bounds.left + glyph.bounds.width + padding;
-    const float top    = -glyph.bounds.top + padding;
+        const float padding = 0.5f;
 
-    float u1 = static_cast<float>(glyph.textureRect.left) - padding;
-    float v1 = static_cast<float>(glyph.textureRect.top  + glyph.textureRect.height) + padding;
-    float u2 = static_cast<float>(glyph.textureRect.left + glyph.textureRect.width)  + padding;
-    float v2 = static_cast<float>(glyph.textureRect.top ) - padding;
-    const glm::vec2 multiplier = 1.f / atlasSize;
-    u1 *= multiplier.x;
-    u2 *= multiplier.x;
-    v1 *= multiplier.y;
-    v2 *= multiplier.y;
+        const float left   =  glyph.bounds.left - padding;
+        const float bottom = -glyph.bounds.top - glyph.bounds.height - padding;
+        const float right  =  glyph.bounds.left + glyph.bounds.width + padding;
+        const float top    = -glyph.bounds.top + padding;
 
-    glm::vec2 min = {position.x + left , position.y + bottom};
-    glm::vec2 max = {position.x + right, position.y + top};
+        float u1 = static_cast<float>(glyph.textureRect.left) - padding;
+        float v1 = static_cast<float>(glyph.textureRect.top  + glyph.textureRect.height) + padding;
+        float u2 = static_cast<float>(glyph.textureRect.left + glyph.textureRect.width)  + padding;
+        float v2 = static_cast<float>(glyph.textureRect.top ) - padding;
+        const glm::vec2 multiplier = 1.f / atlasSize;
+        u1 *= multiplier.x;
+        u2 *= multiplier.x;
+        v1 *= multiplier.y;
+        v2 *= multiplier.y;
 
-    vertices.push_back({{position.x + left , position.y + bottom, 0.f}, {u1, v1}});
-    vertices.push_back({{position.x + right, position.y + top   , 0.f}, {u2, v2}});
-    vertices.push_back({{position.x + left , position.y + top   , 0.f}, {u1, v2}});
+        glm::vec2 min = {position.x + left , position.y + bottom};
+        glm::vec2 max = {position.x + right, position.y + top};
 
-    vertices.push_back({{position.x + left , position.y + bottom, 0.f}, {u1, v1}});
-    vertices.push_back({{position.x + right, position.y + bottom, 0.f}, {u2, v1}});
-    vertices.push_back({{position.x + right, position.y + top   , 0.f}, {u2, v2}});
+        vertices.push_back({{position.x + left , position.y + bottom, 0.f}, {u1, v1}});
+        vertices.push_back({{position.x + right, position.y + top   , 0.f}, {u2, v2}});
+        vertices.push_back({{position.x + left , position.y + top   , 0.f}, {u1, v2}});
 
-    return {min, max};
+        vertices.push_back({{position.x + left , position.y + bottom, 0.f}, {u1, v1}});
+        vertices.push_back({{position.x + right, position.y + bottom, 0.f}, {u2, v1}});
+        vertices.push_back({{position.x + right, position.y + top   , 0.f}, {u2, v2}});
+
+        return {min, max};
+    }
 }
 
 const std::string& Text::getString() const {
@@ -83,7 +86,7 @@ Text& Text::setFont(const std::shared_ptr<sf::Font>& font) {
     return *this;
 }
 
-const unsigned int Text::getCharacterSize() const {
+unsigned int Text::getCharacterSize() const {
 
     return m_characterSize;
 }
@@ -179,7 +182,7 @@ void Text::ensureGeometryUpdate() const {
     sf::Uint32 previousChar = 0;
     for (char c : m_string) {
 
-        auto currentChar = (sf::Uint32)c;
+        const auto currentChar = static_cast<sf::Uint32>(c);
         position.x += m_font->getKerning(previousChar, currentChar, m_characterSize);
         previousChar = currentChar;
 
@@ -236,10 +239,12 @@ namespace {
 };
 
 Text& Text::addFromLua(Actor& actor, LuaState& lua) {
+
     auto& text = actor.add<Text>();
 
-    if (auto material = readMaterial(lua))
+    if (const std::shared_ptr<Material> material = readMaterial(lua)) {
         text.m_material = material;
+    }
 
     return text;
 }

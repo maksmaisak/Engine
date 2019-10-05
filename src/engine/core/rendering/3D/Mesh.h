@@ -7,7 +7,8 @@
 #include <assimp/mesh.h>
 #include "glm.h"
 #include "Resources.h"
-#include "GLWrappers.h"
+#include "VertexArrayObject.h"
+#include "VertexBufferObject.h"
 
 namespace en {
 

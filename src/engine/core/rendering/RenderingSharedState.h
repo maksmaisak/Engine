@@ -16,11 +16,14 @@ namespace en {
     struct RenderingSharedState {
 
         RenderingSharedState();
+        void loadConfigFromLua(class LuaState& lua);
 
         DepthMaps depthMaps;
         VertexRenderer vertexRenderer;
         std::unordered_map<std::shared_ptr<class Material>, Mesh> batches;
 
+        bool enableStaticBatching;
+        bool enableDebugOutput;
         glm::vec2 referenceResolution;
     };
 }

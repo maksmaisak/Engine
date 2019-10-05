@@ -1,17 +1,13 @@
 #include "Mesh.h"
 
-#include <iostream>
-#include <map>
-#include <string>
-#include <fstream>
 #include <assimp/mesh.h>
 #include <assimp/matrix4x4.h>
-#include <assert.h>
+#include <cassert>
 #include <functional>
 
 #include "utils/Meta.h"
 #include "GLHelpers.h"
-#include "Demangle.h"
+#include "ScopedBind.h"
 
 using namespace en;
 
@@ -94,7 +90,7 @@ Mesh::Mesh(const aiMesh* aiMesh, const aiMatrix4x4& aiTransform) :
 
 void Mesh::render(GLint verticesAttrib, GLint normalsAttrib, GLint uvsAttrib, GLint tangentsAttrib, GLint bitangentsAttrib) const {
 
-    m_vao.bind();
+    const auto bindVAO = gl::ScopedBind(m_vao);
 
 	static const auto tryEnableVertexAttribArray = [](GLint attributeLocation, const gl::VertexBufferObject& buffer, GLint numComponents, bool normalize) {
 
@@ -126,8 +122,6 @@ void Mesh::render(GLint verticesAttrib, GLint normalsAttrib, GLint uvsAttrib, GL
 	if (uvsAttrib        > -1) glDisableVertexAttribArray(static_cast<GLuint>(uvsAttrib       ));
 	if (normalsAttrib    > -1) glDisableVertexAttribArray(static_cast<GLuint>(normalsAttrib   ));
 	if (verticesAttrib   > -1) glDisableVertexAttribArray(static_cast<GLuint>(verticesAttrib  ));
-
-	m_vao.unbind();
 }
 
 void Mesh::add(const Mesh& mesh, const glm::mat4& transform) {
@@ -244,7 +238,6 @@ void Mesh::buffer() {
     bufferVector(m_uvBuffer       , m_uvs       );
     bufferVector(m_tangentBuffer  , m_tangents  );
     bufferVector(m_bitangentBuffer, m_bitangents);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     if (!m_vao) {

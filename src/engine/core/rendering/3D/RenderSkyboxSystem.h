@@ -10,6 +10,8 @@
 #include "glm.h"
 #include "ShaderProgram.h"
 #include "System.h"
+#include "VertexArrayObject.h"
+#include "VertexBufferObject.h"
 
 namespace en {
 
@@ -17,21 +19,14 @@ namespace en {
 
     public:
         RenderSkyboxSystem();
-        ~RenderSkyboxSystem() override;
-        RenderSkyboxSystem(const RenderSkyboxSystem&) = delete;
-        RenderSkyboxSystem& operator=(const RenderSkyboxSystem&) = delete;
-        RenderSkyboxSystem(RenderSkyboxSystem&&) = delete;
-        RenderSkyboxSystem& operator=(RenderSkyboxSystem&&) = delete;
-
         void start() override;
         void draw() override;
 
     private:
-
         void renderSkyboxCubemap(const class Texture& cubemap, const glm::mat4& matrixPV);
 
-        GLuint m_vao = 0;
-        GLuint m_bufferId = 0;
+        gl::VertexArrayObject m_vao;
+        gl::VertexBufferObject m_buffer;
         std::shared_ptr<ShaderProgram> m_shader;
 
         std::shared_ptr<Texture> m_defaultSkybox;

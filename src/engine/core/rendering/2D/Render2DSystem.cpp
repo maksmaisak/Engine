@@ -3,6 +3,7 @@
 //
 
 #include "Render2DSystem.h"
+#include <utility>
 #include "Actor.h"
 #include "TileLayer.h"
 #include "Sprite.h"
@@ -27,7 +28,10 @@ namespace {
     constexpr std::size_t AtlasSize = 8;
 
     uint32_t pack(const Tile::AtlasCoordinates& atlasCoordinates) {
-        return ((uint32_t)atlasCoordinates.x << 24) | ((uint32_t)atlasCoordinates.y << 24 >> 8);
+
+        return
+            (static_cast<uint32_t>(atlasCoordinates.x) << 24) |
+            (static_cast<uint32_t>(atlasCoordinates.y) << 24 >> 8);
     }
 
     glm::mat4 getViewMatrix(const Transform& cameraTransform) {
@@ -42,6 +46,18 @@ namespace {
     glm::mat4 getSpriteModelMatrix(const Transform& spriteTransform, const Sprite& sprite) {
 
         return spriteTransform.getWorldTransform() * glm::translate(glm::vec3(-sprite.pivot, 0.f));
+    }
+
+    std::pair<TileLayer::Coordinates, TileLayer::Coordinates> getTileIndicesBounds(const glm::vec2& cameraCenter, const glm::vec2& orthographicHalfSize) {
+
+        const TileLayer::Coordinates visibleTileIndicesMin = glm::floor(cameraCenter - orthographicHalfSize);
+        const TileLayer::Coordinates visibleTileIndicesMax = glm::floor(cameraCenter + orthographicHalfSize);
+
+        const glm::vec<2, std::size_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
+        const glm::vec<2, std::size_t> finalTileRangeSize = glm::min(visibleTileRangeSize, MapDataTextureResolution - 1);
+        const TileLayer::Coordinates finalTileIndicesMax = visibleTileIndicesMin + TileLayer::Coordinates(finalTileRangeSize);
+
+        return {visibleTileIndicesMin, finalTileIndicesMax};
     }
 }
 
@@ -69,7 +85,6 @@ Render2DSystem::Render2DSystem() :
 
     {
         assert(m_tileLayerMaterial);
-        const auto& m = *m_tileLayerMaterial;
         m_tileLayerMaterial->setUniformValue("mapDataTexture", m_mapDataTexture);
         m_tileLayerMaterial->setUniformValue("tileAtlas", m_tileset);
 
@@ -111,6 +126,7 @@ void Render2DSystem::draw() {
     const Transform& cameraTransform = cameraActor.get<Transform>();
     const glm::mat4 matrixView = getViewMatrix(cameraTransform);
     const glm::mat4 matrixProjection = camera.getCameraProjectionMatrix(*m_engine);
+
     renderLayers(cameraTransform.getWorldPosition(), camera.getOrthographicExtents(*m_engine), matrixView, matrixProjection);
     renderSprites(matrixView, matrixProjection);
     m_debugVolumeRenderer->render(matrixProjection * matrixView);
@@ -125,33 +141,19 @@ void Render2DSystem::renderLayers(const glm::vec2& cameraCenter, const glm::vec2
     glDisable(GL_DEPTH_TEST);
 
     const std::shared_ptr<const Mesh> quad = Mesh::getQuad();
-
-    const TileLayer::Coordinates visibleTileIndicesMin = glm::floor(cameraCenter - orthographicHalfSize);
-    const TileLayer::Coordinates visibleTileIndicesMax = glm::ceil(cameraCenter + orthographicHalfSize);
-    const glm::vec<2, std::size_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
-    const glm::vec<2, std::size_t> finalTileRangeSize = glm::min(visibleTileRangeSize, MapDataTextureResolution);
-    const TileLayer::Coordinates finalTileIndicesMax = visibleTileIndicesMin + TileLayer::Coordinates(finalTileRangeSize);
+    const auto [tileIndicesMin, tileIndicesMax] = getTileIndicesBounds(cameraCenter, orthographicHalfSize);
 
     for (Entity e : m_registry->with<TileLayer>()) {
 
         auto& tileLayer = m_registry->get<TileLayer>(e);
+        updateMapDataTexture(tileLayer, tileIndicesMin, tileIndicesMax);
 
-        std::size_t mapDataIndex = 0;
-        using index_t = TileLayer::Coordinates::value_type;
-        for (index_t y = visibleTileIndicesMin.y; y < finalTileIndicesMax.y; ++y) {
-            for (index_t x = visibleTileIndicesMin.x; x < finalTileIndicesMax.x; ++x) {
-                m_mapData[mapDataIndex++] = pack(tileLayer.at({x, y}).atlasCoordinates);
-            }
-        }
-
-        m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, finalTileRangeSize.x, finalTileRangeSize.y);
-
-        const glm::mat4 matrixModel = glm::translate(glm::vec3(visibleTileIndicesMin, -1.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
+        const glm::mat4 matrixModel = glm::translate(glm::vec3(tileIndicesMin, -1.f)) * glm::scale(glm::vec3(MapDataTextureResolution));
         m_tileLayerMaterial->render(quad.get(), m_engine, nullptr, matrixModel, matrixView, matrixProjection);
     }
 
     m_debugVolumeRenderer->addAABB(glm::vec3(cameraCenter, 0.f), glm::vec3(orthographicHalfSize, 1.f));
-    m_debugVolumeRenderer->addAABBMinMax(glm::vec3(visibleTileIndicesMin, -1.f), glm::vec3(visibleTileIndicesMax,  1.f));
+    m_debugVolumeRenderer->addAABBMinMax(glm::vec3(tileIndicesMin, -1.f), glm::vec3(tileIndicesMax + TileLayer::Coordinates(1), 1.f));
     m_debugVolumeRenderer->addAABB(glm::vec3(0.5f), glm::vec3(0.5f), glm::vec4(1.f));
 
     glEnable(GL_DEPTH_TEST);
@@ -163,23 +165,45 @@ void Render2DSystem::renderSprites(const glm::mat4& matrixView, const glm::mat4&
         return;
     }
 
-    const std::shared_ptr<const Mesh> quad = Mesh::getQuad();
-
     const GLint textureUniformLocation = m_spriteShader->getUniformLocation("spriteTexture");
     const GLint matrixUniformLocation = m_spriteShader->getUniformLocation("matrixProjection");
     const GLint spriteColorUniformLocation = m_spriteShader->getUniformLocation("spriteColor");
     m_spriteShader->use();
+
+    const std::shared_ptr<const Mesh> quad = Mesh::getQuad();
+
+    const glm::mat4 matrixPV = matrixProjection * matrixView;
+
     for (Entity e : m_registry->with<Transform, Sprite>()) {
 
         const Sprite& sprite = m_registry->get<Sprite>(e);
         const Texture* const texture = sprite.texture.get();
         if (texture && texture->isValid()) {
 
+            // TODO bounds checking
+            const glm::mat4 matrixModel = getSpriteModelMatrix(m_registry->get<Transform>(e), sprite);
+
             gl::setUniform(textureUniformLocation, texture, 0, GL_TEXTURE_2D);
-            gl::setUniform(matrixUniformLocation, matrixProjection * matrixView * getSpriteModelMatrix(m_registry->get<Transform>(e), sprite));
+            gl::setUniform(matrixUniformLocation, matrixPV * matrixModel);
             gl::setUniform(spriteColorUniformLocation, sprite.color);
 
             quad->render(0, -1, 1);
         }
     }
+}
+
+void Render2DSystem::updateMapDataTexture(TileLayer& tileLayer, const TileLayer::Coordinates& tileIndicesMin, const TileLayer::Coordinates& tileIndicesMax) {
+
+    const glm::vec<2, GLsizei> tileIndexCount = glm::vec<2, GLsizei>(tileIndicesMax - tileIndicesMin) + 1;
+    assert(tileIndexCount.x <= MapDataTextureResolution);
+    assert(tileIndexCount.y <= MapDataTextureResolution);
+
+    std::size_t mapDataIndex = 0;
+    for (TileLayer::Coordinate y = tileIndicesMin.y; y <= tileIndicesMax.y; ++y) {
+        for (TileLayer::Coordinate x = tileIndicesMin.x; x <= tileIndicesMax.x; ++x) {
+            m_mapData[mapDataIndex++] = pack(tileLayer.at({x, y}).atlasCoordinates);
+        }
+    }
+
+    m_mapDataTexture->updateData2D(m_mapData.data(), GL_UNSIGNED_INT_8_8_8_8, 0, 0, tileIndexCount.x, tileIndexCount.y);
 }

@@ -300,7 +300,7 @@ function scene:start()
 					-- the new ones
 					for k, v in ipairs(stars) do
 						if v ~= nil then
-							v:remove("Sprite")
+							v:remove("UISprite")
 							v = nil
 						end
 					end
@@ -311,11 +311,11 @@ function scene:start()
 						totalNumberOfStars = savedLevelData.stars
 					end
 
-					self.actor:remove("Sprite")
+					self.actor:remove("UISprite")
 					local level = Game.levels[levelIndex]
 					if level then
 						local imagePath = level.thumbnailPath
-						local sprite = self.actor:add("Sprite", {
+						local sprite = self.actor:add("UISprite", {
 							material = {
 								shader	= "sprite",
 								texture = imagePath,

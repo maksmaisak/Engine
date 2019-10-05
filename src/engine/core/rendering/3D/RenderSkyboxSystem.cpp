@@ -11,6 +11,7 @@
 #include "Engine.h"
 #include "Transform.h"
 #include "Camera.h"
+#include "ScopedBind.h"
 
 using namespace en;
 
@@ -63,16 +64,18 @@ namespace {
     std::shared_ptr<Texture> getDefaultSkybox(LuaState& lua) {
 
         lua_getglobal(lua, "Config");
-        auto popConfig = PopperOnDestruct(lua);
-        if (lua_isnil(lua, -1))
+        const auto popConfig = PopperOnDestruct(lua);
+        if (lua_isnil(lua, -1)) {
             return nullptr;
+        }
 
         lua_getfield(lua, -1, "defaultSkybox");
-        auto popSkybox = PopperOnDestruct(lua);
-        if (lua_isnil(lua, -1))
+        const auto popSkybox = PopperOnDestruct(lua);
+        if (lua_isnil(lua, -1)) {
             return nullptr;
+        }
 
-        static std::string keys[] = {
+        static const std::string keys[] {
             "right",
             "left",
             "top",
@@ -84,9 +87,10 @@ namespace {
         std::array<std::string, 6> imagePaths;
         for (int i = 0; i < 6; ++i) {
 
-            std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
-            if (!path)
+            const std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
+            if (!path) {
                 return nullptr;
+            }
 
             imagePaths[i] = "assets/" + *path;
         }
@@ -98,34 +102,20 @@ namespace {
 RenderSkyboxSystem::RenderSkyboxSystem() :
     m_shader(Resources<ShaderProgram>::get("skybox"))
 {
-    glGenBuffers(1, &m_bufferId);
+    m_vao.create();
+    const auto bindVAO = gl::ScopedBind(m_vao);
 
-    // Set up the VAO
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
     {
-        glBindBuffer(GL_ARRAY_BUFFER, m_bufferId);
+        m_buffer.create();
+        const auto bindBuffer = gl::ScopedBind(m_buffer, GL_ARRAY_BUFFER);
+
+        glBufferData(GL_ARRAY_BUFFER, skyboxVertices.size() * sizeof(float), &skyboxVertices, GL_STATIC_DRAW);
         glCheckError();
-        {
-            glBufferData(GL_ARRAY_BUFFER, skyboxVertices.size() * sizeof(float), &skyboxVertices, GL_STATIC_DRAW);
-            glCheckError();
-            glEnableVertexAttribArray(0);
-            glCheckError();
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-            glCheckError();
-        }
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glEnableVertexAttribArray(0);
+        glCheckError();
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
         glCheckError();
     }
-    glBindVertexArray(0);
-
-    glCheckError();
-}
-
-RenderSkyboxSystem::~RenderSkyboxSystem() {
-
-    glDeleteVertexArrays(1, &m_vao);
-    glDeleteBuffers(1, &m_bufferId);
 }
 
 void RenderSkyboxSystem::start()
@@ -135,21 +125,25 @@ void RenderSkyboxSystem::start()
 
 void RenderSkyboxSystem::draw() {
 
-    Actor mainCamera = m_engine->actor(m_registry->with<Transform, Camera>().tryGetOne());
-    if (!mainCamera)
+    Actor mainCamera = m_engine->getMainCamera();
+    if (!mainCamera) {
         return;
+    }
 
     Scene* scene = m_engine->getSceneManager().getCurrentScene();
-    if (!scene)
+    if (!scene) {
         return;
+    }
 
     const auto& renderSettings = scene->getRenderSettings();
-    if (!renderSettings.useSkybox)
+    if (!renderSettings.useSkybox) {
         return;
+    }
 
     const std::shared_ptr<Texture>& skyboxTexture = renderSettings.skyboxTexture ? renderSettings.skyboxTexture : m_defaultSkybox;
-    if (!skyboxTexture || !skyboxTexture->isValid() || skyboxTexture->getKind() != Texture::Kind::TextureCube)
+    if (!skyboxTexture || !skyboxTexture->isValid() || skyboxTexture->getKind() != Texture::Kind::TextureCube) {
         return;
+    }
 
     const glm::mat4 matrixView = glm::mat4(glm::inverse(mainCamera.get<Transform>().getWorldRotation()));
 
@@ -173,20 +167,15 @@ void RenderSkyboxSystem::renderSkyboxCubemap(const Texture& cubemap, const glm::
 
     glDepthFunc(GL_LEQUAL);
 
-    m_shader->use();
-    glCheckError();
-    glBindVertexArray(m_vao);
     {
-        gl::setUniform(m_shader->getUniformLocation("matrixPV"), matrixPV);
+        const auto bindVAO = gl::ScopedBind(m_vao);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.getId());
-        glUniform1i(m_shader->getUniformLocation("skyboxTexture"), 0);
+        m_shader->use();
+        gl::setUniform(m_shader->getUniformLocation("matrixPV"), matrixPV);
+        gl::setUniform(m_shader->getUniformLocation("skyboxTexture"), &cubemap, 0, GL_TEXTURE_CUBE_MAP);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
-        glCheckError();
     }
-    glBindVertexArray(0);
 
     glDepthFunc(GL_LESS);
 }

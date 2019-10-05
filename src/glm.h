@@ -1,10 +1,13 @@
-#ifndef MYGLM_HPP
-#define MYGLM_HPP
+#ifndef MYGLM_H
+#define MYGLM_H
 
 #include <iostream>
 #include <iomanip>
 
+#ifndef GLM_FORCE_RADIANS
 #define GLM_FORCE_RADIANS
+#endif
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -39,4 +42,4 @@ inline std::ostream& operator <<(std::ostream& stream, const glm::mat<C, R, T, Q
 	return stream;
 }
 
-#endif // MYGLM_HPP
+#endif // MYGLM_H

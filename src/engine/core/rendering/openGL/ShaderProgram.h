@@ -9,7 +9,7 @@
 #include <optional>
 #include <utils/Exception.h>
 #include "Resources.h"
-#include "config.hpp"
+#include "Config.h"
 #include "GLSetUniform.h"
 
 namespace en {

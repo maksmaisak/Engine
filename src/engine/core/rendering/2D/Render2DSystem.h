@@ -10,6 +10,7 @@
 #include "Mesh.h"
 #include "DebugVolumeRenderer.h"
 #include "glm.h"
+#include "TileLayer.h"
 
 namespace en {
 
@@ -25,6 +26,7 @@ namespace en {
 
         void renderLayers(const glm::vec2& cameraCenter, const glm::vec2& orthographicHalfSize, const glm::mat4& matrixView, const glm::mat4& matrixProjection);
         void renderSprites(const glm::mat4& matrixView, const glm::mat4& matrixProjection);
+        void updateMapDataTexture(TileLayer& tileLayer, const TileLayer::Coordinates& min, const TileLayer::Coordinates& max);
 
         std::unique_ptr<class Material> m_tileLayerMaterial;
         std::shared_ptr<class Texture> m_tileset;

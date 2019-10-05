@@ -17,16 +17,18 @@ namespace {
 
     void updateUIRect(Engine& engine, EntityRegistry& registry, Entity e, const glm::vec2& parentSize, const glm::vec2& parentPivot, float scaleFactor) {
 
-        auto* rect = registry.tryGet<UIRect>(e);
-        if (!rect)
+        auto* const rect = registry.tryGet<UIRect>(e);
+        if (!rect) {
             return;
+        }
 
-        auto* tf = registry.tryGet<Transform>(e);
-        if (!tf)
+        auto* const tf = registry.tryGet<Transform>(e);
+        if (!tf) {
             return;
+        }
 
-        const glm::vec2 parentMinToLocalMin = parentSize * rect->anchorMin + rect->offsetMin * scaleFactor;
-        const glm::vec2 parentMinToLocalMax = parentSize * rect->anchorMax + rect->offsetMax * scaleFactor;
+        const glm::vec2 parentMinToLocalMin = rect->anchorMin * parentSize + rect->offsetMin * scaleFactor;
+        const glm::vec2 parentMinToLocalMax = rect->anchorMax * parentSize + rect->offsetMax * scaleFactor;
         rect->computedSize = parentMinToLocalMax - parentMinToLocalMin;
 
         const glm::vec2 parentMinToLocalPivot = glm::lerp(parentMinToLocalMin, parentMinToLocalMax, rect->pivot);
@@ -34,20 +36,25 @@ namespace {
         const glm::vec2 parentPivotToLocalPivot = parentPivotToParentMin + parentMinToLocalPivot;
         tf->setLocalPosition(glm::vec3(parentPivotToLocalPivot, tf->getLocalPosition().z));
 
-        for (Entity child : tf->getChildren())
+        for (Entity child : tf->getChildren()) {
             updateUIRect(engine, registry, child, rect->computedSize, rect->pivot, scaleFactor);
+        }
     }
 }
 
-RenderUISystem::RenderUISystem(RenderingSharedState& renderingSharedState) :
-    m_renderingSharedState(&renderingSharedState)
-{}
+RenderUISystem::RenderUISystem(std::shared_ptr<RenderingSharedState> renderingSharedState) :
+    m_renderingSharedState(std::move(renderingSharedState))
+{
+    assert(m_renderingSharedState);
+}
 
 void RenderUISystem::start() {
 
     LuaState& lua = m_engine->getLuaState();
+
     lua_getglobal(lua, "Game");
-    auto popGame = lua::PopperOnDestruct(lua);
+    const auto popGame = lua::PopperOnDestruct(lua);
+
     lua.setField("getUIScaleFactor", [this](){return getUIScaleFactor();});
 }
 
@@ -55,13 +62,17 @@ void RenderUISystem::draw() {
 
     glDisable(GL_DEPTH_TEST);
 
-    for (Entity e : m_registry->with<Transform, UIRect>())
-        if (!m_registry->get<Transform>(e).getParent())
+    for (Entity e : m_registry->with<Transform, UIRect>()) {
+        if (!m_registry->get<Transform>(e).getParent()) {
             updateUIRect(*m_engine, *m_registry, e, getWindowSize(), {0, 0}, getUIScaleFactor());
+        }
+    }
 
-    for (Entity e : m_registry->with<Transform, UIRect>())
-        if (!m_registry->get<Transform>(e).getParent())
+    for (Entity e : m_registry->with<Transform, UIRect>()) {
+        if (!m_registry->get<Transform>(e).getParent()) {
             renderUIRect(e, m_registry->get<UIRect>(e));
+        }
+    }
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -116,7 +127,7 @@ void RenderUISystem::renderSprite(const UISprite& sprite, const Transform& trans
     const glm::mat4& matrixModel = transform.getWorldTransform();
     const glm::vec2 localMin = -rect.computedSize * rect.pivot;
     const glm::vec2 localMax =  rect.computedSize * (1.f - rect.pivot);
-    const glm::vec3 corners[] = {
+    const glm::vec3 corners[] {
         matrixModel * glm::vec4(localMin              , 0, 1),
         matrixModel * glm::vec4(localMin.x, localMax.y, 0, 1),
         matrixModel * glm::vec4(localMax.x, localMin.y, 0, 1),

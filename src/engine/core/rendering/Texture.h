@@ -6,14 +6,14 @@
 #include <GL/glew.h>
 #include <array>
 #include "glm.h"
-#include "GLWrappers.h"
 #include "Resources.h"
-#include "config.hpp"
+#include "Config.h"
+#include "TextureObject.h"
 
 namespace en {
 
-	/// A wrapper around a texture id.
-	/// Manages the lifetime of said id.
+	/// Represents a texture resource.
+	/// Imports texture data, creates the OpenGL texture, buffers data to the GPU.
 	class Texture final {
 
 	public:
@@ -31,6 +31,7 @@ namespace en {
             CreationSettings();
 
 	        Kind kind;
+
 	        bool generateMipmaps;
             GLint numMipmapLevels;
 
@@ -52,10 +53,10 @@ namespace en {
 		void updateData2D(GLvoid* pixelData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height);
         void updateData2D(GLvoid* pixelData, GLenum dataFormat = GL_UNSIGNED_BYTE);
 
-		GLuint getId() const;
-		bool isValid() const;
-		Kind getKind() const;
-		Size getSize() const;
+        GLuint getId() const;
+        bool isValid() const;
+        Kind getKind() const;
+        Size getSize() const;
 
 	private:
 

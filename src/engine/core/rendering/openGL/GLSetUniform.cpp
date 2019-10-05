@@ -49,10 +49,13 @@ namespace gl {
 
     void setUniform(GLint location, const en::Texture* texture, GLenum textureNum, GLenum target) {
 
+        glCheckError();
         assert(texture && texture->isValid());
 
         glActiveTexture(GL_TEXTURE0 + textureNum);
         glBindTexture(target, texture->getId());
         glUniform1i(location, 0);
+
+        glCheckError();
     }
 }

@@ -1,13 +1,10 @@
 
 #include "Texture.h"
 #include <algorithm>
-#include <utility>
-#include <iostream>
-#include <string>
 #include <cassert>
 #include <array>
 #include <SFML/Graphics.hpp> // For sf::Image
-#include "glm.h"
+#include "ScopedBind.h"
 #include "GLHelpers.h"
 
 using namespace en;
@@ -70,9 +67,10 @@ Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const Creation
         if (!images[i].loadFromFile(cubeSidePaths[i]))
             return;
 
-    m_glTexture.create();
-    m_glTexture.bind(GL_TEXTURE_CUBE_MAP);
     {
+        m_glTexture.create();
+        const auto bindTexture = gl::ScopedBind(m_glTexture, GL_TEXTURE_CUBE_MAP);
+
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, settings.wrapS);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, settings.wrapT);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, settings.minFilter);
@@ -89,7 +87,6 @@ Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const Creation
             glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
         }
     }
-    m_glTexture.unbind(GL_TEXTURE_CUBE_MAP);
 }
 
 /// DEPRECATED
@@ -124,9 +121,10 @@ void Texture::setUpOpenGLTexture2D(const CreationSettings& settings, const GLvoi
 
     constexpr GLenum Target = GL_TEXTURE_2D;
 
-    m_glTexture.create();
-    m_glTexture.bind(Target);
     {
+        m_glTexture.create();
+        const auto bindTexture = gl::ScopedBind(m_glTexture, Target);
+
         glTexParameteri(Target, GL_TEXTURE_WRAP_S, settings.wrapS);
         glTexParameteri(Target, GL_TEXTURE_WRAP_T, settings.wrapT);
         glTexParameteri(Target, GL_TEXTURE_MIN_FILTER, settings.minFilter);
@@ -147,15 +145,14 @@ void Texture::setUpOpenGLTexture2D(const CreationSettings& settings, const GLvoi
 
             } else {
 
-                glTexStorage2D(GL_TEXTURE_2D, settings.numMipmapLevels, settings.internalFormat, m_size.x, m_size.y);
-                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+                glTexStorage2D(Target, settings.numMipmapLevels, settings.internalFormat, m_size.x, m_size.y);
+                glTexSubImage2D(Target, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
             }
 
             glGenerateMipmap(Target);
             glTexParameteri(Target, GL_TEXTURE_MAX_LEVEL, DefaultMaxMipmapLevel);
         }
     }
-    m_glTexture.unbind(Target);
 }
 
 void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height) {
@@ -167,10 +164,8 @@ void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat, GLint offsetX, 
     assert(0 <= offsetX + width && offsetX + width <= m_size.x);
     assert(0 <= offsetY + height && offsetY + height <= m_size.y);
 
-    constexpr GLenum Target = GL_TEXTURE_2D;
-    m_glTexture.bind(Target);
-    glTexSubImage2D(Target, 0, offsetX, offsetY, width, height, GL_RGBA, dataFormat, imageData);
-    m_glTexture.unbind(Target);
+    const auto bindTexture = gl::ScopedBind(m_glTexture, GL_TEXTURE_2D);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, offsetX, offsetY, width, height, GL_RGBA, dataFormat, imageData);
 }
 
 void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat) {
