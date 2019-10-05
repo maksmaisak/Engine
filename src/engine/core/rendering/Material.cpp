@@ -22,7 +22,8 @@ using namespace en;
 using namespace std::string_literals;
 
 Material::Material(const std::string& shaderFilename) :
-    Material(Resources<ShaderProgram>::get(shaderFilename)) {}
+    Material(Resources<ShaderProgram>::get(shaderFilename))
+{}
 
 Material::Material(std::shared_ptr<ShaderProgram> shader) : m_shader(std::move(shader)) {
 
@@ -37,8 +38,9 @@ namespace {
 
     std::string getShaderNameFromLua(LuaState& lua) {
 
-        if (!lua_istable(lua, -1) && !lua_isuserdata(lua, -1))
+        if (!lua_istable(lua, -1) && !lua_isuserdata(lua, -1)) {
             luaL_error(lua, "Can't make a material out of given %s", luaL_typename(lua, -1));
+        }
 
         return lua.tryGetField<std::string>("shader").value_or("lit");
     }
@@ -46,8 +48,9 @@ namespace {
     std::shared_ptr<ShaderProgram> getShader(LuaState& lua) {
 
         const std::string shaderName = getShaderNameFromLua(lua);
-        if (shaderName != "pbr")
+        if (shaderName != "pbr") {
             return Resources<ShaderProgram>::get(shaderName);
+        }
 
         // Special handling for "pbr" to handle conditionally-compiled shader variants
 
@@ -61,20 +64,24 @@ namespace {
         };
 
         auto it = renderModeGetters.find(renderMode);
-        if (it == renderModeGetters.end())
+        if (it == renderModeGetters.end()) {
             throw utils::Exception("Unknown renderMode for a material: " + renderMode);
+        }
 
         const auto& get = it->second;
         return get();
     }
 
-    std::shared_ptr<Texture> getTextureFromLua(LuaState& lua, const std::string& fieldName, const std::shared_ptr<Texture>& defaultTexture = Textures::white(), GLenum textureInternalFormat = GL_SRGB_ALPHA) {
+    std::shared_ptr<Texture> getTextureFromLua(LuaState& lua, const std::string& fieldName, const std::shared_ptr<Texture>& defaultTexture = Textures::white(), GLenum textureInternalFormat = GL_SRGB8_ALPHA8) {
 
         std::optional<std::string> path = lua.tryGetField<std::string>(fieldName);
-        if (path)
-            return Textures::get(config::ASSETS_PATH + *path, textureInternalFormat);
-        else
-            return defaultTexture;
+        if (path) {
+            Texture::CreationSettings settings;
+            settings.internalFormat = textureInternalFormat;
+            return Textures::get(config::ASSETS_PATH + *path, settings);
+        }
+
+        return defaultTexture;
     }
 
     // Readers of properties for different shaders.
@@ -98,12 +105,12 @@ namespace {
                 m.setUniformValue("albedoMap", getTextureFromLua(lua, "albedo", Textures::white()));
 
                 const auto defaultMetallicSmoothnessMap = Textures::white();
-                const auto metallicSmoothnessMap = getTextureFromLua(lua, "metallicSmoothness", defaultMetallicSmoothnessMap, GL_RGBA);
+                const auto metallicSmoothnessMap = getTextureFromLua(lua, "metallicSmoothness", defaultMetallicSmoothnessMap, GL_RGBA8);
                 const bool isDefaultMSMap = metallicSmoothnessMap == defaultMetallicSmoothnessMap;
                 m.setUniformValue("metallicSmoothnessMap", metallicSmoothnessMap);
 
-                m.setUniformValue("aoMap"       , getTextureFromLua(lua, "ao"    , Textures::white(), GL_RGBA));
-                m.setUniformValue("normalMap"   , getTextureFromLua(lua, "normal", Textures::defaultNormalMap(), GL_RGBA));
+                m.setUniformValue("aoMap"       , getTextureFromLua(lua, "ao"    , Textures::white(), GL_RGBA8));
+                m.setUniformValue("normalMap"   , getTextureFromLua(lua, "normal", Textures::defaultNormalMap(), GL_RGBA8));
 
                 m.setUniformValue("albedoColor", lua.tryGetField<glm::vec4>("albedoColor").value_or(glm::vec4(1)));
                 m.setUniformValue("metallicMultiplier"  , lua.tryGetField<float>("metallicMultiplier").value_or(isDefaultMSMap ? 0 : 1));
@@ -131,9 +138,10 @@ Material::Material(LuaState& lua) : Material(getShader(lua)) {
 
     std::string shaderName = getShaderNameFromLua(lua);
 
-    auto it = readers.find(shaderName);
-    if (it == readers.end())
+    const auto it = readers.find(shaderName);
+    if (it == readers.end()) {
         return;
+    }
 
     auto& read = it->second;
     read(lua, *this);
@@ -298,8 +306,9 @@ template<>
 void Material::setCustomUniformsOfType<Material::FontAtlas>(const Material::LocationToUniformValue<FontAtlas>& values) {
 
     for (auto& [location, setting] : values) {
-        if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getNativeHandle()))
+        if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getNativeHandle())) {
             break;
+        } 
     }
 }
 

@@ -17,7 +17,7 @@ namespace gl {
 
         using TBindFunction = decltype(&TBindable::bind);
         using BindFunctionTraits = utils::functionTraits<TBindFunction>;
-        using TBindTargetAsTuple = typename BindFunctionTraits::ArgsTuple;
+        using TBindTargetAsTuple = typename BindFunctionTraits::ArgsAsTuple;
     public:
 
         template<typename... Args>

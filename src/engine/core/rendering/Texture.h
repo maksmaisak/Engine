@@ -28,6 +28,8 @@ namespace en {
 
 	    struct CreationSettings {
 
+	        static CreationSettings linearColorSettings;
+
             CreationSettings();
 
 	        Kind kind;
@@ -45,10 +47,6 @@ namespace en {
 		explicit Texture(const Size& size, const CreationSettings& settings = {});
         explicit Texture(const std::string& path, const CreationSettings& settings = {});
         explicit Texture(const std::array<std::string, 6>& cubeSidePaths, const CreationSettings& settings = {});
-        /// Deprecated
-		explicit Texture(const std::string& path, GLint internalFormat);
-        /// Deprecated
-        explicit Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat);
 
 		void updateData2D(GLvoid* pixelData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height);
         void updateData2D(GLvoid* pixelData, GLenum dataFormat = GL_UNSIGNED_BYTE);
@@ -72,7 +70,11 @@ namespace en {
         inline static std::shared_ptr<Texture> white() {return get(config::TEXTURE_PATH + "white.png");}
         inline static std::shared_ptr<Texture> black() {return get(config::TEXTURE_PATH + "black.png");}
         inline static std::shared_ptr<Texture> transparent() {return get(config::TEXTURE_PATH + "transparent.png");}
-        inline static std::shared_ptr<Texture> defaultNormalMap() {return get(config::TEXTURE_PATH + "defaultNormalMap.png", GL_RGBA);}
+        inline static std::shared_ptr<Texture> defaultNormalMap() {
+            Texture::CreationSettings settings;
+            settings.internalFormat = GL_RGBA8;
+            return get(config::TEXTURE_PATH + "defaultNormalMap.png", settings);
+        }
     };
 }
 

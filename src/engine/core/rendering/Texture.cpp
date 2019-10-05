@@ -13,10 +13,17 @@ namespace {
 
     constexpr GLint DefaultMaxMipmapLevel = 1000;
 
-    Texture::CreationSettings makeSettingsFromInternalFormat(GLint internalFormat) {
+    Texture::CreationSettings makeSettingsFromInternalFormat(GLint internalFormat) noexcept {
 
         Texture::CreationSettings settings;
         settings.internalFormat = internalFormat;
+        return settings;
+    }
+
+    Texture::CreationSettings makeLinearColorSettings() noexcept {
+
+        Texture::CreationSettings settings;
+        settings.internalFormat = GL_RGBA8;
         return settings;
     }
 }
@@ -31,6 +38,8 @@ Texture::CreationSettings::CreationSettings() :
     minFilter(GL_LINEAR_MIPMAP_LINEAR),
     magFilter(GL_LINEAR)
 {}
+
+Texture::CreationSettings Texture::CreationSettings::linearColorSettings = makeLinearColorSettings();
 
 Texture::Texture(const Size& size, const CreationSettings& settings) :
     m_size(size),
@@ -88,16 +97,6 @@ Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const Creation
         }
     }
 }
-
-/// DEPRECATED
-Texture::Texture(const std::string& filename, GLint internalFormat) :
-    Texture(filename, makeSettingsFromInternalFormat(internalFormat))
-{}
-
-/// DEPRECATED
-Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, GLint internalFormat) :
-    Texture(cubeSidePaths, makeSettingsFromInternalFormat(internalFormat))
-{}
 
 GLuint Texture::getId() const {
 	return m_glTexture.getId();

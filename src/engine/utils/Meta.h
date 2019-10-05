@@ -83,7 +83,7 @@ namespace utils {
         using Owner  = TOwner;
         using Signature = TResult(TArgs...);
         using FunctionType = std::function<Signature>;
-        using ArgsTuple = std::tuple<TArgs...>;
+        using ArgsAsTuple = std::tuple<TArgs...>;
     };
 
     template<typename T, bool = hasDeducibleSignature_v<T>>
