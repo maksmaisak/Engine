@@ -171,12 +171,6 @@ void ShadowMapper::updateDepthMaps() {
 
     updateDepthMapsDirectionalLights(directionalLights);
     updateDepthMapsPositionalLights(pointLights);
-
-    // Reset viewport back to the window size.
-    const auto size = m_engine->getWindow().getSize();
-    glViewport(0, 0, size.x, size.y);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glCheckError();
 }
 
 void ShadowMapper::updateDepthMapsDirectionalLights(const std::vector<Entity>& lightEntities) {
@@ -184,9 +178,8 @@ void ShadowMapper::updateDepthMapsDirectionalLights(const std::vector<Entity>& l
     DepthMaps& depthMaps = m_renderingSharedState->depthMaps;
     EntityRegistry& registry = m_engine->getRegistry();
 
-    // Bind framebuffer
     glViewport(0, 0, depthMaps.getDirectionalMapResolution().x, depthMaps.getDirectionalMapResolution().y);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMaps.getDirectionalMapsFramebuffer());
+    depthMaps.getDirectionalMapsFramebuffer().bind(GL_FRAMEBUFFER);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_directionalDepthShader->use();
@@ -227,7 +220,7 @@ void ShadowMapper::updateDepthMapsDirectionalLights(const std::vector<Entity>& l
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    depthMaps.getDirectionalMapsFramebuffer().unbind(GL_FRAMEBUFFER);
 }
 
 void ShadowMapper::updateDepthMapsPositionalLights(const std::vector<Entity>& lightEntities) {
@@ -235,9 +228,8 @@ void ShadowMapper::updateDepthMapsPositionalLights(const std::vector<Entity>& li
     DepthMaps& depthMaps = m_renderingSharedState->depthMaps;
     EntityRegistry& registry = m_engine->getRegistry();
 
-    // Bind framebuffer
     glViewport(0, 0, depthMaps.getCubemapResolution().x, depthMaps.getCubemapResolution().y);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMaps.getCubemapsFramebuffer());
+    depthMaps.getCubemapsFramebuffer().bind(GL_FRAMEBUFFER);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     m_positionalDepthShader->use();
@@ -296,5 +288,5 @@ void ShadowMapper::updateDepthMapsPositionalLights(const std::vector<Entity>& li
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    depthMaps.getCubemapsFramebuffer().unbind(GL_FRAMEBUFFER);
 }
