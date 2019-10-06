@@ -21,12 +21,12 @@ namespace en {
         explicit LineRenderer(class Actor& actor, std::size_t maxNumVerticesPerDrawCall = 32768);
         void draw() override;
 
-        void addLineSegment(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color = glm::vec4(1.f));
-        void addLineSegment(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color = glm::vec4(1.f));
+        void addLineSegment(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color = glm::vec4(1.f), float lineWidth = 5.f);
+        void addLineSegment(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color = glm::vec4(1.f), float lineWidth = 5.f);
 
     private:
         void render(const glm::mat4& matrixPVM);
-        void addVertex(const glm::vec3& position, const glm::vec4& color);
+        void addVertex(const glm::vec3& position, const glm::vec4& color, float lineWidth);
 
         std::size_t m_maxNumVerticesPerDrawCall;
         std::shared_ptr<class ShaderProgram> m_wireframeShader;
