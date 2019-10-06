@@ -15,6 +15,15 @@ namespace {
 
     constexpr std::size_t NumComponentsPerVertex = 3 + 4; // 3 for position, 4 for color
     constexpr std::size_t InitialVertexCapacity = 100;
+    constexpr float LineWidth = 1.f;
+
+    glm::vec2 getHalfWidthInClipspace(Engine& engine) {
+
+        constexpr float LineHalfWidth = LineWidth * 0.5f;
+
+        const sf::Vector2u size = engine.getWindow().getSize();
+        return {LineHalfWidth / size.x, LineHalfWidth / size.y};
+    }
 }
 
 LineRenderer& LineRenderer::get(Engine& engine) {
@@ -24,7 +33,7 @@ LineRenderer& LineRenderer::get(Engine& engine) {
 LineRenderer::LineRenderer(Actor& actor, std::size_t maxNumVerticesPerDrawCall) :
     Behavior(actor),
     m_maxNumVerticesPerDrawCall(maxNumVerticesPerDrawCall),
-    m_wireframeShader(Resources<ShaderProgram>::get("wireframe")),
+    m_wireframeShader(Resources<ShaderProgram>::get("line")),
     m_vao(gl::ForceCreate{}),
     m_vbo(gl::ForceCreate{})
 {
@@ -59,8 +68,7 @@ void LineRenderer::render(const glm::mat4& matrixPVM) {
 
     m_wireframeShader->use();
     m_wireframeShader->setUniformValue("matrixPVM", matrixPVM);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    m_wireframeShader->setUniformValue("halfWidthInClipspace", getHalfWidthInClipspace(getEngine()));
 
     {
         const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
@@ -75,8 +83,6 @@ void LineRenderer::render(const glm::mat4& matrixPVM) {
     }
 
     m_vertexData.clear();
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void LineRenderer::addLineSegment(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color) {
