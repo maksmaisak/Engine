@@ -13,8 +13,14 @@ using namespace en;
 
 namespace {
 
-    constexpr std::size_t NumComponentsPerVertex = 3 + 4; // 3 for position, 4 for color
+    constexpr std::size_t NumComponentsPerVertex = 3 + 1 + 4; // 3 for position, 1 for line width, 4 for color
     constexpr std::size_t InitialVertexCapacity = 100;
+
+    glm::vec2 getInverseWindowSize(Engine& engine) {
+
+        const sf::Vector2u size = engine.getWindow().getSize();
+        return {1.f / size.x, 1.f / size.y};
+    }
 }
 
 LineRenderer& LineRenderer::get(Engine& engine) {
@@ -24,7 +30,7 @@ LineRenderer& LineRenderer::get(Engine& engine) {
 LineRenderer::LineRenderer(Actor& actor, std::size_t maxNumVerticesPerDrawCall) :
     Behavior(actor),
     m_maxNumVerticesPerDrawCall(maxNumVerticesPerDrawCall),
-    m_wireframeShader(Resources<ShaderProgram>::get("wireframe")),
+    m_wireframeShader(Resources<ShaderProgram>::get("line")),
     m_vao(gl::ForceCreate{}),
     m_vbo(gl::ForceCreate{})
 {
@@ -38,10 +44,10 @@ LineRenderer::LineRenderer(Actor& actor, std::size_t maxNumVerticesPerDrawCall) 
         glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * NumComponentsPerVertex * m_maxNumVerticesPerDrawCall, nullptr, GL_DYNAMIC_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * NumComponentsPerVertex, nullptr);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * NumComponentsPerVertex, nullptr);
 
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * NumComponentsPerVertex, (void*)(sizeof(GLfloat) * 3));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * NumComponentsPerVertex, (void*)(sizeof(GLfloat) * 4));
     }
 }
 
@@ -59,8 +65,9 @@ void LineRenderer::render(const glm::mat4& matrixPVM) {
 
     m_wireframeShader->use();
     m_wireframeShader->setUniformValue("matrixPVM", matrixPVM);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    const sf::Vector2u viewportSize = getEngine().getWindow().getSize();
+    m_wireframeShader->setUniformValue("viewportSize", glm::vec2(viewportSize.x, viewportSize.y));
+    m_wireframeShader->setUniformValue("inverseViewportSize", glm::vec2(1.f / viewportSize.x, 1.f / viewportSize.y));
 
     {
         const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
@@ -75,27 +82,26 @@ void LineRenderer::render(const glm::mat4& matrixPVM) {
     }
 
     m_vertexData.clear();
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void LineRenderer::addLineSegment(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color) {
+void LineRenderer::addLineSegment(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color, float lineWidth) {
 
-    addVertex(start, color);
-    addVertex(end, color);
+    addVertex(start, color, lineWidth);
+    addVertex(end, color, lineWidth);
 }
 
-void LineRenderer::addLineSegment(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color) {
-    addLineSegment(glm::vec3(start, 1.f), glm::vec3(end, 1.f), color);
+void LineRenderer::addLineSegment(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color, float lineWidth) {
+    addLineSegment(glm::vec3(start, 1.f), glm::vec3(end, 1.f), color, lineWidth);
 }
 
-void LineRenderer::addVertex(const glm::vec3& position, const glm::vec4& color) {
+void LineRenderer::addVertex(const glm::vec3& position, const glm::vec4& color, float lineWidth) {
 
     assert(m_vertexData.size() + NumComponentsPerVertex <= m_maxNumVerticesPerDrawCall * NumComponentsPerVertex && "Can't render that many vertices in one go.");
 
     m_vertexData.push_back(position.x);
     m_vertexData.push_back(position.y);
     m_vertexData.push_back(position.z);
+    m_vertexData.push_back(lineWidth);
 
     m_vertexData.push_back(color.r);
     m_vertexData.push_back(color.g);
