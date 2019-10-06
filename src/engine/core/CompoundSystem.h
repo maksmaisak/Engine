@@ -11,9 +11,8 @@
 namespace en {
 
     class CompoundSystem : public System {
-
+        
     public:
-        void start() override;
         void update(float dt) override;
         void draw() override;
 
@@ -21,18 +20,18 @@ namespace en {
         TSystem& addSystem(Args&&... args);
 
     private:
-        void startNotStartedSystems();
+        void appendNewSystems();
 
         std::vector<std::unique_ptr<System>> m_systems;
-        std::vector<System*> m_notStarted;
+        std::vector<std::unique_ptr<System>> m_newSystems;
     };
 
     template<typename TSystem, typename... Args>
     inline TSystem& CompoundSystem::addSystem(Args&&... args) {
 
-        auto ptr = std::make_unique<TSystem>(std::forward<Args>(args)...);
+        std::unique_ptr<TSystem> ptr = std::make_unique<TSystem>(std::forward<Args>(args)...);
         TSystem& system = *ptr;
-        m_systems.push_back(std::move(ptr));
+        m_newSystems.push_back(std::move(ptr));
 
         system.init(*m_engine);
         system.start();

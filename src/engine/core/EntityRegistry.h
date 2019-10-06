@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 21/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_ENTITYREGISTRY_H
-#define SAXION_Y2Q1_CPP_ENTITYREGISTRY_H
+#ifndef ENGINE_ENTITYREGISTRY_H
+#define ENGINE_ENTITYREGISTRY_H
 
 #include <memory>
 #include <utility>
@@ -22,19 +22,18 @@ namespace en {
 
     /// Manages entities and components
     /// Create, destroy entities.
-    /// Add, modify and remove components.
+    /// Add, get and remove components.
+    /// Example:
     /// Iterate through all entities which have a given set of components:
-    /// for (Entity e : registry.with<Transform, RenderInfo>())
+    /// for (Entity e : registry.with<Transform, RenderInfo>()) {}
     class EntityRegistry {
 
     public:
-
         en::Entity makeEntity();
         en::Entity makeEntity(const std::string& name);
+        /// Unsafe while iterating over entities. Add a marker component like en::Destroy instead.
         void destroy(Entity entity);
         void destroyAll();
-
-        en::Entity findByName(const std::string& name) const;
 
         template<class TComponent, typename... Args>
         inline TComponent& add(Entity entity, Args&&... args);
@@ -56,16 +55,17 @@ namespace en {
         inline EntitiesView<TComponent...> with() const;
 
         bool isAlive(Entity e) const;
+        Entity findByName(const std::string& name) const;
 
     private:
 
-        Entities m_entities;
-
-        using ComponentTypeIndices = utils::CustomTypeIndex<struct componentIndicesDummy>;
-        mutable std::vector<std::unique_ptr<ComponentPoolBase>> m_componentPools;
-
         template<typename TComponent>
         inline ComponentPool<TComponent>& getPool(bool mustBePresentAlready = false) const;
+
+        Entities m_entities;
+
+        using ComponentTypeIndices = utils::CustomTypeIndex<struct ComponentIndicesDummy>;
+        mutable std::vector<std::unique_ptr<ComponentPoolBase>> m_componentPools;
     };
 
     template<class TComponent, typename... Args>
@@ -83,8 +83,9 @@ namespace en {
     TComponent& EntityRegistry::getOrAdd(Entity entity, Args&& ... args) {
 
         ComponentPool<TComponent>& pool = getPool<TComponent>();
-        if (TComponent* ptr = pool.tryGet(entity))
+        if (TComponent* ptr = pool.tryGet(entity)) {
             return *ptr;
+        }
 
         auto [index, componentReference] = pool.insert(entity, std::forward<Args>(args)...);
         Receiver<ComponentAdded<TComponent>>::broadcast({entity, componentReference});
@@ -114,6 +115,7 @@ namespace en {
 
     template<class TComponent>
     inline bool EntityRegistry::remove(Entity entity) {
+
         return getPool<TComponent>(true).remove(entity);
     }
 
@@ -137,4 +139,4 @@ namespace en {
     }
 }
 
-#endif //SAXION_Y2Q1_CPP_ENTITYREGISTRY_H
+#endif //ENGINE_ENTITYREGISTRY_H

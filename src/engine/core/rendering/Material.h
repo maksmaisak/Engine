@@ -9,9 +9,9 @@
 #include <string>
 #include <unordered_map>
 #include <tuple>
-#include "glm.hpp"
-#include "ShaderProgram.hpp"
-#include "Texture.hpp"
+#include "glm.h"
+#include "ShaderProgram.h"
+#include "Texture.h"
 #include "TupleUtils.h"
 #include "Light.h"
 #include "Transform.h"
@@ -44,7 +44,7 @@ namespace en {
              const glm::mat4& projectionMatrix
         );
 
-        void setAttributesAndDraw(const Mesh* mesh);
+        void setAttributesAndDraw(const class Mesh* mesh);
 
         /// Sets the built-in uniforms related to the model matrix.
         /// Useful if you're rendering multiple meshes with the same material and want to avoid unnecessary state changes.
@@ -53,7 +53,7 @@ namespace en {
 
         /// A shortcut for `use` followed by `setAttributesAndDraw`
         void render(
-            const Mesh* mesh,
+            const class Mesh* mesh,
             Engine* engine,
             DepthMaps* depthMaps,
             const glm::mat4& modelMatrix,

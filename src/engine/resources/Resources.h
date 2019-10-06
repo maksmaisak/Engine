@@ -10,9 +10,6 @@
 #include <map>
 #include <type_traits>
 #include <algorithm>
-#include "Texture.hpp"
-#include "Model.h"
-#include "config.hpp"
 
 namespace en {
 
@@ -34,7 +31,7 @@ namespace en {
 
         /// Gets a resource by given key.
         /// If not already present, tries create one using a load function.
-        /// The load function is one of these, in order of priority:
+        /// The load function is one of these, in descending priority:
         /// - load in ResourceLoader<TResource> template specialization.
         /// - static TResource::load, returning a shared_ptr or a raw pointer to TResource.
         /// - the constructor of TResource, if exists.
@@ -44,25 +41,28 @@ namespace en {
         inline static std::shared_ptr<TResource> get(const std::string& key, Args&&... args) {
 
             const auto foundIterator = m_resources.find(key);
-            if (foundIterator != m_resources.end())
+            if (foundIterator != m_resources.end()) {
                 return foundIterator->second;
+            }
 
             std::shared_ptr<TResource> resource;
 
             if constexpr (!std::is_base_of_v<NoLoader, TLoader>) {
 
-                if constexpr (sizeof...(Args) > 0 || canLoadWithNoArgs_v<TLoader>)
+                if constexpr (sizeof...(Args) > 0 || canLoadWithNoArgs_v<TLoader>) {
                     resource = TLoader::load(std::forward<Args>(args)...);
-                else
+                } else {
                     resource = TLoader::load(key);
+                }
 
             } else {
 
                 // Fall back to constructor if there is no valid loader.
-                if constexpr (std::is_constructible_v<TResource, Args...>)
+                if constexpr (std::is_constructible_v<TResource, Args...>) {
                     resource = std::make_shared<TResource>(std::forward<Args>(args)...);
-                else
+                } else {
                     resource = std::make_shared<TResource>(key, std::forward<Args>(args)...);
+                }
             }
 
             const auto [it, didAdd] = m_resources.emplace(key, std::move(resource));
@@ -100,16 +100,6 @@ namespace en {
     // Using inline static to avoid defining this out of the class body causes clang to segfault :(
     template<typename TResource>
     std::map<std::string, std::shared_ptr<TResource>> Resources<TResource>::m_resources;
-
-    using Models = Resources<Model>;
-
-    struct Textures : Resources<Texture> {
-
-        inline static std::shared_ptr<Texture> white() {return get(config::TEXTURE_PATH + "white.png");}
-        inline static std::shared_ptr<Texture> black() {return get(config::TEXTURE_PATH + "black.png");}
-        inline static std::shared_ptr<Texture> transparent() {return get(config::TEXTURE_PATH + "transparent.png");}
-        inline static std::shared_ptr<Texture> defaultNormalMap() {return get(config::TEXTURE_PATH + "defaultNormalMap.png", GL_RGBA);}
-    };
 }
 
 #endif //ENGINE_RESOURCES_H

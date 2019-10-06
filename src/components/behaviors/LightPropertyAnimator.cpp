@@ -4,11 +4,11 @@
 
 #include "LightPropertyAnimator.h"
 #include "Light.h"
-#include "glm.hpp"
+#include "glm.h"
 
 void LightPropertyAnimator::start() {
 
-    m_initialLight = actor().get<en::Light>();
+    m_initialLight = getActor().get<en::Light>();
     m_startTime = GameTime::now();
 }
 

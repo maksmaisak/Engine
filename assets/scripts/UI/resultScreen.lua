@@ -19,7 +19,7 @@ function ResultScreen:createStar(aMinX,aMinY,aMaxX,aMaxY)
 			anchorMin = {aMinX, aMinY},
 			anchorMax = {aMaxX, aMaxY}
 		},
-		Sprite = {
+		UISprite = {
 			material = {
 				shader	= "sprite",
 				texture	= "textures/star.png",

@@ -18,15 +18,14 @@ namespace en {
         virtual void draw() {} // called every frame
 
     protected:
-        class Engine* m_engine = {};
-        class EntityRegistry* m_registry = {};
-
-        sf::RenderWindow& getWindow();
+        class Engine* m_engine = nullptr;
+        class EntityRegistry* m_registry = nullptr;
 
     private:
         void init(Engine& engine);
-        friend class Engine;
+
         friend class CompoundSystem;
+        friend class EngineSystems;
     };
 }
 

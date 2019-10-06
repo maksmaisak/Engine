@@ -7,7 +7,7 @@
 
 #include "Engine.h"
 #include "Behavior.h"
-#include "glm.hpp"
+#include "glm.h"
 #include "Transform.h"
 #include <SFML/System.hpp>
 

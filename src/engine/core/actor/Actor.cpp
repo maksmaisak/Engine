@@ -83,7 +83,7 @@ Actor::Actor(Engine& engine, Entity entity) :
     m_engine(&engine),
     m_registry(&engine.getRegistry()),
     m_entity(entity)
-    {}
+{}
 
 std::string Actor::getName() const {
 
@@ -92,6 +92,13 @@ std::string Actor::getName() const {
 }
 
 void Actor::destroy() {
+
+    if (*this && !tryGet<Destroy>()) {
+        add<Destroy>();
+    }
+}
+
+void Actor::destroyImmediate() {
 
     m_registry->destroy(m_entity);
 }
@@ -102,14 +109,11 @@ void Actor::initializeMetatable(LuaState& lua) {
     lua.setField("getInChildren", &pushByTypeNameWithChildren);
     lua.setField("add", &addByTypeName);
     lua.setField("remove", &removeByTypeName);
-    lua.setField("destroyImmediate", &Actor::destroy);
-    lua.setField("destroy", [](Actor& actor){
-        if (actor && !actor.tryGet<Destroy>())
-            actor.add<Destroy>();
-    });
+    lua.setField("destroy", &Actor::destroy);
+    lua.setField("destroyImmediate", &Actor::destroyImmediate);
 
     lua::addProperty(lua, "name", lua::property(
-        [](Actor& actor){
+        [](Actor& actor) {
             Name* ptr = actor.tryGet<Name>();
             return ptr ? std::make_optional(ptr->value) : std::nullopt;
         },

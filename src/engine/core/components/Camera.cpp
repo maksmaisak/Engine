@@ -16,7 +16,7 @@ void Camera::initializeMetatable(LuaState& lua) {
     lua::addProperty(lua, "farPlaneDistance" , lua::property(&Camera::farPlaneDistance));
 }
 
-glm::mat4 Camera::getCameraProjectionMatrix(Engine& engine, std::optional<float> rangeLimit) {
+glm::mat4 Camera::getCameraProjectionMatrix(Engine& engine, std::optional<float> rangeLimit) const {
 
     const auto size = engine.getWindow().getSize();
     const float aspectRatio = (float)size.x / size.y;
@@ -43,4 +43,13 @@ glm::mat4 Camera::getCameraProjectionMatrix(Engine& engine, std::optional<float>
         nearPlaneDistance,
         farPlaneDistanceEffective
     );
+}
+
+glm::vec2 Camera::getOrthographicExtents(Engine& engine) const {
+
+    const auto windowSize = engine.getWindow().getSize();
+    return {
+        orthographicHalfSize * ((float)windowSize.x / windowSize.y),
+        orthographicHalfSize
+    };
 }

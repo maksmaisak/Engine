@@ -21,7 +21,7 @@ namespace en {
         struct OnSceneClosed {SceneManager* sceneManager;};
         struct OnSceneOpened {SceneManager* sceneManager;};
 
-        explicit SceneManager(Engine* engine) : m_engine(engine) {assert(m_engine);}
+        explicit SceneManager(Engine& engine);
         void update(float dt);
 
         inline Scene* getCurrentScene() { return m_currentScene.get(); }

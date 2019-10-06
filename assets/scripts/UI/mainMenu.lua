@@ -43,7 +43,7 @@ local function createStar(aMinX,aMinY,aMaxX,aMaxY)
 			anchorMin = {aMinX, aMinY},
 			anchorMax = {aMaxX, aMaxY}
 		},
-		Sprite = {
+		UISprite = {
 			material = {
 				shader	= "sprite",
 				texture	= "textures/star.png",
@@ -61,7 +61,7 @@ function scene:start()
 		Game.makeActor {
 			Transform = {},
 			UIRect = {},
-			Sprite = {material = {shader = "sprite", texture = "textures/phiGrid.png", color = {1,1,1,0.5}}}
+			UISprite = {material = {shader = "sprite", texture = "textures/phiGrid.png", color = {1,1,1,0.5}}}
 		}
 	end
 
@@ -113,7 +113,7 @@ function scene:start()
 			anchorMin = {0, 0},
 			anchorMax = {1, 1}
 		},		
-		Sprite = {
+		UISprite = {
 			material = {
 				shader	= "sprite",
 				texture = "textures/transparent.png"
@@ -130,7 +130,7 @@ function scene:start()
 			anchorMin = {0.05, 0.6},
 			anchorMax = {0.05, 0.6}
 		},
-		Sprite = {
+		UISprite = {
 			material = {
 				shader	= "sprite",
 				texture = "textures/arrowLeft.png"
@@ -156,7 +156,7 @@ function scene:start()
 			anchorMin = {0.95, 0.6},
 			anchorMax = {0.95, 0.6}
 		},
-		Sprite = {
+		UISprite = {
 			material = {
 				shader	= "sprite",
 				texture = "textures/arrowRight.png"
@@ -216,7 +216,7 @@ function scene:start()
 			anchorMin = {0.5, 0.55},
 			anchorMax = {0.5, 0.55}
 		},
-		Sprite = {material = {shader = "sprite"}},
+		UISprite = {material = {shader = "sprite"}},
 		LuaBehavior = {
 			start = function(self)
 				self.isFirstUpdate = true
@@ -300,7 +300,7 @@ function scene:start()
 					-- the new ones
 					for k, v in ipairs(stars) do
 						if v ~= nil then
-							v:remove("Sprite")
+							v:remove("UISprite")
 							v = nil
 						end
 					end
@@ -311,11 +311,11 @@ function scene:start()
 						totalNumberOfStars = savedLevelData.stars
 					end
 
-					self.actor:remove("Sprite")
+					self.actor:remove("UISprite")
 					local level = Game.levels[levelIndex]
 					if level then
 						local imagePath = level.thumbnailPath
-						local sprite = self.actor:add("Sprite", {
+						local sprite = self.actor:add("UISprite", {
 							material = {
 								shader	= "sprite",
 								texture = imagePath,
@@ -419,7 +419,7 @@ function scene:start()
 			anchorMin = {0.5, 0},
 			anchorMax = {0.5, 1}
 		},
-		Sprite = {
+		UISprite = {
 			material = {
 				shader	= "sprite",
 				texture	= "textures/menuBackground.jpg"
@@ -427,7 +427,7 @@ function scene:start()
 		},
 		LuaBehavior = {
 			start = function(self)
-				self.sprite = self.actor:get("Sprite")
+				self.sprite = self.actor:get("UISprite")
 				self.uiRect = self.actor:get("UIRect")
 			end,
 			update = function(self)

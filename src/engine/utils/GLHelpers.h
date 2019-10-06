@@ -2,19 +2,20 @@
 // Created by Maksym Maisak on 11/12/18.
 //
 
-#ifndef SAXION_Y2Q1_RENDERING_GLHELPERS_H
-#define SAXION_Y2Q1_RENDERING_GLHELPERS_H
+#ifndef ENGINE_GLHELPERS_H
+#define ENGINE_GLHELPERS_H
 
 #include <GL/glew.h>
 #include <iostream>
 #include <string>
 
 inline GLenum glCheckError_(const char *file, int line) {
+
     GLenum lastErrorCode = GL_NO_ERROR;
     GLenum errorCode;
     while ((errorCode = glGetError()) != GL_NO_ERROR) {
-        lastErrorCode = errorCode;
 
+        lastErrorCode = errorCode;
         std::string error;
         switch (errorCode) {
             case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
@@ -24,11 +25,21 @@ inline GLenum glCheckError_(const char *file, int line) {
             case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
             case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
             case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+            default: break;
         }
         std::cerr << error << " | " << file << " (" << line << ")" << std::endl;
     }
     return lastErrorCode;
 }
-#define glCheckError() glCheckError_(__FILE__, __LINE__)
 
-#endif //SAXION_Y2Q1_RENDERING_GLHELPERS_H
+#ifdef NDEBUG
+    #define	glCheckError(e)	(GL_NO_ERROR)
+    #define glCheckBefore(e) (e)
+    #define glCheckBeforeAfter(e) (e)
+#else
+    #define glCheckError() glCheckError_(__FILE__, __LINE__)
+    #define glCheckBefore(e) (glCheckError(), e)
+    #define glCheckBeforeAfter(e) glCheckError(); e; glCheckError()
+#endif
+
+#endif //ENGINE_GLHELPERS_H

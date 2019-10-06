@@ -10,7 +10,7 @@
 #include "Light.h"
 #include "Material.h"
 #include "Resources.h"
-#include "Mesh.hpp"
+#include "Mesh.h"
 #include "DepthMaps.h"
 #include "GLHelpers.h"
 #include "GLSetUniform.h"
@@ -22,7 +22,8 @@ using namespace en;
 using namespace std::string_literals;
 
 Material::Material(const std::string& shaderFilename) :
-    Material(Resources<ShaderProgram>::get(shaderFilename)) {}
+    Material(Resources<ShaderProgram>::get(shaderFilename))
+{}
 
 Material::Material(std::shared_ptr<ShaderProgram> shader) : m_shader(std::move(shader)) {
 
@@ -37,8 +38,9 @@ namespace {
 
     std::string getShaderNameFromLua(LuaState& lua) {
 
-        if (!lua_istable(lua, -1) && !lua_isuserdata(lua, -1))
+        if (!lua_istable(lua, -1) && !lua_isuserdata(lua, -1)) {
             luaL_error(lua, "Can't make a material out of given %s", luaL_typename(lua, -1));
+        }
 
         return lua.tryGetField<std::string>("shader").value_or("lit");
     }
@@ -46,8 +48,9 @@ namespace {
     std::shared_ptr<ShaderProgram> getShader(LuaState& lua) {
 
         const std::string shaderName = getShaderNameFromLua(lua);
-        if (shaderName != "pbr")
+        if (shaderName != "pbr") {
             return Resources<ShaderProgram>::get(shaderName);
+        }
 
         // Special handling for "pbr" to handle conditionally-compiled shader variants
 
@@ -61,20 +64,24 @@ namespace {
         };
 
         auto it = renderModeGetters.find(renderMode);
-        if (it == renderModeGetters.end())
+        if (it == renderModeGetters.end()) {
             throw utils::Exception("Unknown renderMode for a material: " + renderMode);
+        }
 
         const auto& get = it->second;
         return get();
     }
 
-    std::shared_ptr<Texture> getTextureFromLua(LuaState& lua, const std::string& fieldName, const std::shared_ptr<Texture>& defaultTexture = Textures::white(), GLenum textureInternalFormat = GL_SRGB_ALPHA) {
+    std::shared_ptr<Texture> getTextureFromLua(LuaState& lua, const std::string& fieldName, const std::shared_ptr<Texture>& defaultTexture = Textures::white(), GLenum textureInternalFormat = GL_SRGB8_ALPHA8) {
 
         std::optional<std::string> path = lua.tryGetField<std::string>(fieldName);
-        if (path)
-            return Textures::get(config::ASSETS_PATH + *path, textureInternalFormat);
-        else
-            return defaultTexture;
+        if (path) {
+            Texture::CreationSettings settings;
+            settings.internalFormat = textureInternalFormat;
+            return Textures::get(config::ASSETS_PATH + *path, settings);
+        }
+
+        return defaultTexture;
     }
 
     // Readers of properties for different shaders.
@@ -98,12 +105,12 @@ namespace {
                 m.setUniformValue("albedoMap", getTextureFromLua(lua, "albedo", Textures::white()));
 
                 const auto defaultMetallicSmoothnessMap = Textures::white();
-                const auto metallicSmoothnessMap = getTextureFromLua(lua, "metallicSmoothness", defaultMetallicSmoothnessMap, GL_RGBA);
+                const auto metallicSmoothnessMap = getTextureFromLua(lua, "metallicSmoothness", defaultMetallicSmoothnessMap, GL_RGBA8);
                 const bool isDefaultMSMap = metallicSmoothnessMap == defaultMetallicSmoothnessMap;
                 m.setUniformValue("metallicSmoothnessMap", metallicSmoothnessMap);
 
-                m.setUniformValue("aoMap"       , getTextureFromLua(lua, "ao"    , Textures::white(), GL_RGBA));
-                m.setUniformValue("normalMap"   , getTextureFromLua(lua, "normal", Textures::defaultNormalMap(), GL_RGBA));
+                m.setUniformValue("aoMap"       , getTextureFromLua(lua, "ao"    , Textures::white(), GL_RGBA8));
+                m.setUniformValue("normalMap"   , getTextureFromLua(lua, "normal", Textures::defaultNormalMap(), GL_RGBA8));
 
                 m.setUniformValue("albedoColor", lua.tryGetField<glm::vec4>("albedoColor").value_or(glm::vec4(1)));
                 m.setUniformValue("metallicMultiplier"  , lua.tryGetField<float>("metallicMultiplier").value_or(isDefaultMSMap ? 0 : 1));
@@ -131,9 +138,10 @@ Material::Material(LuaState& lua) : Material(getShader(lua)) {
 
     std::string shaderName = getShaderNameFromLua(lua);
 
-    auto it = readers.find(shaderName);
-    if (it == readers.end())
+    const auto it = readers.find(shaderName);
+    if (it == readers.end()) {
         return;
+    }
 
     auto& read = it->second;
     read(lua, *this);
@@ -219,10 +227,10 @@ void Material::setBuiltinUniforms(
         gl::setUniform(u.ambientColor, getAmbientColor(*engine));
 
     if (depthMaps && valid(u.directionalDepthMaps))
-        setUniformTexture(u.directionalDepthMaps, depthMaps->getDirectionalMapsTextureId(), GL_TEXTURE_2D_ARRAY);
+        setUniformTexture(u.directionalDepthMaps, depthMaps->getDirectionalMapsTexture(), GL_TEXTURE_2D_ARRAY);
 
     if (depthMaps && valid(u.depthCubemaps))
-        setUniformTexture(u.depthCubemaps, depthMaps->getCubemapsTextureId(), GL_TEXTURE_CUBE_MAP_ARRAY);
+        setUniformTexture(u.depthCubemaps, depthMaps->getCubemapsTexture(), GL_TEXTURE_CUBE_MAP_ARRAY);
 
     auto& registry = engine->getRegistry();
 
@@ -270,8 +278,10 @@ void Material::updateModelMatrix(const glm::mat4& modelMatrix) {
     const auto& u = m_builtinUniformLocations;
 
     gl::setUniform(u.model, modelMatrix);
-    if (valid(u.modelNormal))
+
+    if (valid(u.modelNormal)) {
         gl::setUniform(u.modelNormal, glm::mat3(glm::transpose(glm::inverse(modelMatrix))));
+    }
 }
 
 template<typename T>
@@ -285,9 +295,10 @@ void Material::setCustomUniformsOfType(const Material::LocationToUniformValue<T>
 template<>
 void Material::setCustomUniformsOfType<std::shared_ptr<Texture>>(const Material::LocationToUniformValue<std::shared_ptr<Texture>>& values) {
 
-    for (auto& [location, value] : values) {
-        if (!setUniformTexture(location, value->getId()))
+    for (auto& [location, texture] : values) {
+        if (!setUniformTexture(location, texture->getId())) {
             break;
+        }
     }
 }
 
@@ -295,8 +306,9 @@ template<>
 void Material::setCustomUniformsOfType<Material::FontAtlas>(const Material::LocationToUniformValue<FontAtlas>& values) {
 
     for (auto& [location, setting] : values) {
-        if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getNativeHandle()))
+        if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getNativeHandle())) {
             break;
+        }
     }
 }
 
@@ -309,7 +321,7 @@ bool Material::setUniformTexture(GLint uniformLocation, GLuint textureId, GLenum
 
     if (m_numTexturesInUse >= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
 
-        // TODO have materials (and maybe other resources) have a name to display in these error messages.
+        // TODO have materials (and other objects) have a name to display in these error messages.
         std::cout << "Too many textures for this material: " << m_numTexturesInUse << "/" << GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS << std::endl;
         return false;
     }
@@ -380,6 +392,7 @@ Material::BuiltinUniformLocations Material::cacheBuiltinUniformLocations() {
 
         m_numSupportedDirectionalLights = i + 1;
     }
+
     // Spot lights
     u.numSpotLights = m_shader->getUniformLocation("numSpotLights");
     for (int i = 0; i < MAX_NUM_SPOT_LIGHTS; ++i) {
@@ -410,11 +423,11 @@ Material::AttributeLocations Material::cacheAttributeLocations() {
 
     AttributeLocations a;
 
-    a.vertex    = m_shader->getAttribLocation("vertex");
-    a.normal    = m_shader->getAttribLocation("normal");
-    a.uv        = m_shader->getAttribLocation("uv");
-    a.tangent   = m_shader->getAttribLocation("tangent");
-    a.bitangent = m_shader->getAttribLocation("bitangent");
+    a.vertex    = m_shader->getAttributeLocation("vertex");
+    a.normal    = m_shader->getAttributeLocation("normal");
+    a.uv        = m_shader->getAttributeLocation("uv");
+    a.tangent   = m_shader->getAttributeLocation("tangent");
+    a.bitangent = m_shader->getAttributeLocation("bitangent");
 
     return a;
 }
@@ -436,8 +449,9 @@ void Material::setUniformsPointLight(
     const Light& light,
     const Transform& tf
 ) {
-    if (valid(locations.position))
+    if (valid(locations.position)) {
         gl::setUniform(locations.position, tf.getWorldPosition());
+    }
 
     gl::setUniform(locations.color       , light.color * light.intensity);
     gl::setUniform(locations.colorAmbient, light.colorAmbient);
@@ -453,8 +467,9 @@ void Material::setUniformDirectionalLight(
     const Light& light,
     const Transform& tf
 ) {
-    if (valid(locations.direction))
+    if (valid(locations.direction)) {
         gl::setUniform(locations.direction, tf.getForward());
+    }
 
     gl::setUniform(locations.color       , light.color * light.intensity);
     gl::setUniform(locations.colorAmbient, light.colorAmbient);
@@ -472,11 +487,13 @@ void Material::setUniformSpotLight(
     const Light& light,
     const Transform& tf
 ) {
-    if (valid(locations.position))
+    if (valid(locations.position)) {
         gl::setUniform(locations.position, tf.getWorldPosition());
+    }
 
-    if (valid(locations.direction))
+    if (valid(locations.direction)) {
         gl::setUniform(locations.direction, glm::normalize(glm::vec3(tf.getWorldTransform()[2])));
+    }
 
     gl::setUniform(locations.color       , light.color * light.intensity);
     gl::setUniform(locations.colorAmbient, light.colorAmbient);

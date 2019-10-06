@@ -64,7 +64,7 @@ function HudArrows:createArrows()
 				offsetMin = {position.x - arrowHalfSize.x, position.y - arrowHalfSize.y},
 				offsetMax = {position.x + arrowHalfSize.x, position.y + arrowHalfSize.y},
 			},
-			Sprite = {
+			UISprite = {
 				material = {
 					shader	= "sprite",
 					texture	= texture

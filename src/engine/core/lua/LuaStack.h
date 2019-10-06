@@ -14,7 +14,7 @@
 
 #include "Demangle.h"
 #include "Meta.h"
-#include "glm.hpp"
+#include "glm.h"
 #include "Exception.h"
 
 namespace lua {

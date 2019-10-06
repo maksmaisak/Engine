@@ -5,7 +5,7 @@
 #include "LightingScene.h"
 
 #include <memory>
-#include "config.hpp"
+#include "Config.h"
 #include "Camera.h"
 #include "Transform.h"
 #include "RenderInfo.h"
@@ -14,9 +14,9 @@
 #include "RotatingBehavior.hpp"
 #include "LightPropertyAnimator.h"
 #include "Resources.h"
-#include "Texture.hpp"
+#include "Texture.h"
 #include "Material.h"
-#include "glm.hpp"
+#include "glm.h"
 #include <glm/gtx/euler_angles.hpp>
 
 constexpr bool AnimateLightProperties = false;
@@ -130,9 +130,9 @@ void LightingScene::open() {
         auto models = en::Models::get(config::MODEL_PATH + "Pillar_tall.obj");
         auto material = std::make_shared<en::Material>("pbr");
         material->setUniformValue("albedoMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/pillar/Pilars_AlbedoTransparency.png"));
-        material->setUniformValue("metallicSmoothnessMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/pillar/Pilars_MetallicSmoothness.png", GL_RGBA));
-        material->setUniformValue("normalMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/pillar/Pilars_Normal.png", GL_RGBA));
-        material->setUniformValue("aoMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/pillar/Pilars_AO.png", GL_RGBA));
+        material->setUniformValue("metallicSmoothnessMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/pillar/Pilars_MetallicSmoothness.png", en::Texture::CreationSettings::linearColorSettings));
+        material->setUniformValue("normalMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/pillar/Pilars_Normal.png", en::Texture::CreationSettings::linearColorSettings));
+        material->setUniformValue("aoMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/pillar/Pilars_AO.png", en::Texture::CreationSettings::linearColorSettings));
         material->setUniformValue("albedoColor"         , glm::vec4(1));
         material->setUniformValue("metallicMultiplier"  , 1.f);
         material->setUniformValue("smoothnessMultiplier", 1.f);
@@ -146,9 +146,9 @@ void LightingScene::open() {
         auto model = en::Models::get(config::MODEL_PATH + "plane.obj");
         auto material = std::make_shared<en::Material>("pbr");
         material->setUniformValue("albedoMap"   , en::Textures::get(config::TEXTURE_PATH + "testPBR/oldTiledStone/tiledstone1_basecolor.png"));
-        material->setUniformValue("metallicSmoothnessMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/oldTiledStone/tiledstone1_metallicSmoothness.psd", GL_RGBA));
-        material->setUniformValue("normalMap"   , en::Textures::get(config::TEXTURE_PATH + "testPBR/oldTiledStone/tiledstone1_normal.png", GL_RGBA));
-        material->setUniformValue("aoMap"       , en::Textures::get(config::TEXTURE_PATH + "testPBR/oldTiledStone/tiledstone1_AO.png"    , GL_RGBA));
+        material->setUniformValue("metallicSmoothnessMap", en::Textures::get(config::TEXTURE_PATH + "testPBR/oldTiledStone/tiledstone1_metallicSmoothness.psd", en::Texture::CreationSettings::linearColorSettings));
+        material->setUniformValue("normalMap"   , en::Textures::get(config::TEXTURE_PATH + "testPBR/oldTiledStone/tiledstone1_normal.png", en::Texture::CreationSettings::linearColorSettings));
+        material->setUniformValue("aoMap"       , en::Textures::get(config::TEXTURE_PATH + "testPBR/oldTiledStone/tiledstone1_AO.png"    , en::Texture::CreationSettings::linearColorSettings));
         material->setUniformValue("albedoColor"         , glm::vec4(1));
         material->setUniformValue("metallicMultiplier"  , 1.f);
         material->setUniformValue("smoothnessMultiplier", 1.f);

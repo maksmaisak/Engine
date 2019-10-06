@@ -29,8 +29,9 @@ namespace en {
 
     void Entities::remove(Entity entity) {
 
-        if (!contains(entity))
+        if (!contains(entity)) {
             return;
+        }
 
         const auto id = getId(entity);
         m_entities[id] = m_nextFree;
@@ -59,12 +60,14 @@ namespace en {
 
     bool Entities::contains(Entity entity) const {
 
-        if (entity == nullEntity)
+        if (entity == nullEntity) {
             return false;
+        }
 
         const auto id = getId(entity);
-        if (id >= m_entities.size())
+        if (id >= m_entities.size()) {
             return false;
+        }
 
         return m_entities[id] == entity;
     }

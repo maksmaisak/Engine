@@ -7,7 +7,7 @@
 
 #include "System.h"
 #include "Entity.h"
-#include "glm.hpp"
+#include "glm.h"
 
 namespace en {
 
