@@ -62,11 +62,13 @@ namespace en {
 
         inline void receive(const Collision& collision) override {
 
-            if (TBehavior* a = getBehaviorForCallback(collision.a))
+            if (TBehavior* a = getBehaviorForCallback(collision.a)) {
                 a->onCollision(collision.b);
+            }
 
-            if (TBehavior* b = getBehaviorForCallback(collision.b))
+            if (TBehavior* b = getBehaviorForCallback(collision.b)) {
                 b->onCollision(collision.a);
+            }
         }
 
         inline void receive(const MouseEnter& info) override {forwardEvent(info.entity, info);}
@@ -78,15 +80,19 @@ namespace en {
 
         template<typename TEvent>
         inline void forwardEvent(Entity e, const TEvent& event) {
-            if (auto* behavior = getBehaviorForCallback(e))
+
+            if (TBehavior* const behavior = getBehaviorForCallback(e)) {
                 behavior->on(event);
+            }
         }
 
         inline TBehavior* getBehaviorForCallback(Entity e) {
 
-            if (auto* behavior = m_registry->tryGet<TBehavior>(e))
-                if (!m_registry->tryGet<Destroy>(e))
+            if (auto* behavior = m_registry->tryGet<TBehavior>(e)) {
+                if (!m_registry->tryGet<Destroy>(e)) {
                     return behavior;
+                }
+            }
 
             return nullptr;
         }

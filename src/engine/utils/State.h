@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 4/11/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_STATE_H
-#define SAXION_Y2Q1_CPP_STATE_H
+#ifndef ENGINE_STATE_H
+#define ENGINE_STATE_H
 
 #include "HashedString.h"
 
@@ -23,4 +23,4 @@ namespace en {
 }
 
 
-#endif //SAXION_Y2Q1_CPP_STATE_H
+#endif //ENGINE_STATE_H

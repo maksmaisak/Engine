@@ -29,14 +29,11 @@ namespace en {
     class EntityRegistry {
 
     public:
-
         en::Entity makeEntity();
         en::Entity makeEntity(const std::string& name);
         /// Unsafe while iterating over entities. Add a marker component like en::Destroy instead.
         void destroy(Entity entity);
         void destroyAll();
-
-        en::Entity findByName(const std::string& name) const;
 
         template<class TComponent, typename... Args>
         inline TComponent& add(Entity entity, Args&&... args);
@@ -58,16 +55,17 @@ namespace en {
         inline EntitiesView<TComponent...> with() const;
 
         bool isAlive(Entity e) const;
+        Entity findByName(const std::string& name) const;
 
     private:
+
+        template<typename TComponent>
+        inline ComponentPool<TComponent>& getPool(bool mustBePresentAlready = false) const;
 
         Entities m_entities;
 
         using ComponentTypeIndices = utils::CustomTypeIndex<struct ComponentIndicesDummy>;
         mutable std::vector<std::unique_ptr<ComponentPoolBase>> m_componentPools;
-
-        template<typename TComponent>
-        inline ComponentPool<TComponent>& getPool(bool mustBePresentAlready = false) const;
     };
 
     template<class TComponent, typename... Args>

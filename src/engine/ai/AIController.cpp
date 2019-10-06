@@ -7,8 +7,6 @@
 #include "Engine.h"
 #include "Transform.h"
 #include "Sprite.h"
-#include "MoveAction.h"
-#include "ShootAction.h"
 
 using namespace ai;
 
@@ -22,10 +20,6 @@ AIController& AIController::create(class en::Engine& engine) {
 
 void AIController::start() {
 
-    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(12, 5)));
-    enqueueAction(std::make_unique<ShootAction>(glm::vec2(20.5f, 10.5f)));
-    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(12, 10)));
-    enqueueAction(std::make_unique<MoveAction>(glm::i64vec2(0 , 10)));
 }
 
 void AIController::update(float dt) {
@@ -52,8 +46,10 @@ void AIController::update(float dt) {
     }
 }
 
-void AIController::enqueueAction(std::unique_ptr<Action>&& action) {
+AIController& AIController::enqueueAction(std::unique_ptr<Action>&& action) {
 
     action->actor = getActor();
     m_actionQueue.push(std::move(action));
+
+    return *this;
 }

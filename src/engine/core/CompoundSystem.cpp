@@ -6,29 +6,33 @@
 
 using namespace en;
 
-void CompoundSystem::start() {
-
-    startNotStartedSystems();
-}
-
 void CompoundSystem::update(float dt) {
 
-    startNotStartedSystems();
+    appendNewSystems();
 
-    for (auto& system : m_systems)
-        system->update(dt);
+    for (std::unique_ptr<System>& system : m_systems) {
+        if (system) {
+            system->update(dt);
+        }
+    }
 }
 
 void CompoundSystem::draw() {
 
-    for (auto& system : m_systems)
-        system->draw();
+    appendNewSystems();
+
+    for (std::unique_ptr<System>& system : m_systems) {
+        if (system) {
+            system->draw();
+        }
+    }
 }
 
-void CompoundSystem::startNotStartedSystems() {
+void CompoundSystem::appendNewSystems() {
 
-    for (auto* system : m_notStarted)
-        system->start();
+    for (std::unique_ptr<System>& system : m_newSystems) {
+        m_systems.push_back(std::move(system));
+    }
 
-    m_notStarted.clear();
+    m_newSystems.clear();
 }

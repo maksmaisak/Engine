@@ -20,12 +20,12 @@
 #include "CollisionDetectionTestScene.h"
 #include "LightingScene.h"
 #include "TerrainScene.h"
+#include "AITestingScene.h"
 #include "LuaScene.h"
 
 #include "TestComponentPool.h"
 
 #include "CameraControls2DSystem.h"
-#include "AIController.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -57,7 +57,9 @@ int main() {
         //systems.addSystem<en::PhysicsSystemBoundingSphereNarrowphase>().setGravity({0, -9.8, 0});
         //systems.addSystem<en::PhysicsSystemFlatGrid>().setGravity({0, -9.8, 0});
         //systems.addSystem<en::PhysicsSystemQuadtree>().setGravity({0, -9.8, 0});
-        //systems.addSystem<en::PhysicsSystemOctree>().setGravity({0, -9.8, 0});
+        systems.addSystem<en::PhysicsSystemOctree>().setGravity({0, -9.8, 0});
+
+        //systems.addSystem<CameraControls2DSystem>();
 
         systems.addSystem<en::UIEventSystem>();
         systems.addSystem<en::BehaviorsSystem>();
@@ -67,16 +69,11 @@ int main() {
         systems.addSystem<en::DestroySystem>();
     }
 
-    {
-        systems.addSystem<CameraControls2DSystem>();
-    }
-
-    ai::AIController::create(*engine);
-
     //openStartLuaScene(*engine);
+    //engine->getSceneManager().setCurrentScene<AITestingScene>();
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{20, 0, glm::vec3(20.f)});
-    //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});
+    engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{400, 1000, glm::vec3(50.f)});
     //engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
     //engine->getSceneManager().setCurrentScene<LightingScene>();

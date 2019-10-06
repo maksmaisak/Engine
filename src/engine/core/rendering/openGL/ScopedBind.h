@@ -5,7 +5,6 @@
 #ifndef ENGINE_SCOPEDBIND_H
 #define ENGINE_SCOPEDBIND_H
 
-#include "GLWrapper.h"
 #include "Meta.h"
 
 namespace gl {
@@ -18,8 +17,8 @@ namespace gl {
         using TBindFunction = decltype(&TBindable::bind);
         using BindFunctionTraits = utils::functionTraits<TBindFunction>;
         using TBindTargetAsTuple = typename BindFunctionTraits::ArgsAsTuple;
-    public:
 
+    public:
         template<typename... Args>
         explicit inline ScopedBind(const TBindable& bindable, Args&&... args) :
             m_bindable(&bindable),

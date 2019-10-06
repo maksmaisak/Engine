@@ -35,6 +35,9 @@ namespace {
 
         glClearColor(0, 0, 0, 1);
 
+        // Enable antialiasing on lines
+        glEnable(GL_LINE_SMOOTH);
+
         // Convert output from fragment shaders from linear to sRGB
         glEnable(GL_FRAMEBUFFER_SRGB);
 

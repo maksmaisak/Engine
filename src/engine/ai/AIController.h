@@ -24,10 +24,9 @@ namespace ai {
         void start() override;
         void update(float dt) override;
 
+        AIController& enqueueAction(std::unique_ptr<Action>&& action);
+
     private:
-
-        void enqueueAction(std::unique_ptr<Action>&& action);
-
         std::queue<std::unique_ptr<Action>> m_actionQueue;
     };
 }

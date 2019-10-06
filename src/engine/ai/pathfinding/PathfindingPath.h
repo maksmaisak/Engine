@@ -5,12 +5,12 @@
 #ifndef ENGINE_PATHFINDINGPATH_H
 #define ENGINE_PATHFINDINGPATH_H
 
-#include <queue>
+#include <deque>
 #include "TileLayer.h"
 
 namespace ai {
 
-    using PathfindingPath = std::queue<en::TileLayer::Coordinates>;
+    using PathfindingPath = std::deque<en::TileLayer::Coordinates>;
 }
 
 #endif //ENGINE_PATHFINDINGPATH_H

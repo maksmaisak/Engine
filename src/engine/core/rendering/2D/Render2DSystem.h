@@ -19,8 +19,6 @@ namespace en {
 
     public:
         Render2DSystem();
-
-        void start() override;
         void draw() override;
 
     private:

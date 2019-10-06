@@ -68,7 +68,7 @@ namespace {
         };
 
         // Add the corners in worldspace
-        for (int i = 0b00; i <= 0b11; ++i) {
+        for (unsigned int i = 0b00; i <= 0b11; ++i) {
             bounds.add(matrixModel * glm::vec4(
                 (i & 0b01) ? 0.f : 1.f,
                 (i & 0b10) ? 0.f : 1.f,
@@ -110,7 +110,6 @@ Render2DSystem::Render2DSystem() :
 
         const glm::dvec2 atlasSizeDouble = glm::dvec2(AtlasSize);
         const glm::dvec2 dataTextureResolution = glm::dvec2(MapDataTextureResolution);
-
         constexpr double numPaddingPixelsPerTile = 48.0;
         m_tileLayerMaterial->setUniformValue("mapDataTextureResolution", glm::vec2(dataTextureResolution));
         m_tileLayerMaterial->setUniformValue("invMapDataTextureResolution", glm::vec2(1.0 / dataTextureResolution));
@@ -120,19 +119,6 @@ Render2DSystem::Render2DSystem() :
 
     assert(m_mapDataTexture->isValid());
     assert(m_tileset->isValid());
-}
-
-void Render2DSystem::start() {
-    
-    if (!m_registry->with<TileLayer>().tryGetOne()) {
-        m_engine->makeActor("Test tile layer").add<TileLayer>();
-    }
-
-    if (!m_engine->getMainCamera()) {
-        Actor cameraActor = m_engine->makeActor("Test camera");
-        cameraActor.add<Camera>().isOrthographic = true;
-        cameraActor.add<Transform>().move({0, 0, 10.f});
-    }
 }
 
 void Render2DSystem::draw() {
@@ -176,9 +162,12 @@ void Render2DSystem::renderLayers(const utils::Bounds2D& cameraBounds, const glm
         m_tileLayerMaterial->render(quad.get(), m_engine, nullptr, matrixModel, matrixView, matrixProjection);
     }
 
-    m_debugVolumeRenderer->addAABBMinMax(glm::vec3(cameraBounds.min, 0.f), glm::vec3(cameraBounds.max, 1.f));
-    m_debugVolumeRenderer->addAABBMinMax(glm::vec3(tileIndicesMin, -1.f), glm::vec3(tileIndicesMax + TileLayer::Coordinates(1), 1.f));
-    m_debugVolumeRenderer->addAABB(glm::vec3(0.5f), glm::vec3(0.5f), glm::vec4(1.f));
+    if (m_registry->with<TileLayer>().tryGetOne()) {
+
+        m_debugVolumeRenderer->addAABBMinMax(glm::vec3(cameraBounds.min, 0.f), glm::vec3(cameraBounds.max, 1.f));
+        m_debugVolumeRenderer->addAABBMinMax(glm::vec3(tileIndicesMin, -1.f), glm::vec3(tileIndicesMax + TileLayer::Coordinates(1), 1.f));
+        m_debugVolumeRenderer->addAABB(glm::vec3(0.5f), glm::vec3(0.5f), glm::vec4(1.f));
+    }
 
     glEnable(GL_DEPTH_TEST);
 }
