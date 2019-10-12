@@ -16,7 +16,7 @@ MoveAction::MoveAction() :
     m_targetPositionBlackboardKey("targetPosition")
 {}
 
-MoveAction::MoveAction(const std::string& targetPositionBlackboardKey) :
+MoveAction::MoveAction(const en::Name& targetPositionBlackboardKey) :
     m_targetPositionBlackboardKey(targetPositionBlackboardKey)
 {}
 

@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "Messaging.h"
 #include "EntityEvents.h"
-#include "Name.h"
+#include "StringName.h"
 
 namespace en {
 
@@ -20,7 +20,7 @@ namespace en {
     Entity EntityRegistry::makeEntity(const std::string& name) {
 
         const en::Entity entity = m_entities.add();
-        add<Name>(entity, name);
+        add<StringName>(entity, name);
         Receiver<EntityCreated>::broadcast({entity});
         return entity;
     }
@@ -31,9 +31,9 @@ namespace en {
 
     Entity EntityRegistry::findByName(const std::string& name) const {
 
-        auto range = with<Name>();
+        auto range = with<StringName>();
         auto end = range.end();
-        auto it = std::find_if(range.begin(), end, [&](Entity e) {return get<Name>(e).value == name;});
+        auto it = std::find_if(range.begin(), end, [&](Entity e) {return get<StringName>(e).value == name;});
         return it != end ? *it : nullEntity;
     }
 

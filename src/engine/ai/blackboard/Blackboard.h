@@ -12,6 +12,7 @@
 #include "glm.h"
 #include "TupleUtils.h"
 #include "Grid.h"
+#include "Name.h"
 
 namespace ai {
 
@@ -20,7 +21,7 @@ namespace ai {
     public:
 
         template<typename T>
-        inline std::optional<T> get(const std::string& key) const {
+        inline std::optional<T> get(const en::Name& key) const {
 
             const auto& keyToValueMap = getKeyToValueMap<T>();
             const auto it = keyToValueMap.find(key);
@@ -32,14 +33,14 @@ namespace ai {
         }
 
         template<typename T>
-        inline void set(const std::string& key, T&& value) {
+        inline void set(const en::Name& key, T&& value) {
 
             auto& keyToValueMap = getKeyToValueMap<T>();
             keyToValueMap[key] = std::forward<T>(value);
         }
 
         template<typename T>
-        inline bool unset(const std::string& key) {
+        inline bool unset(const en::Name& key) {
 
             const auto& keyToValueMap = getKeyToValueMap<T>();
             const auto it = keyToValueMap.find(key);
@@ -54,7 +55,7 @@ namespace ai {
     private:
 
         template<typename T>
-        using KeyToValueMap = std::unordered_map<std::string, T>;
+        using KeyToValueMap = std::unordered_map<en::Name, T>;
 
         template<typename... T>
         using KeyToValueMaps = std::tuple<KeyToValueMap<T>...>;

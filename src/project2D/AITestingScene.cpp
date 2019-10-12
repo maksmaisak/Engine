@@ -20,8 +20,7 @@ void AITestingScene::open() {
 
     en::Engine& engine = getEngine();
 
-    engine.makeActor("layer default").add<en::TileLayer>();
-    engine.makeActor("layer items").add<en::TileLayer>();
+    engine.makeActor("layerDefault").add<en::TileLayer>();
 
     en::Actor cameraActor = engine.makeActor("Test camera");
     cameraActor.add<en::Camera>().isOrthographic = true;
@@ -29,11 +28,13 @@ void AITestingScene::open() {
 
     using namespace ai;
 
-    static const auto isFarFromTarget = [](en::Actor& actor, Blackboard* blackboard) -> bool {
+    const en::Name targetPositionName = "targetPosition";
+
+    static const auto isFarFromTarget = [targetPositionName](en::Actor& actor, Blackboard* blackboard) -> bool {
 
         if (const auto* transform = actor.tryGet<en::Transform>()) {
             if (blackboard) {
-                if (const auto targetPositionOptional = blackboard->get<en::GridPosition>("targetPosition")) {
+                if (const auto targetPositionOptional = blackboard->get<en::GridPosition>(targetPositionName)) {
                     return 2.f * 2.f <= glm::distance2(glm::vec2(transform->getWorldPosition()), glm::vec2(*targetPositionOptional));
                 }
             }
@@ -47,14 +48,14 @@ void AITestingScene::open() {
     aiController.setBehaviorTree(make_unique<BehaviorTree>(make_unique<Selector>(
         make_unique<ConditionDecorator>(
             isFarFromTarget,
-            std::make_unique<MoveAction>("targetPosition")
+            std::make_unique<MoveAction>(targetPositionName)
         ),
-        make_unique<InlineAction>([](en::Actor& actor, Blackboard* blackboard) {
+        make_unique<InlineAction>([targetPositionName](en::Actor& actor, Blackboard* blackboard) {
             if (blackboard) {
-                if (const auto targetPosition = blackboard->get<en::GridPosition>("targetPosition")) {
-                    blackboard->set("targetPosition", *targetPosition + en::GridPosition(5, 5));
+                if (const auto targetPosition = blackboard->get<en::GridPosition>(targetPositionName)) {
+                    blackboard->set(targetPositionName, *targetPosition + en::GridPosition(5, 5));
                 } else {
-                    blackboard->set("targetPosition", en::GridPosition(12, 10));
+                    blackboard->set(targetPositionName, en::GridPosition(12, 10));
                 }
             }
         })

@@ -5,7 +5,7 @@
 #include "Actor.h"
 #include "Engine.h"
 #include "Transform.h"
-#include "Name.h"
+#include "StringName.h"
 #include "LuaState.h"
 #include "Destroy.h"
 #include "Tween.h"
@@ -87,7 +87,7 @@ Actor::Actor(Engine& engine, Entity entity) :
 
 std::string Actor::getName() const {
 
-    const Name* ptr = tryGet<Name>();
+    const StringName* ptr = tryGet<StringName>();
     return ptr ? ptr->value : "unnamed";
 }
 
@@ -114,15 +114,15 @@ void Actor::initializeMetatable(LuaState& lua) {
 
     lua::addProperty(lua, "name", lua::property(
         [](Actor& actor) {
-            Name* ptr = actor.tryGet<Name>();
+            StringName* ptr = actor.tryGet<StringName>();
             return ptr ? std::make_optional(ptr->value) : std::nullopt;
         },
         [](Actor& actor, const std::string& newName) {
-            Name* nameComponent = actor.tryGet<Name>();
+            StringName* nameComponent = actor.tryGet<StringName>();
             if (nameComponent) {
                 nameComponent->value = newName;
             } else {
-                actor.add<Name>(newName);
+                actor.add<StringName>(newName);
             }
         }
     ));

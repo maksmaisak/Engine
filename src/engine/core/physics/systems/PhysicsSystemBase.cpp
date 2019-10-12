@@ -12,7 +12,7 @@
 #include "Hit.h"
 #include "Messaging.h"
 #include "Collision.h"
-#include "Name.h"
+#include "StringName.h"
 #include "UIRect.h"
 #include "Text.h"
 

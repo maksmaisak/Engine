@@ -6,7 +6,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "Name.h"
+#include "StringName.h"
 #include "Transform.h"
 
 using namespace en;
@@ -138,7 +138,7 @@ Actor ComponentsToLua::makeEntity(lua_State* L, Engine& engine, int entityDefini
     lua_getfield(L, entityDefinitionIndex, "Name");
     auto pop = lua::PopperOnDestruct(L);
     if (lua::is<std::string>(L))
-        actor.add<en::Name>(lua::to<std::string>(L));
+        actor.add<en::StringName>(lua::to<std::string>(L));
 
     return actor;
 }

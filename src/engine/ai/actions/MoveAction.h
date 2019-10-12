@@ -6,10 +6,10 @@
 #define ENGINE_MOVEACTION_H
 
 #include <optional>
-#include <string>
 #include "Action.h"
 #include "glm.h"
 #include "PathfindingPath.h"
+#include "Name.h"
 
 namespace ai {
 
@@ -17,7 +17,7 @@ namespace ai {
 
     public:
         MoveAction();
-        explicit MoveAction(const std::string& targetPositionBlackboardKey);
+        explicit MoveAction(const en::Name& targetPositionBlackboardKey);
 
     protected:
         ActionOutcome execute() override;
@@ -27,7 +27,7 @@ namespace ai {
         ActionOutcome followPathfindingPath();
         void drawPathfindingPath();
 
-        std::string m_targetPositionBlackboardKey;
+        en::Name m_targetPositionBlackboardKey;
         std::optional<PathfindingPath> m_pathfindingPath;
     };
 }

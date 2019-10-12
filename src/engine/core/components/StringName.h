@@ -2,19 +2,19 @@
 // Created by Maksym Maisak on 1/1/19.
 //
 
-#ifndef ENGINE_NAME_H
-#define ENGINE_NAME_H
+#ifndef ENGINE_STRINGNAME_H
+#define ENGINE_STRINGNAME_H
 
 #include <string>
 #include "ComponentsToLua.h"
 
 namespace en {
 
-    struct Name {
+    struct StringName {
 
-        LUA_TYPE(Name)
+        LUA_TYPE(StringName)
 
-        static Name& addFromLua(Actor& actor, LuaState& lua);
+        static StringName& addFromLua(Actor& actor, LuaState& lua);
 
         std::string value;
 
@@ -22,4 +22,4 @@ namespace en {
     };
 }
 
-#endif //ENGINE_NAME_H
+#endif //ENGINE_STRINGNAME_H

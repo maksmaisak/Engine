@@ -3,7 +3,7 @@
 //
 
 #include "GLSetUniform.h"
-#include <assert.h>
+#include <cassert>
 
 namespace gl {
 
