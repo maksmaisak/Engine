@@ -17,8 +17,8 @@ ShootAction::ShootAction(const glm::vec2& targetPosition) :
 
 ActionOutcome ShootAction::execute() {
 
-    en::Actor bullet = actor.getEngine().makeActor("Bullet shot by " + actor.getName());
-    auto& bulletTransform = bullet.add<en::Transform>(actor.get<en::Transform>().getWorldTransform())
+    en::Actor bullet = m_actor.getEngine().makeActor("Bullet shot by " + m_actor.getName());
+    auto& bulletTransform = bullet.add<en::Transform>(m_actor.get<en::Transform>().getWorldTransform())
         .move(0.5f, 0.5f, 1.f)
         .setLocalScale(0.3f);
 

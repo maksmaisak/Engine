@@ -19,9 +19,13 @@ namespace ai {
 
     public:
         virtual ~Action() = default;
+        ActionOutcome execute(en::Actor& actor);
+        virtual inline void reset() {};
+
+    protected:
         virtual ActionOutcome execute() = 0;
 
-        en::Actor actor;
+        en::Actor m_actor;
     };
 }
 

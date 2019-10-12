@@ -6,4 +6,8 @@
 
 using namespace ai;
 
+ActionOutcome Action::execute(en::Actor& actor) {
 
+    m_actor = actor;
+    return execute();
+}

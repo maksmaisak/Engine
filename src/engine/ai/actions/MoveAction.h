@@ -19,12 +19,13 @@ namespace ai {
         ActionOutcome execute() override;
 
     private:
+        void reset() override;
+
         ActionOutcome followPathfindingPath();
+        void drawPathfindingPath();
 
         glm::i64vec2 m_targetPosition;
         std::optional<PathfindingPath> m_pathfindingPath;
-
-        void drawPathfindingPath();
     };
 }
 

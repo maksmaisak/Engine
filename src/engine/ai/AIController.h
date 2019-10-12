@@ -7,7 +7,7 @@
 
 #include <queue>
 #include "Behavior.h"
-#include "Action.h"
+#include "BehaviorTree.h"
 
 namespace en {
     class Engine;
@@ -24,10 +24,11 @@ namespace ai {
         void start() override;
         void update(float dt) override;
 
-        AIController& enqueueAction(std::unique_ptr<Action>&& action);
+        BehaviorTree* getBehaviorTree();
+        void setBehaviorTree(std::unique_ptr<BehaviorTree> behaviorTree);
 
     private:
-        std::queue<std::unique_ptr<Action>> m_actionQueue;
+        std::unique_ptr<BehaviorTree> m_behaviorTree;
     };
 }
 

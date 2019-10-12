@@ -18,7 +18,7 @@ namespace std {
         using argument_type = glm::vec<2, genType>;
         using result_type = std::size_t;
 
-        result_type operator()(const argument_type& vector) const noexcept {
+        inline result_type operator()(const argument_type& vector) const noexcept {
 
             const result_type hashX = std::hash<genType>{}(vector.x);
             const result_type hashY = std::hash<genType>{}(vector.y);

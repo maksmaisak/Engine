@@ -24,32 +24,15 @@ void AIController::start() {
 
 void AIController::update(float dt) {
 
-    Behavior::update(dt);
-
-    if (m_actionQueue.empty()) {
-        return;
-    }
-
-    const ActionOutcome outcome = m_actionQueue.front()->execute();
-    switch (outcome) {
-        case ActionOutcome::InProgress:
-            break;
-        case ActionOutcome::Success:
-            m_actionQueue.pop();
-            break;
-        case ActionOutcome::Fail:
-            m_actionQueue = {};
-            std::cout << "Action failed." << std::endl;
-            break;
-        default:
-            assert(false);
+    if (m_behaviorTree) {
+        m_behaviorTree->execute(getActor());
     }
 }
 
-AIController& AIController::enqueueAction(std::unique_ptr<Action>&& action) {
+BehaviorTree* AIController::getBehaviorTree() {
+    return m_behaviorTree.get();
+}
 
-    action->actor = getActor();
-    m_actionQueue.push(std::move(action));
-
-    return *this;
+void AIController::setBehaviorTree(std::unique_ptr<BehaviorTree> behaviorTree) {
+    m_behaviorTree = std::move(behaviorTree);
 }
