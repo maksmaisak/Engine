@@ -10,6 +10,9 @@
 
 namespace en {
 
+    /// An efficient representation of a name.
+    /// Uses a 64bit id internally,
+    /// but can be freely converted to and from strings using a global table in a thread-safe manner.
     class Name {
 
         friend struct std::hash<en::Name>;

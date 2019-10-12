@@ -5,6 +5,7 @@
 #include "Name.h"
 #include <unordered_map>
 #include <cassert>
+#include <mutex>
 
 using namespace en;
 
@@ -12,13 +13,16 @@ namespace {
 
     std::unordered_map<std::string, id_t> stringToId;
     std::unordered_map<id_t, std::string> idToString;
-
     id_t nextUnusedId = 1;
+
+    std::mutex nameTableMutex;
 }
 
 Name::Name() : m_id(0) {}
 
 Name::Name(const std::string& string) {
+
+    const std::lock_guard guard(nameTableMutex);
 
     const auto it = stringToId.find(string);
     if (it != stringToId.end()) {
@@ -45,6 +49,8 @@ Name::operator bool() const {
 }
 
 Name::operator const std::string&() const {
+
+    const std::lock_guard guard(nameTableMutex);
 
     assert(*this);
     const auto it = idToString.find(m_id);
