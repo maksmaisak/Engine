@@ -7,22 +7,38 @@
 #include "GLMExtensions.h"
 #include "Pathfinding.h"
 #include "LineRenderer.h"
+#include "Grid.h"
+#include "Blackboard.h"
 
 using namespace ai;
 
-MoveAction::MoveAction(const glm::i64vec2& targetPosition) :
-    m_targetPosition(targetPosition)
+MoveAction::MoveAction() :
+    m_targetPositionBlackboardKey("targetPosition")
+{}
+
+MoveAction::MoveAction(const std::string& targetPositionBlackboardKey) :
+    m_targetPositionBlackboardKey(targetPositionBlackboardKey)
 {}
 
 ActionOutcome MoveAction::execute() {
 
-    const glm::i64vec2 gridPosition = m_actor.get<en::Transform>().getWorldPosition();
-    if (gridPosition == m_targetPosition) {
+    if (!m_blackboard) {
+        return ActionOutcome::Fail;
+    }
+
+    std::optional<en::GridPosition> targetPositionOptional = m_blackboard->get<en::GridPosition>(m_targetPositionBlackboardKey);
+    if (!targetPositionOptional) {
+        return ActionOutcome::Fail;
+    }
+
+    const en::GridPosition targetPosition = *targetPositionOptional;
+    const en::GridPosition currentPosition = m_actor.get<en::Transform>().getWorldPosition();
+    if (currentPosition == targetPosition) {
         return ActionOutcome::Success;
     }
 
     if (!m_pathfindingPath) {
-        m_pathfindingPath = Pathfinding::getPath(m_actor.getEngine(), gridPosition, m_targetPosition);
+        m_pathfindingPath = Pathfinding::getPath(m_actor.getEngine(), currentPosition, targetPosition);
         if (!m_pathfindingPath) {
             return ActionOutcome::Fail;
         }
@@ -71,9 +87,9 @@ void MoveAction::drawPathfindingPath() {
 
     auto& lineRenderer = en::LineRenderer::get(m_actor.getEngine());
 
-    ai::PathfindingPath& path = *m_pathfindingPath;
-    std::optional<glm::i64vec2> previousPosition = std::nullopt;
-    for (en::TileLayer::Coordinates position : path) {
+    const ai::PathfindingPath& path = *m_pathfindingPath;
+    std::optional<en::GridPosition> previousPosition = std::nullopt;
+    for (const en::GridPosition& position : path) {
 
         if (previousPosition) {
             lineRenderer.addLineSegment(glm::vec2(*previousPosition) + 0.5f, glm::vec2(position) + 0.5f, {0,1,0,1});

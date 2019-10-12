@@ -32,7 +32,7 @@ ActionOutcome ShootAction::execute() {
 
         auto& transform = bullet.get<en::Transform>();
         transform.move(velocity * dt);
-        const en::TileLayer::Coordinates currentTilePosition = transform.getWorldPosition();
+        const en::GridPosition currentTilePosition = transform.getWorldPosition();
 
         en::EntityRegistry& registry = bullet.getEngine().getRegistry();
 

@@ -5,7 +5,6 @@
 #ifndef ENGINE_ACTORDECL_H
 #define ENGINE_ACTORDECL_H
 
-#include <type_traits>
 #include "Entity.h"
 #include "EntityRegistry.h"
 

@@ -7,10 +7,11 @@
 
 #include <deque>
 #include "TileLayer.h"
+#include "Grid.h"
 
 namespace ai {
 
-    using PathfindingPath = std::deque<en::TileLayer::Coordinates>;
+    using PathfindingPath = std::deque<en::GridPosition>;
 }
 
 #endif //ENGINE_PATHFINDINGPATH_H

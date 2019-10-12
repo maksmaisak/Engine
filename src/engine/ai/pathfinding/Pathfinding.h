@@ -5,8 +5,8 @@
 #ifndef ENGINE_PATHFINDING_H
 #define ENGINE_PATHFINDING_H
 
-#include "PathfindingPath.h"
 #include <optional>
+#include "PathfindingPath.h"
 
 namespace en {
     class Engine;
@@ -17,7 +17,7 @@ namespace ai {
     class Pathfinding {
 
     public:
-        static std::optional<PathfindingPath> getPath(en::Engine& engine, const glm::i64vec2& start, const glm::i64vec2& end, std::size_t maxNumCheckedTiles = 100000);
+        static std::optional<PathfindingPath> getPath(en::Engine& engine, const en::GridPosition& start, const en::GridPosition& end, std::size_t maxNumCheckedTiles = 100000);
     };
 }
 

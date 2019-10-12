@@ -13,7 +13,7 @@ using namespace ai;
 
 namespace {
 
-    bool isObstacle(en::Engine& engine, const glm::i64vec2& tileCoordinates) {
+    bool isObstacle(en::Engine& engine, const en::GridPosition& tileCoordinates) {
 
         const en::EntityRegistry& registry = engine.getRegistry();
         for (en::Entity e : registry.with<en::TileLayer>()) {
@@ -25,8 +25,6 @@ namespace {
         return false;
     }
 
-    using Coords = glm::i64vec2;
-
     enum NodeState {
         Unvisited = 0,
         Open,
@@ -35,7 +33,7 @@ namespace {
 
     struct NodeInfo {
 
-        Coords previous = {0, 0};
+        en::GridPosition previous = {0, 0};
         NodeState state = Unvisited;
         float distance = std::numeric_limits<float>::infinity();
         float totalDistance = std::numeric_limits<float>::infinity();
@@ -45,15 +43,15 @@ namespace {
         }
     };
 
-    inline float manhattan(const Coords& a, const Coords& b) {
+    inline float manhattan(const en::GridPosition& a, const en::GridPosition& b) {
         return static_cast<float>(glm::abs(a.x - b.x) + glm::abs(a.y - b.y));
     }
 
-    inline float heuristic(const Coords& a, const Coords& b) {
+    inline float heuristic(const en::GridPosition& a, const en::GridPosition& b) {
         return manhattan(a, b);
     }
 
-    const glm::i64vec2 neighborDeltas[] {
+    const en::GridPosition neighborDeltas[] {
         { 1,  0},
         { 1,  1},
         { 0,  1},
@@ -67,7 +65,7 @@ namespace {
     const float sqrt2 = glm::sqrt(2.f);
 }
 
-std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Coords& start, const Coords& goal, std::size_t maxNumCheckedTiles) {
+std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const en::GridPosition& start, const en::GridPosition& goal, std::size_t maxNumCheckedTiles) {
 
     if (start == goal) {
         return {};
@@ -78,11 +76,11 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Co
     }
 
     // TODO chunk-based node storage for performance.
-    std::unordered_map<Coords, NodeInfo> nodes;
+    std::unordered_map<en::GridPosition, NodeInfo> nodes;
 
-    const auto reconstructPath = [&nodes, start](const Coords& coords) {
+    const auto reconstructPath = [&nodes, start](const en::GridPosition& coords) {
 
-        std::deque<Coords> reversePath;
+        std::deque<en::GridPosition> reversePath;
 
         const NodeInfo* currentNode = &nodes.at(coords);
         while (currentNode->previous != start) {
@@ -93,8 +91,8 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Co
         return PathfindingPath(reversePath);
     };
 
-    std::priority_queue<Coords, std::vector<Coords>, std::function<bool(const Coords&, const Coords&)>> frontier(
-        [&nodes](const Coords& lhs, const Coords& rhs) {
+    std::priority_queue<en::GridPosition, std::vector<en::GridPosition>, std::function<bool(const en::GridPosition&, const en::GridPosition&)>> frontier(
+        [&nodes](const en::GridPosition& lhs, const en::GridPosition& rhs) {
             return nodes.at(lhs).totalDistance > nodes.at(rhs).totalDistance;
         }
     );
@@ -105,7 +103,7 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Co
     std::size_t numCheckedTiles = 0;
     while (!frontier.empty()) {
 
-        const glm::i64vec2 currentCoords = frontier.top();
+        const en::GridPosition currentCoords = frontier.top();
         if (currentCoords == goal) {
             return reconstructPath(currentCoords);
         }
@@ -118,12 +116,11 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Co
         frontier.pop();
         NodeInfo& currentNode = nodes.at(currentCoords);
         currentNode.state = Closed;
-        assert(nodes.at(currentCoords).state == Closed);
 
         // Walk through neighbors.
         for (int i = 0; i < 8; ++i) {
 
-            const glm::i64vec2 neighborCoords = currentCoords + neighborDeltas[i];
+            const en::GridPosition neighborCoords = currentCoords + neighborDeltas[i];
             NodeInfo& neighborNode = nodes[neighborCoords];
             if (neighborNode.state != Closed && !isObstacle(engine, neighborCoords)) {
 
@@ -138,7 +135,6 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const Co
                     if (neighborNode.state != Open) {
                         frontier.emplace(neighborCoords);
                         neighborNode.state = Open;
-                        assert(nodes.at(neighborCoords).state == Open);
                     }
                 }
             }

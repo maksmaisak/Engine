@@ -14,7 +14,7 @@ ActionOutcome ParallelAction::execute() {
 
         assert(action);
         if (action) {
-            switch(action->execute(m_actor)) {
+            switch(action->execute(m_actor, m_blackboard)) {
                 case ActionOutcome::InProgress:
                     anyInProgress = true;
                     break;

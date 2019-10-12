@@ -48,14 +48,14 @@ namespace {
         return spriteTransform.getWorldTransform() * glm::translate(glm::vec3(-sprite.pivot, 0.f));
     }
 
-    std::pair<TileLayer::Coordinates, TileLayer::Coordinates> getTileIndicesBounds(const utils::Bounds2D& cameraBounds) {
+    std::pair<GridPosition, GridPosition> getTileIndicesBounds(const utils::Bounds2D& cameraBounds) {
 
-        const TileLayer::Coordinates visibleTileIndicesMin = glm::floor(cameraBounds.min);
-        const TileLayer::Coordinates visibleTileIndicesMax = glm::floor(cameraBounds.max);
+        const GridPosition visibleTileIndicesMin = glm::floor(cameraBounds.min);
+        const GridPosition visibleTileIndicesMax = glm::floor(cameraBounds.max);
 
         const glm::vec<2, std::size_t> visibleTileRangeSize = visibleTileIndicesMax - visibleTileIndicesMin;
         const glm::vec<2, std::size_t> finalTileRangeSize = glm::min(visibleTileRangeSize, MapDataTextureResolution - 1);
-        const TileLayer::Coordinates finalTileIndicesMax = visibleTileIndicesMin + TileLayer::Coordinates(finalTileRangeSize);
+        const GridPosition finalTileIndicesMax = visibleTileIndicesMin + GridPosition(finalTileRangeSize);
 
         return {visibleTileIndicesMin, finalTileIndicesMax};
     }
@@ -165,7 +165,7 @@ void Render2DSystem::renderLayers(const utils::Bounds2D& cameraBounds, const glm
     if (m_registry->with<TileLayer>().tryGetOne()) {
 
         m_debugVolumeRenderer->addAABBMinMax(glm::vec3(cameraBounds.min, 0.f), glm::vec3(cameraBounds.max, 1.f));
-        m_debugVolumeRenderer->addAABBMinMax(glm::vec3(tileIndicesMin, -1.f), glm::vec3(tileIndicesMax + TileLayer::Coordinates(1), 1.f));
+        m_debugVolumeRenderer->addAABBMinMax(glm::vec3(tileIndicesMin, -1.f), glm::vec3(tileIndicesMax + GridPosition(1), 1.f));
         m_debugVolumeRenderer->addAABB(glm::vec3(0.5f), glm::vec3(0.5f), glm::vec4(1.f));
     }
 
@@ -204,7 +204,7 @@ void Render2DSystem::renderSprites(const utils::Bounds2D& cameraBounds, const gl
     }
 }
 
-void Render2DSystem::updateMapDataTexture(TileLayer& tileLayer, const TileLayer::Coordinates& tileIndicesMin, const TileLayer::Coordinates& tileIndicesMax) {
+void Render2DSystem::updateMapDataTexture(TileLayer& tileLayer, const GridPosition& tileIndicesMin, const GridPosition& tileIndicesMax) {
 
     const glm::vec<2, GLsizei> tileIndexCount = glm::vec<2, GLsizei>(tileIndicesMax - tileIndicesMin) + 1;
     assert(tileIndexCount.x <= MapDataTextureResolution);
@@ -212,8 +212,8 @@ void Render2DSystem::updateMapDataTexture(TileLayer& tileLayer, const TileLayer:
     assert(tileIndexCount.x * tileIndexCount.y <= m_mapData.size());
 
     std::size_t mapDataIndex = 0;
-    for (TileLayer::Coordinate y = tileIndicesMin.y; y <= tileIndicesMax.y; ++y) {
-        for (TileLayer::Coordinate x = tileIndicesMin.x; x <= tileIndicesMax.x; ++x) {
+    for (GridCoordinate y = tileIndicesMin.y; y <= tileIndicesMax.y; ++y) {
+        for (GridCoordinate x = tileIndicesMin.x; x <= tileIndicesMax.x; ++x) {
             m_mapData[mapDataIndex++] = pack(tileLayer.at({x, y}).atlasCoordinates);
         }
     }
