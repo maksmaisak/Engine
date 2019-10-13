@@ -3,11 +3,11 @@
 //
 
 #include "AITestingScene.h"
+#include <random>
 #include "AIController.h"
 #include "Camera.h"
 #include "Transform.h"
 #include "TileLayer.h"
-
 #include "InlineBehavior.h"
 #include "ConditionDecorator.h"
 #include "InlineAction.h"
@@ -15,6 +15,78 @@
 #include "Selector.h"
 #include "MoveAction.h"
 #include "ShootAction.h"
+#include "ParallelAction.h"
+#include "SimpleParallelAction.h"
+#include "RepeatDecorator.h"
+#include "DelayAction.h"
+
+namespace {
+
+    en::GridPosition findClosestItemPosition(en::Actor& actor) {
+
+        std::default_random_engine randomEngine(std::random_device{}());
+        std::uniform_int_distribution<> distribution(-20, 20);
+
+        if (auto* transform = actor.tryGet<en::Transform>()) {
+            return
+                en::GridPosition(distribution(randomEngine), distribution(randomEngine)) +
+                en::GridPosition(transform->getWorldPosition());
+        }
+
+        return {};
+    }
+
+    std::unique_ptr<ai::BehaviorTree> makeBehaviorTree() {
+
+        using namespace ai;
+        using std::make_unique;
+
+        const en::Name targetPositionName = "targetPosition";
+        const en::Name shootingTargetName = "shootingTarget";
+
+        const auto isNotAtTarget = [targetPositionName](en::Actor& actor, Blackboard* blackboard) -> bool {
+
+            if (const auto* transform = actor.tryGet<en::Transform>()) {
+                if (blackboard) {
+                    if (const auto targetPositionOptional = blackboard->get<en::GridPosition>(targetPositionName)) {
+                        return *targetPositionOptional != en::GridPosition(transform->getWorldPosition());
+                    }
+                }
+            }
+
+            return true;
+        };
+
+        const auto unsetTargetPosition = [targetPositionName](en::Actor& actor, Blackboard* blackboard) {
+            if (blackboard) {
+                blackboard->unset<en::GridPosition>(targetPositionName);
+            }
+        };
+
+        auto behaviorTree = make_unique<BehaviorTree>(make_unique<Sequence>(
+            make_unique<InlineAction>([targetPositionName](en::Actor& actor, Blackboard* blackboard) {
+                if (blackboard && !blackboard->get<en::GridPosition>(targetPositionName)) {
+                    blackboard->set<en::GridPosition>(targetPositionName, findClosestItemPosition(actor));
+                }
+            }),
+            make_unique<Selector>(
+                make_unique<SimpleParallelAction>(
+                    make_unique<MoveAction>(targetPositionName),
+                    make_unique<Sequence>(
+                        make_unique<DelayAction>(0.5f),
+                        make_unique<ShootAction>(shootingTargetName)
+                    )
+                ),
+                make_unique<InlineAction>(unsetTargetPosition)
+            ),
+            make_unique<InlineAction>(unsetTargetPosition)
+        ));
+
+        behaviorTree->getBlackboard().set<en::GridPosition>(shootingTargetName, {0, 0});
+
+        return behaviorTree;
+    }
+}
 
 void AITestingScene::open() {
 
@@ -27,39 +99,7 @@ void AITestingScene::open() {
     cameraActor.add<en::Transform>().move({0, 0, 10.f});
 
     using namespace ai;
-
-    const en::Name targetPositionName = "targetPosition";
-
-    static const auto isFarFromTarget = [targetPositionName](en::Actor& actor, Blackboard* blackboard) -> bool {
-
-        if (const auto* transform = actor.tryGet<en::Transform>()) {
-            if (blackboard) {
-                if (const auto targetPositionOptional = blackboard->get<en::GridPosition>(targetPositionName)) {
-                    return 2.f * 2.f <= glm::distance2(glm::vec2(transform->getWorldPosition()), glm::vec2(*targetPositionOptional));
-                }
-            }
-        }
-
-        return true;
-    };
-
-    using std::make_unique;
     AIController& aiController = AIController::create(engine);
-    aiController.setBehaviorTree(make_unique<BehaviorTree>(make_unique<Selector>(
-        make_unique<ConditionDecorator>(
-            isFarFromTarget,
-            std::make_unique<MoveAction>(targetPositionName)
-        ),
-        make_unique<InlineAction>([targetPositionName](en::Actor& actor, Blackboard* blackboard) {
-            if (blackboard) {
-                if (const auto targetPosition = blackboard->get<en::GridPosition>(targetPositionName)) {
-                    blackboard->set(targetPositionName, *targetPosition + en::GridPosition(5, 5));
-                } else {
-                    blackboard->set(targetPositionName, en::GridPosition(12, 10));
-                }
-            }
-        })
-        //make_unique<InlineAction>([targetPosition](en::Actor& actor){removeItemAt(actor.getEngine(), targetPosition);}),
-        //make_unique<ShootAction>(glm::vec2(20.5f, 10.5f)),
-    )));
+
+    aiController.setBehaviorTree(makeBehaviorTree());
 }

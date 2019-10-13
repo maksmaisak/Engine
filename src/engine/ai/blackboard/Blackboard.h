@@ -42,7 +42,7 @@ namespace ai {
         template<typename T>
         inline bool unset(const en::Name& key) {
 
-            const auto& keyToValueMap = getKeyToValueMap<T>();
+            auto& keyToValueMap = getKeyToValueMap<T>();
             const auto it = keyToValueMap.find(key);
             if (it != keyToValueMap.end()) {
                 keyToValueMap.erase(it);
@@ -84,7 +84,7 @@ namespace ai {
 
         KeyToValueMaps<
             bool,
-            int32_t,
+            int,
             glm::vec3,
             en::GridPosition,
             en::Actor

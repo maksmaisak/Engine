@@ -8,14 +8,26 @@
 #include "Sprite.h"
 #include "InlineBehavior.h"
 #include "TileLayer.h"
+#include "Blackboard.h"
 
 using namespace ai;
 
-ShootAction::ShootAction(const glm::vec2& targetPosition) :
-    m_targetPosition(targetPosition)
+ShootAction::ShootAction(const en::Name& targetPositionName) :
+    m_targetPositionName(targetPositionName)
 {}
 
 ActionOutcome ShootAction::execute() {
+
+    if (!m_blackboard) {
+        return ActionOutcome::Fail;
+    }
+
+    en::GridPosition targetPosition;
+    if (const auto targetPositionOptional = m_blackboard->get<en::GridPosition>(m_targetPositionName)) {
+        targetPosition = *targetPositionOptional;
+    } else {
+        return ActionOutcome::Fail;
+    }
 
     en::Actor bullet = m_actor.getEngine().makeActor("Bullet shot by " + m_actor.getName().getString());
     auto& bulletTransform = bullet.add<en::Transform>(m_actor.get<en::Transform>().getWorldTransform())
@@ -26,7 +38,7 @@ ActionOutcome ShootAction::execute() {
     sprite.color = {1,0,0,1};
 
     constexpr float bulletSpeed = 10.f;
-    const glm::vec2 delta = m_targetPosition - glm::vec2(bulletTransform.getWorldPosition());
+    const glm::vec2 delta = glm::vec2(targetPosition) - glm::vec2(bulletTransform.getWorldPosition());
     const glm::vec2 velocity = delta * bulletSpeed / (glm::length(delta) + glm::epsilon<float>());
     bullet.add<en::InlineBehavior>([velocity](en::Actor& bullet, float dt) {
 

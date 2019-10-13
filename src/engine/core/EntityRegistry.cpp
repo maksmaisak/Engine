@@ -34,7 +34,7 @@ namespace en {
 
         const auto range = with<Name>();
         const auto end = range.end();
-        auto it = std::find_if(range.begin(), end, [&](Entity e) {return get<Name>(e) == name;});
+        const auto it = std::find_if(range.begin(), end, [&](Entity e) {return get<Name>(e) == name;});
         return it != end ? *it : nullEntity;
     }
 
@@ -45,9 +45,7 @@ namespace en {
         }
 
         Receiver<EntityWillBeDestroyed>::broadcast({entity});
-
         m_entities.remove(entity);
-
         for (const std::unique_ptr<ComponentPoolBase>& poolPtr : m_componentPools) {
             if (poolPtr) {
                 poolPtr->remove(entity);
@@ -63,7 +61,6 @@ namespace en {
         }
 
         m_entities.removeAll();
-
         for (const std::unique_ptr<ComponentPoolBase>& poolPtr : m_componentPools) {
             if (poolPtr) {
                 poolPtr->clear();
