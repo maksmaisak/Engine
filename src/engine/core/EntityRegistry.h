@@ -9,7 +9,6 @@
 #include <utility>
 #include <set>
 #include <iostream>
-#include <string>
 #include "Entity.h"
 #include "ComponentPool.h"
 #include "EntitiesView.h"
@@ -30,7 +29,7 @@ namespace en {
 
     public:
         en::Entity makeEntity();
-        en::Entity makeEntity(const std::string& name);
+        en::Entity makeEntity(const class Name& name);
         /// Unsafe while iterating over entities. Add a marker component like en::Destroy instead.
         void destroy(Entity entity);
         void destroyAll();
@@ -55,7 +54,7 @@ namespace en {
         inline EntitiesView<TComponent...> with() const;
 
         bool isAlive(Entity e) const;
-        Entity findByName(const std::string& name) const;
+        Entity findByName(const Name& name) const;
 
     private:
 

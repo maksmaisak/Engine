@@ -17,7 +17,7 @@ ShootAction::ShootAction(const glm::vec2& targetPosition) :
 
 ActionOutcome ShootAction::execute() {
 
-    en::Actor bullet = m_actor.getEngine().makeActor("Bullet shot by " + m_actor.getName());
+    en::Actor bullet = m_actor.getEngine().makeActor("Bullet shot by " + m_actor.getName().getString());
     auto& bulletTransform = bullet.add<en::Transform>(m_actor.get<en::Transform>().getWorldTransform())
         .move(0.5f, 0.5f, 1.f)
         .setLocalScale(0.3f);
@@ -32,9 +32,9 @@ ActionOutcome ShootAction::execute() {
 
         auto& transform = bullet.get<en::Transform>();
         transform.move(velocity * dt);
-        const en::GridPosition currentTilePosition = transform.getWorldPosition();
 
         en::EntityRegistry& registry = bullet.getEngine().getRegistry();
+        const en::GridPosition currentTilePosition = transform.getWorldPosition();
 
         bool isObstacle = false;
         for (en::Entity e : registry.with<en::TileLayer>()) {

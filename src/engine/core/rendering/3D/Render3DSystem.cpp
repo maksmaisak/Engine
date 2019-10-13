@@ -8,7 +8,7 @@
 #include "Camera.h"
 #include "RenderInfo.h"
 #include "Material.h"
-#include "StringName.h"
+#include "Name.h"
 
 using namespace en;
 
@@ -18,8 +18,8 @@ namespace {
 
         if (glCheckError() != GL_NO_ERROR) {
 
-            const auto* const namePtr = actor.tryGet<StringName>();
-            const std::string name = namePtr ? namePtr->value : "unnamed";
+            const auto* const namePtr = actor.tryGet<Name>();
+            const std::string name = namePtr ? *namePtr : "unnamed";
             std::cerr << "Error while rendering " << name << std::endl;
         }
     }

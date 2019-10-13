@@ -62,8 +62,8 @@ namespace en {
 
         Actor actor(Entity entity) const;
         Actor makeActor();
-        Actor makeActor(const std::string& name);
-        Actor findByName(const std::string& name) const;
+        Actor makeActor(const class Name& name);
+        Actor findByName(const class Name& name) const;
         Actor getMainCamera() const;
 
     protected:

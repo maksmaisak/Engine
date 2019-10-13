@@ -43,12 +43,7 @@ Name::Name(const char* string) :
 bool Name::isValid() const {
     return m_id;
 }
-
-Name::operator bool() const {
-    return isValid();
-}
-
-Name::operator const std::string&() const {
+const std::string& Name::getString() const {
 
     const std::lock_guard guard(nameTableMutex);
 
@@ -58,11 +53,23 @@ Name::operator const std::string&() const {
     return it->second;
 }
 
+Name::operator const std::string&() const {
+    return getString();
+}
+
 Name::operator const char*() const {
-    return (operator const std::string&)().c_str();
+    return getString().c_str();
+}
+
+Name::operator bool() const {
+    return isValid();
 }
 
 bool en::operator==(const Name& lhs, const Name& rhs) {
     return lhs.m_id == rhs.m_id;
+}
+
+std::ostream& en::operator<<(std::ostream& stream, const Name& name) {
+    return stream << name.getString();
 }
 

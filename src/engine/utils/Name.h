@@ -25,11 +25,14 @@ namespace en {
         Name(const char* string);
 
         bool isValid() const;
-        operator bool() const;
+        const std::string& getString() const;
+
         operator const std::string&() const;
         operator const char*() const;
+        operator bool() const;
 
         friend bool operator==(const Name& lhs, const Name& rhs);
+        friend std::ostream& operator <<(std::ostream& stream, const Name& name);
 
     private:
         id_t m_id;

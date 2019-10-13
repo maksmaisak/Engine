@@ -125,16 +125,18 @@ namespace en {
         entry.pushFromActor = [](Actor& actor, LuaState& lua) {
 
             T* componentPtr = actor.tryGet<T>();
-            if (componentPtr)
+            if (componentPtr) {
                 lua::push(lua, ComponentReference<T>(actor.getEngine().getRegistry(), actor));
-            else
+            } else {
                 lua_pushnil(lua);
+            }
         };
 
         entry.addToActor = [](Actor& actor, LuaState& lua) {
 
-            if (actor.tryGet<T>())
-                luaL_error(lua, "Actor %s already has a component of type %s", actor.getName().c_str(), utils::demangle<T>().c_str());
+            if (actor.tryGet<T>()) {
+                luaL_error(lua, "Actor %s already has a component of type %s", actor.getName().getString().c_str(), utils::demangle<T>().c_str());
+            }
 
             actor.add<T>();
             lua::push(lua, ComponentReference<T>(actor.getEngine().getRegistry(), actor));
@@ -142,8 +144,9 @@ namespace en {
 
         entry.addToActorFromDefinition = [](Actor& actor, LuaState& lua, int componentDefinitionIndex) {
 
-            if (actor.tryGet<T>())
-                luaL_error(lua, "Actor %s already has a component of type %s", actor.getName().c_str(), utils::demangle<T>().c_str());
+            if (actor.tryGet<T>()) {
+                luaL_error(lua, "Actor %s already has a component of type %s", actor.getName().getString().c_str(), utils::demangle<T>().c_str());
+            }
 
             lua_pushvalue(lua, componentDefinitionIndex);
             detail::LuaComponentFactoryFunctionOf<T>::get()(actor, lua);
@@ -152,8 +155,9 @@ namespace en {
 
         entry.removeFromActor = [](Actor& actor, LuaState& lua) {
 
-            if (!actor.tryGet<T>())
+            if (!actor.tryGet<T>()) {
                 return;
+            }
 
             actor.remove<T>();
         };

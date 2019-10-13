@@ -13,11 +13,11 @@
 #include "LuaState.h"
 #include "ClosureHelper.h"
 #include "Resources.h"
-
 #include "KeyboardHelper.h"
 #include "MouseHelper.h"
 #include "Sound.h"
 #include "Camera.h"
+#include "Name.h"
 
 using namespace en;
 
@@ -223,11 +223,11 @@ Actor Engine::makeActor() {
     return actor(m_registry.makeEntity());
 }
 
-Actor Engine::makeActor(const std::string& name) {
+Actor Engine::makeActor(const Name& name) {
     return actor(m_registry.makeEntity(name));
 }
 
-Actor Engine::findByName(const std::string& name) const {
+Actor Engine::findByName(const Name& name) const {
     return actor(m_registry.findByName(name));
 }
 
