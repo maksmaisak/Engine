@@ -1,44 +1,65 @@
-#include <utility>
-
 //
 // Created by Maksym Maisak on 4/11/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_SCHEDULER_H
-#define SAXION_Y2Q1_CPP_SCHEDULER_H
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
 
 #include <functional>
 #include <queue>
 #include <SFML/System.hpp>
 
-/// Schedules operations to be done at a specific time
-class Scheduler {
-
-public:
-    using func_t = std::function<void()>;
-
-    void update(float dt);
-    void delay(sf::Time timeDelay, const func_t& func);
-    void schedule(sf::Time time, const func_t& func);
-
-private:
+namespace en {
 
     struct ScheduleItem {
 
+        using function_t = std::function<void()>;
+        using id_t = std::uint64_t;
+
         sf::Time time;
-        func_t func;
+        function_t function;
+        id_t id;
+        bool isCancelled;
 
-        ScheduleItem(sf::Time time, func_t func) : time(time), func(std::move(func)) {}
+        ScheduleItem(sf::Time time, function_t function, id_t id);
     };
 
-    struct ScheduleItemCompare {
-        bool operator()(const ScheduleItem& lhs, const ScheduleItem& rhs) {
-            return lhs.time > rhs.time;
-        }
+    class Timer {
+
+    public:
+        Timer();
+        bool isAssigned() const;
+        bool isInProgress() const;
+        bool cancel();
+
+    private:
+        friend class Scheduler;
+        Timer(class Scheduler* scheduler, ScheduleItem::id_t scheduleItemId);
+        Scheduler* m_scheduler;
+        ScheduleItem::id_t m_scheduleItemId;
     };
 
-    std::priority_queue<ScheduleItem, std::vector<ScheduleItem>, ScheduleItemCompare> m_scheduled;
-};
+    /// Schedules operations to be done at a specific time
+    class Scheduler {
 
+    public:
+        Scheduler();
+        void update(float dt);
+        Timer delay(sf::Time timeDelay, const ScheduleItem::function_t& function = nullptr);
+        Timer schedule(sf::Time time, const ScheduleItem::function_t& function = nullptr);
 
-#endif //SAXION_Y2Q1_CPP_SCHEDULER_H
+    private:
+        friend class Timer;
+
+        struct ScheduleItemCompare {
+            bool operator()(const ScheduleItem& lhs, const ScheduleItem& rhs) {
+                return lhs.time > rhs.time;
+            }
+        };
+
+        std::priority_queue<ScheduleItem, std::vector<ScheduleItem>, ScheduleItemCompare> m_scheduled;
+        ScheduleItem::id_t m_nextFreeId;
+    };
+}
+
+#endif //SCHEDULER_H

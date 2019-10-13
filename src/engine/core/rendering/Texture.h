@@ -12,11 +12,11 @@
 
 namespace en {
 
-	/// Represents a texture resource.
-	/// Imports texture data, creates the OpenGL texture, buffers data to the GPU.
-	class Texture final {
+    /// Represents a texture resource.
+    /// Imports texture data, creates the OpenGL texture, buffers data to the GPU.
+    class Texture final {
 
-	public:
+    public:
 
         using Size = glm::vec<2, GLsizei>;
 
@@ -26,29 +26,29 @@ namespace en {
             TextureCube
         };
 
-	    struct CreationSettings {
+        struct CreationSettings {
 
-	        static const CreationSettings linearColorSettings;
+            static const CreationSettings linearColorSettings;
 
             CreationSettings();
 
-	        Kind kind;
+            Kind kind;
 
-	        bool generateMipmaps;
+            bool generateMipmaps;
             GLint numMipmapLevels;
 
-	        GLint internalFormat;
-	        GLint wrapS;
-	        GLint wrapT;
-	        GLint minFilter;
-	        GLint magFilter;
-	    };
+            GLint internalFormat;
+            GLint wrapS;
+            GLint wrapT;
+            GLint minFilter;
+            GLint magFilter;
+        };
 
-		explicit Texture(const Size& size, const CreationSettings& settings = {});
+        explicit Texture(const Size& size, const CreationSettings& settings = {});
         explicit Texture(const std::string& path, const CreationSettings& settings = {});
         explicit Texture(const std::array<std::string, 6>& cubeSidePaths, const CreationSettings& settings = {});
 
-		void updateData2D(GLvoid* pixelData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height);
+        void updateData2D(GLvoid* pixelData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height);
         void updateData2D(GLvoid* pixelData, GLenum dataFormat = GL_UNSIGNED_BYTE);
 
         GLuint getId() const;
@@ -56,14 +56,14 @@ namespace en {
         Kind getKind() const;
         Size getSize() const;
 
-	private:
+    private:
 
-	    void setUpOpenGLTexture2D(const CreationSettings& settings = {}, const GLvoid* imageData = nullptr);
+        void setUpOpenGLTexture2D(const CreationSettings& settings = {}, const GLvoid* imageData = nullptr);
 
-		gl::TextureObject m_glTexture = {};
-		Kind m_kind = Kind::None;
-		Size m_size = {0, 0};
-	};
+        gl::TextureObject m_glTexture = {};
+        Kind m_kind = Kind::None;
+        Size m_size = {0, 0};
+    };
 
     struct Textures : Resources<Texture> {
 

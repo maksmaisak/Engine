@@ -3,24 +3,23 @@
 //
 
 #include "DelayAction.h"
+#include <limits>
 #include "Engine.h"
 #include "GameTime.h"
 
 using namespace ai;
 
 DelayAction::DelayAction(float duration) :
-    m_duration(glm::max(0.f, duration))
+    m_duration(glm::max(std::numeric_limits<float>::epsilon(), duration))
 {}
 
 ActionOutcome DelayAction::execute() {
 
-    // TODO add current tick number to avoid imprecision.
-    // TODO make Scheduler return a handle through which it can be cancelled.
-    if (!m_startTime) {
-        m_startTime = GameTime::nowAsSeconds();
+    if (!m_timer.isAssigned()) {
+        m_timer = m_actor.getEngine().getScheduler().delay(sf::seconds(m_duration));
     }
 
-    if (GameTime::nowAsSeconds() < *m_startTime + m_duration) {
+    if (m_timer.isInProgress()) {
         return ActionOutcome::InProgress;
     }
 
@@ -29,5 +28,6 @@ ActionOutcome DelayAction::execute() {
 
 void DelayAction::reset() {
 
-    m_startTime = std::nullopt;
+    m_timer.cancel();
+    m_timer = {};
 }

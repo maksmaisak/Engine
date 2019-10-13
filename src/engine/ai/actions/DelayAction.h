@@ -8,6 +8,7 @@
 #include <chrono>
 #include <optional>
 #include "Action.h"
+#include "Scheduler.h"
 
 namespace ai {
 
@@ -22,7 +23,7 @@ namespace ai {
 
     private:
         float m_duration;
-        std::optional<float> m_startTime;
+        en::Timer m_timer;
     };
 }
 
