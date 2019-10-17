@@ -11,6 +11,7 @@
 #include "glm.h"
 #include "VertexArrayObject.h"
 #include "VertexBufferObject.h"
+#include "Bounds.h"
 
 namespace en {
 
@@ -23,6 +24,7 @@ namespace en {
 
         void addLineSegment(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color = glm::vec4(1.f), float lineWidth = 5.f);
         void addLineSegment(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color = glm::vec4(1.f), float lineWidth = 5.f);
+        void addAABB(const utils::Bounds2D& bounds, const glm::vec4& color = glm::vec4(1.f), float lineWidth = 5.f);
 
     private:
         void render(const glm::mat4& matrixPVM);

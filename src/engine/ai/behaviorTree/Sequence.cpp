@@ -21,6 +21,7 @@ ActionOutcome Sequence::execute() {
                 reset();
                 return ActionOutcome::Fail;
             case ActionOutcome::Success:
+                action->reset();
                 ++m_currentIndex;
                 break;
             default:

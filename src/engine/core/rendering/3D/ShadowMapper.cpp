@@ -45,7 +45,7 @@ namespace {
 
         utils::Bounds bounds {
             glm::vec3(std::numeric_limits<float>::max()),
-            glm::vec3(std::numeric_limits<float>::min())
+            glm::vec3(std::numeric_limits<float>::lowest())
         };
         for (const glm::vec4& corner : corners) {
             // perspective division.
@@ -63,7 +63,7 @@ namespace {
 
         outBounds = {
             glm::vec3(std::numeric_limits<float>::max()),
-            glm::vec3(std::numeric_limits<float>::min())
+            glm::vec3(std::numeric_limits<float>::lowest())
         };
 
         bool anyShadowReceivers = false;
@@ -104,7 +104,7 @@ namespace {
 
         utils::Bounds transformedBounds {
             glm::vec3(std::numeric_limits<float>::max()),
-            glm::vec3(std::numeric_limits<float>::min())
+            glm::vec3(std::numeric_limits<float>::lowest())
         };
         for (const glm::vec3& corner : corners) {
             transformedBounds.add(corner);

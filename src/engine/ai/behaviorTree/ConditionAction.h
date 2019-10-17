@@ -17,7 +17,7 @@ namespace ai {
     class ConditionAction : public Action {
 
     public:
-        using condition_t = std::function<bool(en::Actor&)>;
+        using condition_t = std::function<bool(en::Actor&, Blackboard*)>;
         ConditionAction(condition_t condition);
 
     protected:

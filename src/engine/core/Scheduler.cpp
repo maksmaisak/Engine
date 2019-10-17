@@ -27,16 +27,16 @@ void Scheduler::update(float dt) {
     }
 }
 
-Timer Scheduler::delay(sf::Time timeDelay, const ScheduleItem::function_t& function) {
+TimerHandle Scheduler::delay(sf::Time timeDelay, const ScheduleItem::function_t& function) {
 
     return schedule(GameTime::nowSFTime() + timeDelay, function);
 }
 
-Timer Scheduler::schedule(sf::Time time, const ScheduleItem::function_t& function) {
+TimerHandle Scheduler::schedule(sf::Time time, const ScheduleItem::function_t& function) {
 
     const ScheduleItem::id_t id = m_nextFreeId++;
     m_scheduled.emplace(time, function, id);
-    return Timer(this, id);
+    return TimerHandle(this, id);
 }
 
 ScheduleItem::ScheduleItem(sf::Time time, ScheduleItem::function_t function, ScheduleItem::id_t id) :
@@ -76,22 +76,22 @@ namespace {
     }
 }
 
-Timer::Timer() :
+TimerHandle::TimerHandle() :
     m_scheduler(nullptr),
     m_scheduleItemId(0)
 {}
 
-Timer::Timer(struct Scheduler* scheduler, ScheduleItem::id_t scheduleItemId) :
+TimerHandle::TimerHandle(struct Scheduler* scheduler, ScheduleItem::id_t scheduleItemId) :
     m_scheduler(scheduler),
     m_scheduleItemId(scheduleItemId)
 {}
 
-bool Timer::isAssigned() const {
+bool TimerHandle::isAssigned() const {
 
     return m_scheduler && m_scheduleItemId;
 }
 
-bool Timer::isInProgress() const {
+bool TimerHandle::isInProgress() const {
 
     if (isAssigned()) {
         if (ScheduleItem* const scheduleItem = findScheduleItemById(getUnderlyingContainer(m_scheduler->m_scheduled), m_scheduleItemId)) {
@@ -104,7 +104,7 @@ bool Timer::isInProgress() const {
     return false;
 }
 
-bool Timer::cancel() {
+bool TimerHandle::cancel() {
 
     if (isAssigned()) {
         if (ScheduleItem* const scheduleItem = findScheduleItemById(getUnderlyingContainer(m_scheduler->m_scheduled), m_scheduleItemId)) {

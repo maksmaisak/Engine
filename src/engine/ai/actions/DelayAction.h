@@ -23,7 +23,7 @@ namespace ai {
 
     private:
         float m_duration;
-        en::Timer m_timer;
+        en::TimerHandle m_timer;
     };
 }
 

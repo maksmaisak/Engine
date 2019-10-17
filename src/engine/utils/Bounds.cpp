@@ -82,9 +82,11 @@ bool Bounds2D::contains(const glm::vec2& position) const {
 
 bool Bounds2D::intersects(const Bounds2D& other) const {
 
-    for (int i = 0; i < 2; ++i)
-        if (other.min[i] > max[i] || other.max[i] < min[i])
+    for (int i = 0; i < 2; ++i) {
+        if (other.min[i] > max[i] || other.max[i] < min[i]) {
             return false;
+        }
+    }
 
     return true;
 }
@@ -114,9 +116,10 @@ void Bounds2D::add(const glm::vec2& point) {
 void Bounds2D::expandByMovement(const glm::vec2& movement) {
 
     for (int i = 0; i < 2; ++i) {
-        if (movement[i] > 0.f)
+        if (movement[i] > 0.f) {
             max[i] += movement[i];
-        else
+        } else {
             min[i] += movement[i];
+        }
     }
 }

@@ -21,6 +21,7 @@ ActionOutcome Selector::execute() {
                 reset();
                 return ActionOutcome::Success;
             case ActionOutcome::Fail:
+                action->reset();
                 ++m_currentIndex;
                 break;
             default:

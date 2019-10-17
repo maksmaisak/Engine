@@ -24,17 +24,17 @@ namespace en {
         ScheduleItem(sf::Time time, function_t function, id_t id);
     };
 
-    class Timer {
+    class TimerHandle {
 
     public:
-        Timer();
+        TimerHandle();
         bool isAssigned() const;
         bool isInProgress() const;
         bool cancel();
 
     private:
         friend class Scheduler;
-        Timer(class Scheduler* scheduler, ScheduleItem::id_t scheduleItemId);
+        TimerHandle(class Scheduler* scheduler, ScheduleItem::id_t scheduleItemId);
         Scheduler* m_scheduler;
         ScheduleItem::id_t m_scheduleItemId;
     };
@@ -45,11 +45,11 @@ namespace en {
     public:
         Scheduler();
         void update(float dt);
-        Timer delay(sf::Time timeDelay, const ScheduleItem::function_t& function = nullptr);
-        Timer schedule(sf::Time time, const ScheduleItem::function_t& function = nullptr);
+        TimerHandle delay(sf::Time timeDelay, const ScheduleItem::function_t& function = nullptr);
+        TimerHandle schedule(sf::Time time, const ScheduleItem::function_t& function = nullptr);
 
     private:
-        friend class Timer;
+        friend class TimerHandle;
 
         struct ScheduleItemCompare {
             bool operator()(const ScheduleItem& lhs, const ScheduleItem& rhs) {

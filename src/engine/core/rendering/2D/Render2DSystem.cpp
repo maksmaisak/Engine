@@ -43,11 +43,6 @@ namespace {
             viewMatrix;
     }
 
-    glm::mat4 getSpriteModelMatrix(const Transform& spriteTransform, const Sprite& sprite) {
-
-        return spriteTransform.getWorldTransform() * glm::translate(glm::vec3(-sprite.pivot, 0.f));
-    }
-
     std::pair<GridPosition, GridPosition> getTileIndicesBounds(const utils::Bounds2D& cameraBounds) {
 
         const GridPosition visibleTileIndicesMin = glm::floor(cameraBounds.min);
@@ -58,26 +53,6 @@ namespace {
         const GridPosition finalTileIndicesMax = visibleTileIndicesMin + GridPosition(finalTileRangeSize);
 
         return {visibleTileIndicesMin, finalTileIndicesMax};
-    }
-
-    utils::Bounds2D getSpriteAABB(const glm::mat4& matrixModel) {
-
-        utils::Bounds2D bounds {
-            glm::vec2(std::numeric_limits<float>::max()),
-            glm::vec2(std::numeric_limits<float>::min())
-        };
-
-        // Add the corners in worldspace
-        for (unsigned int i = 0b00; i <= 0b11; ++i) {
-            bounds.add(matrixModel * glm::vec4(
-                (i & 0b01) ? 0.f : 1.f,
-                (i & 0b10) ? 0.f : 1.f,
-                0.f,
-                1.f
-            ));
-        }
-
-        return bounds;
     }
 }
 
@@ -191,12 +166,12 @@ void Render2DSystem::renderSprites(const utils::Bounds2D& cameraBounds, const gl
         const Texture* const texture = sprite.texture.get();
         if (texture && texture->isValid()) {
 
-            const glm::mat4 matrixModel = getSpriteModelMatrix(m_registry->get<Transform>(e), sprite);
-            const utils::Bounds2D spriteAABB = getSpriteAABB(matrixModel);
+            const glm::mat4 matrixModel = m_registry->get<Transform>(e).getWorldTransform();
+            const utils::Bounds2D spriteAABB = sprite.getAABB(matrixModel);
             if (cameraBounds.intersects(spriteAABB)) {
 
                 gl::setUniform(textureUniformLocation, texture, 0, GL_TEXTURE_2D);
-                gl::setUniform(matrixUniformLocation, matrixPV * matrixModel);
+                gl::setUniform(matrixUniformLocation, matrixPV * matrixModel * glm::translate(glm::vec3(-sprite.pivot, 0.f)));
                 gl::setUniform(spriteColorUniformLocation, sprite.color);
                 quad->render(0, -1, 1);
             }

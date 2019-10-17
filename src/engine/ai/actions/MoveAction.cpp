@@ -38,9 +38,17 @@ ActionOutcome MoveAction::execute() {
     }
 
     if (!m_pathfindingPath) {
-        m_pathfindingPath = Pathfinding::getPath(m_actor.getEngine(), currentPosition, targetPosition);
+
+        PathfindingParams params;
+        params.allowObstacleGoal = true;
+        m_pathfindingPath = Pathfinding::getPath(m_actor.getEngine(), currentPosition, targetPosition, params);
         if (!m_pathfindingPath) {
             return ActionOutcome::Fail;
+        }
+
+        if (!m_pathfindingPath->empty()) {
+            const en::GridPosition& last = m_pathfindingPath->back();
+            assert(last == targetPosition);
         }
     }
 
@@ -63,10 +71,14 @@ ActionOutcome MoveAction::followPathfindingPath() {
     assert(m_pathfindingPath);
     drawPathfindingPath();
 
+    const glm::vec2 nextPosition = m_pathfindingPath->front();
+    if (ai::Pathfinding::isObstacle(m_actor.getEngine(), nextPosition)) {
+        return ActionOutcome::Fail;
+    }
+
     constexpr float speed = 2.f;
     auto& transform = m_actor.get<en::Transform>();
     const glm::vec2 currentPosition = transform.getWorldPosition();
-    const glm::vec2 nextPosition = m_pathfindingPath->front();
     const glm::vec2 newPosition = glm::moveTowards(currentPosition, nextPosition, speed * m_actor.getEngine().getDeltaTime());
     transform.setLocalPosition2D(newPosition);
 

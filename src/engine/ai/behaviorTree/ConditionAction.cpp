@@ -13,5 +13,5 @@ ConditionAction::ConditionAction(condition_t condition) :
 
 ActionOutcome ConditionAction::execute() {
 
-    return (m_condition ? m_condition(m_actor) : false) ? ActionOutcome::Success : ActionOutcome::Fail;
+    return (m_condition ? m_condition(m_actor, m_blackboard) : false) ? ActionOutcome::Success : ActionOutcome::Fail;
 }
