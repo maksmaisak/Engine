@@ -25,7 +25,7 @@ namespace {
         auto& sprite = bullet.add<en::Sprite>();
         sprite.color = {1,0,0,1};
 
-        constexpr float bulletSpeed = 10.f;
+        constexpr float bulletSpeed = 20.f;
         const glm::vec2 delta = targetPosition - glm::vec2(bulletTransform.getWorldPosition());
         const glm::vec2 velocity = delta * bulletSpeed / (glm::length(delta) + glm::epsilon<float>());
         bullet.add<en::InlineBehavior>([velocity](en::Actor& bullet, float dt) {
@@ -33,13 +33,12 @@ namespace {
             auto& transform = bullet.get<en::Transform>();
             transform.move(velocity * dt);
 
-            en::EntityRegistry& registry = bullet.getEngine().getRegistry();
             const utils::Bounds2D spriteBounds = bullet.get<en::Sprite>().getAABB(transform.getWorldTransform());
             const en::GridPosition min = glm::floor(spriteBounds.min);
             const en::GridPosition max = glm::floor(spriteBounds.max);
 
+            en::EntityRegistry& registry = bullet.getEngine().getRegistry();
             for (en::Entity e : registry.with<en::TileLayer>()) {
-
                 auto& tileLayer = registry.get<en::TileLayer>(e);
 
                 for (en::GridCoordinate y = min.y; y <= max.y; ++y) {

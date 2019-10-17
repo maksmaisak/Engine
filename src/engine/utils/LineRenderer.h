@@ -28,6 +28,7 @@ namespace en {
 
     private:
         void render(const glm::mat4& matrixPVM);
+        void useWireframeShader(const glm::mat4& matrixPVM);
         void addVertex(const glm::vec3& position, const glm::vec4& color, float lineWidth);
 
         std::size_t m_maxNumVerticesPerDrawCall;
