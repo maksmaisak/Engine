@@ -14,11 +14,12 @@ namespace ai {
     class InlineAction : public Action {
 
     public:
-        using execute_t = std::function<ActionOutcome(en::Actor&, Blackboard*)>;
+        using execute_t = std::function<ActionOutcome(en::Actor&, Blackboard&)>;
         using reset_t = std::function<void(en::Actor&)>;
+        using executeNoReturn_t = std::function<void(en::Actor&, Blackboard&)>;
 
         InlineAction(execute_t executeFunction, reset_t resetFunction = {});
-        InlineAction(std::function<void(en::Actor&, Blackboard*)> executeFunction, reset_t resetFunction = {});
+        InlineAction(executeNoReturn_t executeFunction, reset_t resetFunction = {});
         void reset() override;
 
     protected:

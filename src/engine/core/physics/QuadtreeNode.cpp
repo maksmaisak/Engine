@@ -34,7 +34,7 @@ const std::array<std::unique_ptr<QuadtreeNode>, 4>& QuadtreeNode::getChildren() 
     return m_children;
 }
 
-const std::vector<std::pair<Entity, utils::Bounds2D>> QuadtreeNode::getEntities() const {
+const std::vector<std::pair<Entity, utils::Bounds2D>>& QuadtreeNode::getEntities() const {
     return m_entities;
 }
 

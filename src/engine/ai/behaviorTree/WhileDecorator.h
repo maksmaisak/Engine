@@ -12,7 +12,7 @@ namespace ai {
 
     class WhileDecorator : public DecoratorAction {
 
-        using condition_t = std::function<bool(en::Actor&, Blackboard*)>;
+        using condition_t = std::function<bool(en::Actor&, Blackboard&)>;
 
     public:
         WhileDecorator(condition_t condition, std::unique_ptr<Action> child);

@@ -12,8 +12,9 @@ ActionOutcome Sequence::execute() {
 
         std::unique_ptr<Action>& action = m_actions.at(m_currentIndex);
         assert(action);
+        assert(m_blackboard);
 
-        const ActionOutcome currentActionOutcome = action->execute(m_actor, m_blackboard);
+        const ActionOutcome currentActionOutcome = action->execute(m_actor, *m_blackboard);
         switch (currentActionOutcome) {
             case ActionOutcome::InProgress:
                 return ActionOutcome::InProgress;

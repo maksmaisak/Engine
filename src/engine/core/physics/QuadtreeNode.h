@@ -22,7 +22,7 @@ namespace en {
         QuadtreeNode(const glm::vec2& center, const glm::vec2& halfSize, int maxDepth = 3, std::size_t capacity = 10, int depth = 0);
         QuadtreeNode(QuadtreeNode* parent, const glm::vec2& center, const glm::vec2& halfSize);
         const std::array<std::unique_ptr<QuadtreeNode>, 4>& getChildren() const;
-        const std::vector<std::pair<Entity, utils::Bounds2D>> getEntities() const;
+        const std::vector<std::pair<Entity, utils::Bounds2D>>& getEntities() const;
         std::size_t getTotalNumEntities() const;
         std::size_t getCapacity() const;
         utils::Bounds2D getBounds() const;

@@ -21,7 +21,7 @@ void BehaviorTree::execute(en::Actor& actor) {
         return;
     }
 
-    const ActionOutcome outcome = m_root->execute(actor, m_blackboard.get());
+    const ActionOutcome outcome = m_root->execute(actor, *m_blackboard);
     if (outcome != ActionOutcome::InProgress) {
         m_root->reset();
     }

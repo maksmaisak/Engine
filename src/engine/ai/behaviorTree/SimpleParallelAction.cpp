@@ -26,13 +26,14 @@ void SimpleParallelAction::reset() {
 
 ActionOutcome SimpleParallelAction::execute() {
 
+    assert(m_blackboard);
     const ActionOutcome mainActionOutcome = m_mainAction ?
-        m_mainAction->execute(m_actor, m_blackboard) :
+        m_mainAction->execute(m_actor, *m_blackboard) :
         ActionOutcome::Fail;
 
     if (m_backgroundAction) {
 
-        const ActionOutcome outcome = m_backgroundAction->execute(m_actor, m_blackboard);
+        const ActionOutcome outcome = m_backgroundAction->execute(m_actor, *m_blackboard);
         if (outcome != ActionOutcome::InProgress) {
             m_backgroundAction->reset();
         }

@@ -13,5 +13,6 @@ ConditionAction::ConditionAction(condition_t condition) :
 
 ActionOutcome ConditionAction::execute() {
 
-    return (m_condition ? m_condition(m_actor, m_blackboard) : false) ? ActionOutcome::Success : ActionOutcome::Fail;
+    assert(m_blackboard);
+    return (m_condition ? m_condition(m_actor, *m_blackboard) : false) ? ActionOutcome::Success : ActionOutcome::Fail;
 }

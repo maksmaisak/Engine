@@ -27,7 +27,7 @@ namespace {
 
     const en::Name targetPositionName = "targetPosition";
 
-    void findTarget(en::Actor& actor, ai::Blackboard* blackboard) {
+    void findTarget(en::Actor& actor, ai::Blackboard& blackboard) {
 
         const auto* const transform = actor.tryGet<en::Transform>();
         if (!transform) {
@@ -45,7 +45,7 @@ namespace {
         );
 
         if (path && !path->empty()) {
-            blackboard->set<en::GridPosition>(targetPositionName, path->back());
+            blackboard.set<en::GridPosition>(targetPositionName, path->back());
         }
     }
 
@@ -54,33 +54,26 @@ namespace {
         using namespace ai;
         using std::make_unique;
 
-        const auto hasValidTarget = [](en::Actor& actor, Blackboard* blackboard) {
+        const auto hasValidTarget = [](en::Actor& actor, Blackboard& blackboard) {
 
-            if (blackboard) {
-                if (const auto targetPositionOptional = blackboard->get<en::GridPosition>(targetPositionName)) {
-                    return Pathfinding::isObstacle(actor.getEngine(), *targetPositionOptional);
-                }
+            if (const auto targetPositionOptional = blackboard.get<en::GridPosition>(targetPositionName)) {
+                return Pathfinding::isObstacle(actor.getEngine(), *targetPositionOptional);
             }
 
             return false;
         };
 
-        const auto unsetTargetPosition = [](en::Actor& actor, Blackboard* blackboard) {
-
-            if (blackboard) {
-                blackboard->unset<en::GridPosition>(targetPositionName);
-            }
+        const auto unsetTargetPosition = [](en::Actor& actor, Blackboard& blackboard) {
+            blackboard.unset<en::GridPosition>(targetPositionName);
         };
 
-        const auto isOutsideShootingRange = [](en::Actor& actor, Blackboard* blackboard) {
+        const auto isOutsideShootingRange = [](en::Actor& actor, Blackboard& blackboard) {
 
-            if (blackboard) {
-                if (const auto targetPositionOptional = blackboard->get<en::GridPosition>(targetPositionName)) {
-                    return 10.f * 10.f < glm::distance2(
-                        glm::vec2(*targetPositionOptional),
-                        glm::vec2(en::GridPosition(actor.get<en::Transform>().getWorldPosition()))
-                    );
-                }
+            if (const auto targetPositionOptional = blackboard.get<en::GridPosition>(targetPositionName)) {
+                return 10.f * 10.f < glm::distance2(
+                    glm::vec2(*targetPositionOptional),
+                    glm::vec2(en::GridPosition(actor.get<en::Transform>().getWorldPosition()))
+                );
             }
 
             return false;

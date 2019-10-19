@@ -12,7 +12,7 @@ ActionOutcome RepeatDecorator::execute() {
         return ActionOutcome::Fail;
     }
 
-    const ActionOutcome outcome = m_child->execute(m_actor, m_blackboard);
+    const ActionOutcome outcome = m_child->execute(m_actor, *m_blackboard);
     switch (outcome) {
 
         case ActionOutcome::InProgress:

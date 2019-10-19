@@ -13,8 +13,9 @@ ActionOutcome ParallelAction::execute() {
     for (std::unique_ptr<Action>& action : m_actions) {
 
         assert(action);
+        assert(m_blackboard);
         if (action) {
-            switch(action->execute(m_actor, m_blackboard)) {
+            switch(action->execute(m_actor, *m_blackboard)) {
                 case ActionOutcome::InProgress:
                     anyInProgress = true;
                     break;

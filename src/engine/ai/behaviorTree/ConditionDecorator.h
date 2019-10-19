@@ -12,7 +12,7 @@ namespace ai {
     /// Behavior tree decorator action that checks a condition every time before executing the child action.
     class ConditionDecorator : public DecoratorAction {
 
-        using condition_t = std::function<bool(en::Actor&, Blackboard*)>;
+        using condition_t = std::function<bool(en::Actor&, Blackboard&)>;
 
     public:
         ConditionDecorator(condition_t condition, std::unique_ptr<Action> child);

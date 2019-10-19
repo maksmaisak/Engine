@@ -13,7 +13,8 @@ WhileDecorator::WhileDecorator(condition_t condition, std::unique_ptr<Action> ch
 
 ActionOutcome WhileDecorator::execute() {
 
-    if (!m_condition || !m_condition(m_actor, m_blackboard)) {
+    assert(m_blackboard);
+    if (!m_condition || !m_condition(m_actor, *m_blackboard)) {
         return ActionOutcome::Success;
     }
 
@@ -21,5 +22,5 @@ ActionOutcome WhileDecorator::execute() {
         return ActionOutcome::Fail;
     }
 
-    return m_child->execute(m_actor, m_blackboard);
+    return m_child->execute(m_actor, *m_blackboard);
 }
