@@ -11,21 +11,21 @@ TileLayerChunk::TileLayerChunk() {
     tiles.fill({});
 }
 
-Tile& TileLayer::at(const Coordinates& tileCoordinates) {
+Tile& TileLayer::at(const GridPosition& tileCoordinates) {
 
-    const Coordinates chunkCoordinates = getChunkCoordinates(tileCoordinates);
+    const GridPosition chunkCoordinates = getChunkCoordinates(tileCoordinates);
 
     const TileLayerChunk& chunk = getOrMakeChunk(chunkCoordinates);
 
-    const Coordinates tileCoordinatesInChunk = tileCoordinates - chunkCoordinates * Coordinates(TileLayerChunk::ChunkSize);
+    const GridPosition tileCoordinatesInChunk = tileCoordinates - chunkCoordinates * GridPosition(TileLayerChunk::ChunkSize);
     return chunk.at(tileCoordinatesInChunk.x, tileCoordinatesInChunk.y);
 }
 
-TileLayer::Coordinates TileLayer::getChunkCoordinates(const Coordinates& tileCoordinates) {
+GridPosition TileLayer::getChunkCoordinates(const GridPosition& tileCoordinates) {
 
-    constexpr auto chunkSize = Coordinates::value_type(TileLayerChunk::ChunkSize);
+    constexpr auto chunkSize = GridCoordinate(TileLayerChunk::ChunkSize);
 
-    const Coordinates chunkCoordinates = {
+    const GridPosition chunkCoordinates {
         tileCoordinates.x >= 0 ? tileCoordinates.x / chunkSize : (tileCoordinates.x + 1) / chunkSize - 1,
         tileCoordinates.y >= 0 ? tileCoordinates.y / chunkSize : (tileCoordinates.y + 1) / chunkSize - 1
     };
@@ -33,7 +33,7 @@ TileLayer::Coordinates TileLayer::getChunkCoordinates(const Coordinates& tileCoo
     return chunkCoordinates;
 }
 
-TileLayerChunk& TileLayer::getOrMakeChunk(const TileLayer::Coordinates& chunkCoordinates) {
+TileLayerChunk& TileLayer::getOrMakeChunk(const GridPosition& chunkCoordinates) {
 
     const auto it = m_chunks.find(chunkCoordinates);
     if (it == m_chunks.end()) {
@@ -43,9 +43,9 @@ TileLayerChunk& TileLayer::getOrMakeChunk(const TileLayer::Coordinates& chunkCoo
     return it->second;
 }
 
-TileLayerChunk& TileLayer::makeChunk(const Coordinates& chunkCoordinates) {
+TileLayerChunk& TileLayer::makeChunk(const GridPosition& chunkCoordinates) {
 
-    static const auto makeTileAt = [](const Coordinates& tileCoordinates) {
+    static const auto makeTileAt = [](const GridPosition& tileCoordinates) {
 
         Tile tile = {};
 
@@ -59,10 +59,10 @@ TileLayerChunk& TileLayer::makeChunk(const Coordinates& chunkCoordinates) {
     };
 
     TileLayerChunk& chunk = m_chunks[chunkCoordinates];
-    const Coordinates coordinatesOffset = chunkCoordinates * TileLayerChunk::ChunkSize;
+    const GridPosition coordinatesOffset = chunkCoordinates * TileLayerChunk::ChunkSize;
     for (std::size_t y = 0; y < TileLayerChunk::ChunkSize; ++y) {
         for (std::size_t x = 0; x < TileLayerChunk::ChunkSize; ++x) {
-            chunk.at(x, y) = makeTileAt(coordinatesOffset + Coordinates(x, y));
+            chunk.at(x, y) = makeTileAt(coordinatesOffset + GridPosition(x, y));
         }
     }
 

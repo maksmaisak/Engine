@@ -8,6 +8,8 @@ using namespace std::chrono;
 
 const GameTime::timePoint GameTime::m_start = std::chrono::high_resolution_clock::now();
 
+// TODO add current tick number support to avoid imprecision
+
 GameTime::duration GameTime::now() {
 
     return std::chrono::high_resolution_clock::now() - m_start;

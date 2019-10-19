@@ -191,9 +191,11 @@ namespace {
         lua_newtable(lua);
         {
             lua.setField("find", [&engine](const std::string& name) -> std::optional<Actor> {
-                Actor actor = engine.findByName(name);
-                if (actor)
+
+                if (Actor actor = engine.findByName(name)) {
                     return std::make_optional(actor);
+                }
+
                 return std::nullopt;
             });
 

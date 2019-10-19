@@ -99,7 +99,7 @@ namespace en {
 
             return std::min(
                 {static_cast<ComponentPoolBase*>(&pools)...},
-                [](const auto* poolA, const auto* poolB) {return poolA->size() < poolB->size();}
+                [](const ComponentPoolBase* poolA, const ComponentPoolBase* poolB) {return poolA->size() < poolB->size();}
             );
         }
     };

@@ -39,16 +39,14 @@ LineRenderer::LineRenderer(Actor& actor, std::size_t maxNumVerticesPerDrawCall) 
     m_vertexData.reserve(InitialVertexCapacity * NumComponentsPerVertex);
 
     const auto bindVAO = gl::ScopedBind(m_vao);
-    {
-        const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * NumComponentsPerVertex * m_maxNumVerticesPerDrawCall, nullptr, GL_DYNAMIC_DRAW);
+    const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * NumComponentsPerVertex * m_maxNumVerticesPerDrawCall, nullptr, GL_DYNAMIC_DRAW);
 
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * NumComponentsPerVertex, nullptr);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * NumComponentsPerVertex, nullptr);
 
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * NumComponentsPerVertex, (void*)(sizeof(GLfloat) * 4));
-    }
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * NumComponentsPerVertex, (void*)(sizeof(GLfloat) * 4));
 }
 
 void LineRenderer::draw() {
@@ -63,25 +61,25 @@ void LineRenderer::draw() {
 
 void LineRenderer::render(const glm::mat4& matrixPVM) {
 
-    m_wireframeShader->use();
-    m_wireframeShader->setUniformValue("matrixPVM", matrixPVM);
-    const sf::Vector2u viewportSize = getEngine().getWindow().getSize();
-    m_wireframeShader->setUniformValue("viewportSize", glm::vec2(viewportSize.x, viewportSize.y));
-    m_wireframeShader->setUniformValue("inverseViewportSize", glm::vec2(1.f / viewportSize.x, 1.f / viewportSize.y));
+    const std::size_t maxNumVertexComponentsPerDrawCall = m_maxNumVerticesPerDrawCall * NumComponentsPerVertex;
 
-    {
-        const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * m_vertexData.size(), m_vertexData.data());
+    useWireframeShader(matrixPVM);
+    glDisable(GL_DEPTH_TEST);
+    const auto bindVAO = gl::ScopedBind(m_vao);
+    const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
+
+    std:size_t startIndex = 0;
+    while (startIndex < m_vertexData.size()) {
+
+        const std::size_t numRenderedVertexComponents = std::min(m_vertexData.size() - startIndex, maxNumVertexComponentsPerDrawCall);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * numRenderedVertexComponents, m_vertexData.data() + startIndex);
+        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(numRenderedVertexComponents / NumComponentsPerVertex));
+
+        startIndex += numRenderedVertexComponents;
     }
-
-    {
-        const auto bindVAO = gl::ScopedBind(m_vao);
-        glDisable(GL_DEPTH_TEST);
-        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(m_vertexData.size() / NumComponentsPerVertex));
-        glEnable(GL_DEPTH_TEST);
-    }
-
     m_vertexData.clear();
+
+    glEnable(GL_DEPTH_TEST);
 }
 
 void LineRenderer::addLineSegment(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color, float lineWidth) {
@@ -91,12 +89,19 @@ void LineRenderer::addLineSegment(const glm::vec3& start, const glm::vec3& end, 
 }
 
 void LineRenderer::addLineSegment(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color, float lineWidth) {
+
     addLineSegment(glm::vec3(start, 1.f), glm::vec3(end, 1.f), color, lineWidth);
 }
 
-void LineRenderer::addVertex(const glm::vec3& position, const glm::vec4& color, float lineWidth) {
+void LineRenderer::addAABB(const utils::Bounds2D& bounds, const glm::vec4& color, float lineWidth) {
 
-    assert(m_vertexData.size() + NumComponentsPerVertex <= m_maxNumVerticesPerDrawCall * NumComponentsPerVertex && "Can't render that many vertices in one go.");
+    addLineSegment({bounds.min.x, bounds.min.y, 1.f}, {bounds.min.x, bounds.max.y, 1.f}, color, lineWidth);
+    addLineSegment({bounds.min.x, bounds.max.y, 1.f}, {bounds.max.x, bounds.max.y, 1.f}, color, lineWidth);
+    addLineSegment({bounds.max.x, bounds.max.y, 1.f}, {bounds.max.x, bounds.min.y, 1.f}, color, lineWidth);
+    addLineSegment({bounds.max.x, bounds.min.y, 1.f}, {bounds.min.x, bounds.min.y, 1.f}, color, lineWidth);
+}
+
+void LineRenderer::addVertex(const glm::vec3& position, const glm::vec4& color, float lineWidth) {
 
     m_vertexData.push_back(position.x);
     m_vertexData.push_back(position.y);
@@ -107,4 +112,14 @@ void LineRenderer::addVertex(const glm::vec3& position, const glm::vec4& color, 
     m_vertexData.push_back(color.g);
     m_vertexData.push_back(color.b);
     m_vertexData.push_back(color.a);
+}
+
+void LineRenderer::useWireframeShader(const glm::mat4& matrixPVM) {
+
+    assert(m_wireframeShader);
+    m_wireframeShader->use();
+    m_wireframeShader->setUniformValue("matrixPVM", matrixPVM);
+    const sf::Vector2u viewportSize = getEngine().getWindow().getSize();
+    m_wireframeShader->setUniformValue("viewportSize", glm::vec2(viewportSize.x, viewportSize.y));
+    m_wireframeShader->setUniformValue("inverseViewportSize", glm::vec2(1.f / viewportSize.x, 1.f / viewportSize.y));
 }

@@ -22,7 +22,7 @@ namespace utils {
 
             Bounds bounds {
                 glm::vec3(std::numeric_limits<float>::max()),
-                glm::vec3(std::numeric_limits<float>::min())
+                glm::vec3(std::numeric_limits<float>::lowest())
             };
 
             for (TIterator it = begin; it != end; ++it) {
@@ -50,13 +50,13 @@ namespace utils {
         Bounds2D();
         Bounds2D(const glm::vec2& min, const glm::vec2& max);
         Bounds2D(const Bounds& other);
-
+        
         template<typename TIterator>
         inline static Bounds2D from(TIterator begin, TIterator end) {
 
             Bounds2D bounds {
                 glm::vec2(std::numeric_limits<float>::max()),
-                glm::vec2(std::numeric_limits<float>::min())
+                glm::vec2(std::numeric_limits<float>::lowest())
             };
 
             for (TIterator it = begin; it != end; ++it) {

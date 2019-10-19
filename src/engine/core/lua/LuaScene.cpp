@@ -15,7 +15,6 @@
 #include "Resources.h"
 
 #include "ComponentsToLua.h"
-#include "Name.h"
 #include "Transform.h"
 #include "RenderInfo.h"
 #include "Rigidbody.h"

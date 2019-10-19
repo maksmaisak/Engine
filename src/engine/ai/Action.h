@@ -10,7 +10,7 @@
 namespace ai {
 
     enum class ActionOutcome {
-        InProgress = 0,
+        InProgress,
         Success,
         Fail
     };
@@ -18,10 +18,17 @@ namespace ai {
     class Action {
 
     public:
+        Action();
+
         virtual ~Action() = default;
+        ActionOutcome execute(en::Actor& actor, class Blackboard* blackboard);
+        virtual inline void reset() {};
+
+    protected:
         virtual ActionOutcome execute() = 0;
 
-        en::Actor actor;
+        en::Actor m_actor;
+        Blackboard* m_blackboard;
     };
 }
 

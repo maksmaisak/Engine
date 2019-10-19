@@ -8,6 +8,7 @@
 #include <array>
 #include <unordered_map>
 #include "Tile.h"
+#include "Grid.h"
 
 // Implementation of hash for vec2 so we can use it as key in unordered_map
 namespace std {
@@ -18,7 +19,7 @@ namespace std {
         using argument_type = glm::vec<2, genType>;
         using result_type = std::size_t;
 
-        result_type operator()(const argument_type& vector) const noexcept {
+        inline result_type operator()(const argument_type& vector) const noexcept {
 
             const result_type hashX = std::hash<genType>{}(vector.x);
             const result_type hashY = std::hash<genType>{}(vector.y);
@@ -45,20 +46,16 @@ namespace en {
     class TileLayer final {
 
     public:
+        Tile& at(const GridPosition& tileCoordinates);
 
-        using Coordinate = int64_t;
-        using Coordinates = glm::vec<2, Coordinate>;
-
-        Tile& at(const Coordinates& tileCoordinates);
-
-        static Coordinates getChunkCoordinates(const Coordinates& tileCoordinates);
+        static GridPosition getChunkCoordinates(const GridPosition& tileCoordinates);
 
     private:
 
-        TileLayerChunk& getOrMakeChunk(const Coordinates& chunkCoordinates);
-        TileLayerChunk& makeChunk(const Coordinates& chunkCoordinates);
+        TileLayerChunk& getOrMakeChunk(const GridPosition& chunkCoordinates);
+        TileLayerChunk& makeChunk(const GridPosition& chunkCoordinates);
 
-        std::unordered_map<Coordinates, TileLayerChunk> m_chunks;
+        std::unordered_map<GridPosition, TileLayerChunk> m_chunks;
     };
 }
 

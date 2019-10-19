@@ -5,9 +5,9 @@
 #ifndef ENGINE_ACTORDECL_H
 #define ENGINE_ACTORDECL_H
 
-#include <type_traits>
 #include "Entity.h"
 #include "EntityRegistry.h"
+#include "Name.h"
 
 namespace en {
 
@@ -53,7 +53,7 @@ namespace en {
         void destroyImmediate();
 
         inline Engine& getEngine() const {return *m_engine;}
-        std::string getName() const;
+        Name getName() const;
 
     private:
         Engine* m_engine = nullptr;

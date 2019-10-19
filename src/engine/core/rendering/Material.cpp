@@ -136,15 +136,15 @@ namespace {
 
 Material::Material(LuaState& lua) : Material(getShader(lua)) {
 
-    std::string shaderName = getShaderNameFromLua(lua);
+    const std::string shaderName = getShaderNameFromLua(lua);
 
     const auto it = readers.find(shaderName);
     if (it == readers.end()) {
         return;
     }
 
-    auto& read = it->second;
-    read(lua, *this);
+    const auto& readFunction = it->second;
+    readFunction(lua, *this);
 }
 
 void Material::use(
@@ -190,8 +190,9 @@ namespace {
     glm::vec3 getAmbientColor(Engine& engine) {
 
         Scene* scene = engine.getSceneManager().getCurrentScene();
-        if (!scene)
+        if (!scene) {
             return glm::vec3(0.f);
+        }
 
         return scene->getRenderSettings().ambientColor;
     }

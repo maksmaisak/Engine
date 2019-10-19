@@ -6,14 +6,11 @@
 #include <SFML/Graphics.hpp>
 #include <sstream>
 #include <chrono>
-#include <locale>
 #include "Transform.h"
 #include "Rigidbody.h"
 #include "Hit.h"
 #include "Messaging.h"
 #include "Collision.h"
-#include "Name.h"
-
 #include "UIRect.h"
 #include "Text.h"
 

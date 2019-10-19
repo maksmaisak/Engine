@@ -29,18 +29,16 @@ namespace en {
 
             // If an entity got a component added and removed multiple times, m_notStarted will have duplicates.
             // Remove them.
+            std::sort(m_notStarted.begin(), m_notStarted.end());
             m_notStarted.erase(std::unique(m_notStarted.begin(), m_notStarted.end()), m_notStarted.end());
             for (Entity e : m_notStarted) {
-
-                auto* behavior = m_registry->tryGet<TBehavior>(e);
-                if (behavior) {
+                if (auto* behavior = m_registry->tryGet<TBehavior>(e)) {
                     behavior->start();
                 }
             }
             m_notStarted.clear();
 
             for (Entity e : m_registry->with<TBehavior>()) {
-
                 auto& behavior = m_registry->get<TBehavior>(e);
                 behavior.update(dt);
             }
@@ -49,7 +47,6 @@ namespace en {
         inline void draw() override {
 
             for (Entity e : m_registry->with<TBehavior>()) {
-
                 auto& behavior = m_registry->get<TBehavior>(e);
                 behavior.draw();
             }

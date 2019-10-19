@@ -17,7 +17,7 @@ namespace en {
         return entity;
     }
 
-    Entity EntityRegistry::makeEntity(const std::string& name) {
+    Entity EntityRegistry::makeEntity(const Name& name) {
 
         const en::Entity entity = m_entities.add();
         add<Name>(entity, name);
@@ -26,27 +26,27 @@ namespace en {
     }
 
     bool EntityRegistry::isAlive(Entity e) const {
+
         return m_entities.contains(e);
     }
 
-    Entity EntityRegistry::findByName(const std::string& name) const {
+    Entity EntityRegistry::findByName(const Name& name) const {
 
-        auto range = with<Name>();
-        auto end = range.end();
-        auto it = std::find_if(range.begin(), end, [&](Entity e) {return get<Name>(e).value == name;});
+        const auto range = with<Name>();
+        const auto end = range.end();
+        const auto it = std::find_if(range.begin(), end, [&](Entity e) {return get<Name>(e) == name;});
         return it != end ? *it : nullEntity;
     }
 
     void EntityRegistry::destroy(Entity entity) {
 
-        if (!m_entities.contains(entity))
+        if (!m_entities.contains(entity)) {
             return;
+        }
 
         Receiver<EntityWillBeDestroyed>::broadcast({entity});
-
         m_entities.remove(entity);
-
-        for (const auto& poolPtr : m_componentPools) {
+        for (const std::unique_ptr<ComponentPoolBase>& poolPtr : m_componentPools) {
             if (poolPtr) {
                 poolPtr->remove(entity);
                 assert(!poolPtr->contains(entity));
@@ -56,10 +56,12 @@ namespace en {
 
     void EntityRegistry::destroyAll() {
 
-        for (Entity e : m_entities) Receiver<EntityWillBeDestroyed>::broadcast({e});
-        m_entities.removeAll();
+        for (Entity e : m_entities) {
+            Receiver<EntityWillBeDestroyed>::broadcast({e});
+        }
 
-        for (const auto& poolPtr : m_componentPools) {
+        m_entities.removeAll();
+        for (const std::unique_ptr<ComponentPoolBase>& poolPtr : m_componentPools) {
             if (poolPtr) {
                 poolPtr->clear();
             }

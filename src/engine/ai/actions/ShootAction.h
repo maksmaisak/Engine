@@ -7,17 +7,18 @@
 
 #include "Action.h"
 #include "glm.h"
+#include "Name.h"
 
 namespace ai {
 
     class ShootAction : public Action {
 
     public:
-        explicit ShootAction(const glm::vec2& targetPosition);
+        explicit ShootAction(const en::Name& targetPositionName);
         ActionOutcome execute() override;
 
     private:
-        glm::vec2 m_targetPosition;
+        en::Name m_targetPositionName;
     };
 }
 

@@ -7,6 +7,7 @@
 
 // The declaration is in ActorDecl.h to prevent an include loop involving Engine.h
 #include "ActorDecl.h"
+#include <type_traits>
 #include "Engine.h"
 
 namespace en {

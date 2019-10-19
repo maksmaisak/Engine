@@ -7,24 +7,48 @@
 #include "GLMExtensions.h"
 #include "Pathfinding.h"
 #include "LineRenderer.h"
+#include "Grid.h"
+#include "Blackboard.h"
 
 using namespace ai;
 
-MoveAction::MoveAction(const glm::i64vec2& targetPosition) :
-    m_targetPosition(targetPosition)
+MoveAction::MoveAction() :
+    m_targetPositionBlackboardKey("targetPosition")
+{}
+
+MoveAction::MoveAction(const en::Name& targetPositionBlackboardKey) :
+    m_targetPositionBlackboardKey(targetPositionBlackboardKey)
 {}
 
 ActionOutcome MoveAction::execute() {
 
-    const glm::i64vec2 gridPosition = actor.get<en::Transform>().getWorldPosition();
-    if (gridPosition == m_targetPosition) {
+    if (!m_blackboard) {
+        return ActionOutcome::Fail;
+    }
+
+    std::optional<en::GridPosition> targetPositionOptional = m_blackboard->get<en::GridPosition>(m_targetPositionBlackboardKey);
+    if (!targetPositionOptional) {
+        return ActionOutcome::Fail;
+    }
+
+    const en::GridPosition targetPosition = *targetPositionOptional;
+    const en::GridPosition currentPosition = m_actor.get<en::Transform>().getWorldPosition();
+    if (currentPosition == targetPosition) {
         return ActionOutcome::Success;
     }
 
     if (!m_pathfindingPath) {
-        m_pathfindingPath = Pathfinding::getPath(actor.getEngine(), gridPosition, m_targetPosition);
+
+        PathfindingParams params;
+        params.allowObstacleGoal = true;
+        m_pathfindingPath = Pathfinding::getPath(m_actor.getEngine(), currentPosition, targetPosition, params);
         if (!m_pathfindingPath) {
             return ActionOutcome::Fail;
+        }
+
+        if (!m_pathfindingPath->empty()) {
+            const en::GridPosition& last = m_pathfindingPath->back();
+            assert(last == targetPosition);
         }
     }
 
@@ -35,16 +59,27 @@ ActionOutcome MoveAction::execute() {
     return followPathfindingPath();
 }
 
+void MoveAction::reset() {
+
+    Action::reset();
+
+    m_pathfindingPath = std::nullopt;
+}
+
 ActionOutcome MoveAction::followPathfindingPath() {
 
     assert(m_pathfindingPath);
     drawPathfindingPath();
 
-    constexpr float speed = 2.f;
-    auto& transform = actor.get<en::Transform>();
-    const glm::vec2 currentPosition = transform.getWorldPosition();
     const glm::vec2 nextPosition = m_pathfindingPath->front();
-    const glm::vec2 newPosition = glm::moveTowards(currentPosition, nextPosition, speed * actor.getEngine().getDeltaTime());
+    if (ai::Pathfinding::isObstacle(m_actor.getEngine(), nextPosition)) {
+        return ActionOutcome::Fail;
+    }
+
+    constexpr float speed = 2.f;
+    auto& transform = m_actor.get<en::Transform>();
+    const glm::vec2 currentPosition = transform.getWorldPosition();
+    const glm::vec2 newPosition = glm::moveTowards(currentPosition, nextPosition, speed * m_actor.getEngine().getDeltaTime());
     transform.setLocalPosition2D(newPosition);
 
     if (glm::distance2(newPosition, nextPosition) < glm::epsilon<float>()) {
@@ -62,11 +97,11 @@ void MoveAction::drawPathfindingPath() {
 
     assert(m_pathfindingPath);
 
-    auto& lineRenderer = en::LineRenderer::get(actor.getEngine());
+    auto& lineRenderer = en::LineRenderer::get(m_actor.getEngine());
 
-    ai::PathfindingPath& path = *m_pathfindingPath;
-    std::optional<glm::i64vec2> previousPosition = std::nullopt;
-    for (en::TileLayer::Coordinates position : path) {
+    const ai::PathfindingPath& path = *m_pathfindingPath;
+    std::optional<en::GridPosition> previousPosition = std::nullopt;
+    for (const en::GridPosition& position : path) {
 
         if (previousPosition) {
             lineRenderer.addLineSegment(glm::vec2(*previousPosition) + 0.5f, glm::vec2(position) + 0.5f, {0,1,0,1});

@@ -5,8 +5,8 @@
 #ifndef ENGINE_PATHFINDING_H
 #define ENGINE_PATHFINDING_H
 
-#include "PathfindingPath.h"
 #include <optional>
+#include "PathfindingPath.h"
 
 namespace en {
     class Engine;
@@ -14,10 +14,32 @@ namespace en {
 
 namespace ai {
 
+    struct PathfindingParams {
+
+        PathfindingParams();
+
+        std::size_t maxNumCheckedTiles;
+        bool allowObstacleGoal;
+    };
+
     class Pathfinding {
 
     public:
-        static std::optional<PathfindingPath> getPath(en::Engine& engine, const glm::i64vec2& start, const glm::i64vec2& end, std::size_t maxNumCheckedTiles = 100000);
+
+        static std::optional<PathfindingPath> getPath(en::Engine& engine, const en::GridPosition& start,
+            const en::GridPosition& goal,
+            const PathfindingParams& params = {}
+        );
+
+        static std::optional<PathfindingPath> getPath(en::Engine& engine, const en::GridPosition& start,
+            const std::function<bool(const en::GridPosition&)>& isGoal,
+            const std::function<float(const en::GridPosition&)>& heuristic = nullHeuristic,
+            const PathfindingParams& params = {}
+        );
+
+        static bool isObstacle(en::Engine& engine, const en::GridPosition& tileCoordinates);
+
+        static inline float nullHeuristic(const en::GridPosition& position) {return 0.f;}
     };
 }
 

@@ -5,7 +5,6 @@
 #include "Actor.h"
 #include "Engine.h"
 #include "Transform.h"
-#include "Name.h"
 #include "LuaState.h"
 #include "Destroy.h"
 #include "Tween.h"
@@ -17,8 +16,9 @@ namespace {
     int pushByTypeName(lua_State* L) {
 
         auto actor = lua::check<Actor>(L, 1);
-        if (!actor)
+        if (!actor) {
             return 0;
+        }
 
         auto name = lua::check<std::string>(L, 2);
         ComponentsToLua::pushComponentReferenceByTypeName(L, actor, name);
@@ -85,10 +85,10 @@ Actor::Actor(Engine& engine, Entity entity) :
     m_entity(entity)
 {}
 
-std::string Actor::getName() const {
+Name Actor::getName() const {
 
-    const Name* ptr = tryGet<Name>();
-    return ptr ? ptr->value : "unnamed";
+    const Name* const ptr = tryGet<Name>();
+    return ptr ? *ptr : "unnamed";
 }
 
 void Actor::destroy() {
@@ -114,13 +114,12 @@ void Actor::initializeMetatable(LuaState& lua) {
 
     lua::addProperty(lua, "name", lua::property(
         [](Actor& actor) {
-            Name* ptr = actor.tryGet<Name>();
-            return ptr ? std::make_optional(ptr->value) : std::nullopt;
+            const Name* const ptr = actor.tryGet<Name>();
+            return ptr ? std::make_optional(ptr->getString()) : std::nullopt;
         },
         [](Actor& actor, const std::string& newName) {
-            Name* nameComponent = actor.tryGet<Name>();
-            if (nameComponent) {
-                nameComponent->value = newName;
+            if (Name* const ptr = actor.tryGet<Name>()) {
+                *ptr = newName;
             } else {
                 actor.add<Name>(newName);
             }
