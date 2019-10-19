@@ -11,8 +11,8 @@ using namespace en;
 
 namespace {
 
-    std::unordered_map<std::string, id_t> stringToId;
-    std::unordered_map<id_t, std::string> idToString;
+    std::unordered_map<std::string, Name::id_t> stringToId;
+    std::unordered_map<Name::id_t, std::string> idToString;
     std::shared_mutex nameTableMutex;
 }
 

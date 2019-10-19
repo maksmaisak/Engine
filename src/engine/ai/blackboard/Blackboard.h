@@ -33,10 +33,10 @@ namespace ai {
         }
 
         template<typename T>
-        inline void set(const en::Name& key, T&& value) {
+        inline void set(const en::Name& key, const T& value) {
 
             auto& keyToValueMap = getKeyToValueMap<T>();
-            keyToValueMap[key] = std::forward<T>(value);
+            keyToValueMap[key] = value;
         }
 
         template<typename T>

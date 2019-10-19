@@ -25,26 +25,26 @@
 
 namespace {
 
-    en::GridPosition findClosestItemPosition(en::Actor& actor) {
+    void findTarget(en::Actor& actor, ai::Blackboard* blackboard) {
 
-        if (const auto* const transform = actor.tryGet<en::Transform>()) {
-
-            const auto isObstacle = [&engine = actor.getEngine()](const en::GridPosition& pos) {
-                return ai::Pathfinding::isObstacle(engine, pos);
-            };
-
-            ai::PathfindingParams params;
-            params.allowObstacleGoal = true;
-            const std::optional<ai::PathfindingPath> path = ai::Pathfinding::getPath(actor.getEngine(),
-                transform->getWorldPosition(), isObstacle, ai::Pathfinding::nullHeuristic, params
-            );
-
-            if (path && !path->empty()) {
-                return path->back();
-            }
+        const auto* const transform = actor.tryGet<en::Transform>();
+        if (!transform) {
+            return;
         }
 
-        return {};
+        const auto isObstacle = [&engine = actor.getEngine()](const en::GridPosition& pos) {
+            return ai::Pathfinding::isObstacle(engine, pos);
+        };
+
+        ai::PathfindingParams params;
+        params.allowObstacleGoal = true;
+        const std::optional<ai::PathfindingPath> path = ai::Pathfinding::getPath(actor.getEngine(),
+            transform->getWorldPosition(), isObstacle, ai::Pathfinding::nullHeuristic, params
+        );
+
+        if (path && !path->empty()) {
+            blackboard->set<en::GridPosition>("targetPosition", path->back());
+        }
     }
 
     std::unique_ptr<ai::BehaviorTree> makeBehaviorTree() {
@@ -89,9 +89,7 @@ namespace {
         auto behaviorTree = make_unique<BehaviorTree>(make_unique<Sequence>(
             make_unique<Selector>(
                 make_unique<ConditionAction>(hasValidTarget),
-                make_unique<InlineAction>([targetPositionName](en::Actor& actor, Blackboard* blackboard) {
-                    blackboard->set<en::GridPosition>(targetPositionName, findClosestItemPosition(actor));
-                })
+                make_unique<InlineAction>(findTarget)
             ),
             make_unique<Selector>(
                 make_unique<WhileDecorator>(
