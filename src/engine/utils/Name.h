@@ -18,7 +18,7 @@ namespace en {
         friend struct std::hash<en::Name>;
 
     public:
-        using id_t = std::uint64_t;
+        using id_t = std::hash<std::string>::result_type;
 
         Name();
         Name(const std::string& string);

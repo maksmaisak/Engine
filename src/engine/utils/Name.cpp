@@ -5,7 +5,7 @@
 #include "Name.h"
 #include <unordered_map>
 #include <cassert>
-#include <mutex>
+#include <shared_mutex>
 
 using namespace en;
 
@@ -13,27 +13,28 @@ namespace {
 
     std::unordered_map<std::string, id_t> stringToId;
     std::unordered_map<id_t, std::string> idToString;
-    id_t nextUnusedId = 1;
-
-    std::mutex nameTableMutex;
+    std::shared_mutex nameTableMutex;
 }
 
 Name::Name() : m_id(0) {}
 
 Name::Name(const std::string& string) {
 
-    const std::lock_guard guard(nameTableMutex);
+    const std::unique_lock writeLock(nameTableMutex);
 
     const auto it = stringToId.find(string);
     if (it != stringToId.end()) {
-        m_id = it->second;
-        return;
-    }
 
-    // New name
-    m_id = nextUnusedId++;
-    stringToId.emplace(string, m_id);
-    idToString.emplace(m_id, string);
+        // Existing name
+        m_id = it->second;
+
+    } else {
+
+        // New name
+        m_id = std::hash<std::string>{}(string);
+        stringToId.emplace(string, m_id);
+        idToString.emplace(m_id, string);
+    }
 }
 
 Name::Name(const char* string) :
@@ -43,11 +44,12 @@ Name::Name(const char* string) :
 bool Name::isValid() const {
     return m_id;
 }
+
 const std::string& Name::getString() const {
 
-    const std::lock_guard guard(nameTableMutex);
+    const std::shared_lock readerLock(nameTableMutex);
 
-    assert(*this);
+    assert(isValid());
     const auto it = idToString.find(m_id);
     assert(it != idToString.end());
     return it->second;
