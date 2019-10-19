@@ -32,7 +32,7 @@ namespace en {
         operator bool() const;
 
         friend bool operator==(const Name& lhs, const Name& rhs);
-        friend std::ostream& operator <<(std::ostream& stream, const Name& name);
+        friend std::ostream& operator<<(std::ostream& stream, const Name& name);
 
     private:
         id_t m_id;

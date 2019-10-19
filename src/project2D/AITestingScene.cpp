@@ -25,6 +25,8 @@
 
 namespace {
 
+    const en::Name targetPositionName = "targetPosition";
+
     void findTarget(en::Actor& actor, ai::Blackboard* blackboard) {
 
         const auto* const transform = actor.tryGet<en::Transform>();
@@ -43,7 +45,7 @@ namespace {
         );
 
         if (path && !path->empty()) {
-            blackboard->set<en::GridPosition>("targetPosition", path->back());
+            blackboard->set<en::GridPosition>(targetPositionName, path->back());
         }
     }
 
@@ -52,17 +54,7 @@ namespace {
         using namespace ai;
         using std::make_unique;
 
-        const en::Name targetPositionName = "targetPosition";
-        const en::Name shootingTargetName = "shootingTarget";
-
-        const auto unsetTargetPosition = [targetPositionName](en::Actor& actor, Blackboard* blackboard) {
-
-            if (blackboard) {
-                blackboard->unset<en::GridPosition>(targetPositionName);
-            }
-        };
-
-        const auto hasValidTarget = [targetPositionName](en::Actor& actor, Blackboard* blackboard) {
+        const auto hasValidTarget = [](en::Actor& actor, Blackboard* blackboard) {
 
             if (blackboard) {
                 if (const auto targetPositionOptional = blackboard->get<en::GridPosition>(targetPositionName)) {
@@ -73,7 +65,14 @@ namespace {
             return false;
         };
 
-        const auto isOutsideShootingRange = [targetPositionName](en::Actor& actor, Blackboard* blackboard) {
+        const auto unsetTargetPosition = [](en::Actor& actor, Blackboard* blackboard) {
+
+            if (blackboard) {
+                blackboard->unset<en::GridPosition>(targetPositionName);
+            }
+        };
+
+        const auto isOutsideShootingRange = [](en::Actor& actor, Blackboard* blackboard) {
 
             if (blackboard) {
                 if (const auto targetPositionOptional = blackboard->get<en::GridPosition>(targetPositionName)) {
@@ -83,6 +82,7 @@ namespace {
                     );
                 }
             }
+
             return false;
         };
 
@@ -92,26 +92,23 @@ namespace {
                 make_unique<InlineAction>(findTarget)
             ),
             make_unique<Selector>(
-                make_unique<WhileDecorator>(
-                    isOutsideShootingRange,
-                    make_unique<MoveAction>(targetPositionName)
+                make_unique<Sequence>(
+                    make_unique<WhileDecorator>(
+                        isOutsideShootingRange,
+                        make_unique<MoveAction>(targetPositionName)
+                    ),
+                    make_unique<WhileDecorator>(
+                        hasValidTarget,
+                        make_unique<Sequence>(
+                            make_unique<ShootAction>(targetPositionName),
+                            make_unique<DelayAction>(0.1f)
+                        )
+                    ),
+                    make_unique<InlineAction>(unsetTargetPosition)
                 ),
                 make_unique<InlineAction>(unsetTargetPosition)
-            ),
-            make_unique<Sequence>(
-                make_unique<WhileDecorator>(
-                    hasValidTarget,
-                    make_unique<Sequence>(
-                        make_unique<ShootAction>(targetPositionName),
-                        make_unique<DelayAction>(0.1f)
-                    )
-                ),
-                make_unique<InlineAction>(unsetTargetPosition)
-            ),
-            make_unique<InlineAction>(unsetTargetPosition)
+            )
         ));
-
-        behaviorTree->getBlackboard().set<en::GridPosition>(shootingTargetName, {0, 0});
 
         return behaviorTree;
     }
