@@ -25,6 +25,8 @@ namespace ai {
     class Pathfinding {
 
     public:
+        using goalPredicate_t = std::function<bool(const en::GridPosition&)>;
+        using heuristic_t = std::function<float(const en::GridPosition&)>;
 
         static std::optional<PathfindingPath> getPath(en::Engine& engine, const en::GridPosition& start,
             const en::GridPosition& goal,
@@ -32,8 +34,8 @@ namespace ai {
         );
 
         static std::optional<PathfindingPath> getPath(en::Engine& engine, const en::GridPosition& start,
-            const std::function<bool(const en::GridPosition&)>& isGoal,
-            const std::function<float(const en::GridPosition&)>& heuristic = nullHeuristic,
+            const goalPredicate_t& isGoal,
+            const heuristic_t& heuristic = nullHeuristic,
             const PathfindingParams& params = {}
         );
 

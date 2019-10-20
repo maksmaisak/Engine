@@ -26,7 +26,6 @@ void SimpleParallelAction::reset() {
 
 ActionOutcome SimpleParallelAction::execute() {
 
-    assert(m_blackboard);
     const ActionOutcome mainActionOutcome = m_mainAction ?
         m_mainAction->execute(m_actor, *m_blackboard) :
         ActionOutcome::Fail;

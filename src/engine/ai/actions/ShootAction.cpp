@@ -70,10 +70,6 @@ ShootAction::ShootAction(const en::Name& targetPositionName) :
 
 ActionOutcome ShootAction::execute() {
 
-    if (!m_blackboard) {
-        return ActionOutcome::Fail;
-    }
-
     en::GridPosition targetPosition;
     if (const auto targetPositionOptional = m_blackboard->get<en::GridPosition>(m_targetPositionName)) {
         targetPosition = *targetPositionOptional;

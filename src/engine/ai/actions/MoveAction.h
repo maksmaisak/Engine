@@ -17,17 +17,19 @@ namespace ai {
 
     public:
         MoveAction();
-        explicit MoveAction(const en::Name& targetPositionBlackboardKey);
+        /// The key may refer to either a GridPosition or an Actor
+        explicit MoveAction(const en::Name& targetBlackboardKey);
 
     protected:
         ActionOutcome execute() override;
 
     private:
         void reset() override;
+
         ActionOutcome followPathfindingPath();
         void drawPathfindingPath();
 
-        en::Name m_targetPositionBlackboardKey;
+        en::Name m_targetBlackboardKey;
         std::optional<PathfindingPath> m_pathfindingPath;
     };
 }

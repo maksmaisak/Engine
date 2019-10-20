@@ -12,21 +12,37 @@
 
 using namespace ai;
 
+namespace {
+
+    std::optional<en::GridPosition> getTargetPosition(const Blackboard& blackboard, const en::Name& key) {
+
+        if (const auto positionOptional = blackboard.get<en::GridPosition>(key)) {
+            return positionOptional;
+        }
+
+        if (const auto actorOptional = blackboard.get<en::Actor>(key)) {
+            if (const en::Actor actor = *actorOptional) {
+                if (const auto* const transform = actor.tryGet<en::Transform>()) {
+                    return en::GridPosition(glm::floor(transform->getWorldPosition()));
+                }
+            }
+        }
+
+        return std::nullopt;
+    }
+}
+
 MoveAction::MoveAction() :
-    m_targetPositionBlackboardKey("targetPosition")
+    m_targetBlackboardKey("targetPosition")
 {}
 
-MoveAction::MoveAction(const en::Name& targetPositionBlackboardKey) :
-    m_targetPositionBlackboardKey(targetPositionBlackboardKey)
+MoveAction::MoveAction(const en::Name& targetBlackboardKey) :
+    m_targetBlackboardKey(targetBlackboardKey)
 {}
 
 ActionOutcome MoveAction::execute() {
 
-    if (!m_blackboard) {
-        return ActionOutcome::Fail;
-    }
-
-    std::optional<en::GridPosition> targetPositionOptional = m_blackboard->get<en::GridPosition>(m_targetPositionBlackboardKey);
+    const std::optional<en::GridPosition> targetPositionOptional = getTargetPosition(*m_blackboard, m_targetBlackboardKey);
     if (!targetPositionOptional) {
         return ActionOutcome::Fail;
     }

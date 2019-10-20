@@ -113,8 +113,8 @@ std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const en
 }
 
 std::optional<PathfindingPath> Pathfinding::getPath(en::Engine& engine, const en::GridPosition& start,
-    const std::function<bool(const en::GridPosition&)>& isGoal,
-    const std::function<float(const en::GridPosition&)>& heuristic,
+    const goalPredicate_t& isGoal,
+    const heuristic_t& heuristic,
     const PathfindingParams& params
 ) {
 
