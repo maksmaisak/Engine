@@ -13,8 +13,8 @@ using namespace ai;
 AIController& AIController::create(class en::Engine& engine) {
 
     en::Actor actor = engine.makeActor("AI Actor");
-    actor.add<en::Transform>();
-    actor.add<en::Sprite>().pivot = glm::vec2(0.f);
+    actor.add<en::Transform>().move(glm::vec3(0.5f));
+    actor.add<en::Sprite>();
     return actor.add<AIController>();
 }
 

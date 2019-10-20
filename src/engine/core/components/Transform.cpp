@@ -88,15 +88,17 @@ Transform& Transform::setLocalScale(float localScale) {
 // TODO Make this optionally preserve world position
 Transform& Transform::setParent(Entity newParent) {
 
-    Entity oldParent = m_parent;
+    const Entity oldParent = m_parent;
     if (!isNullEntity(oldParent)) {
-        if (oldParent == newParent) return *this;
+        if (oldParent == newParent) {
+            return *this;
+        }
         m_registry->get<Transform>(oldParent).removeChild(m_entity);
     }
 
     if (!isNullEntity(newParent)) {
-        auto& parentTransformable = m_registry->get<Transform>(newParent);
-        parentTransformable.addChild(m_entity);
+        auto& parentTransform = m_registry->get<Transform>(newParent);
+        parentTransform.addChild(m_entity);
     }
 
     m_parent = newParent;

@@ -32,6 +32,8 @@ namespace ai {
             return std::nullopt;
         }
 
+        en::Actor getActorChecked(const en::Name& key) const;
+
         template<typename T>
         inline void set(const en::Name& key, const T& value) {
 

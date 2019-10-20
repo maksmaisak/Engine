@@ -87,10 +87,12 @@ ActionOutcome MoveAction::followPathfindingPath() {
     assert(m_pathfindingPath);
     drawPathfindingPath();
 
-    const glm::vec2 nextPosition = m_pathfindingPath->front();
-    if (ai::Pathfinding::isObstacle(m_actor.getEngine(), nextPosition)) {
+    const en::GridPosition nextGridPosition = m_pathfindingPath->front();
+    if (ai::Pathfinding::isObstacle(m_actor.getEngine(), nextGridPosition)) {
         return ActionOutcome::Fail;
     }
+
+    const glm::vec2 nextPosition = glm::vec2(nextGridPosition) + 0.5f;
 
     constexpr float speed = 2.f;
     auto& transform = m_actor.get<en::Transform>();

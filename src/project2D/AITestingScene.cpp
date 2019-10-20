@@ -28,8 +28,12 @@ namespace {
 
     const en::Name closestObstacleName = "closestObstacleName";
     const en::Name targetItemName = "targetItem";
+    const en::Name stockpileLocationName = "stockpileLocationName";
+    const en::Name grabbedItemName = "grabbedItem";
 
-    struct Item {};
+    struct Item {
+        bool isGrabbed = false;
+    };
 
     void makeItems(en::Engine& engine) {
 
@@ -132,7 +136,7 @@ namespace {
         });
     }
 
-    std::unique_ptr<ai::BehaviorTree> makeBehaviorTree() {
+    std::unique_ptr<ai::Sequence> makeShootAtClosestObstacleSubtree() {
 
         using namespace ai;
         using std::make_unique;
@@ -140,25 +144,11 @@ namespace {
         const auto hasValidClosestObstacle = [](en::Actor& actor, Blackboard& blackboard) {
 
             if (const auto targetPositionOptional = blackboard.get<en::GridPosition>(closestObstacleName)) {
-                return Pathfinding::isObstacle(actor.getEngine(), *targetPositionOptional);
+                const bool isObstacle = Pathfinding::isObstacle(actor.getEngine(), *targetPositionOptional);
+                return isObstacle;
             }
 
             return false;
-        };
-
-        const auto hasValidTargetItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
-
-            if (const auto actorOptional = blackboard.get<en::Actor>(targetItemName)) {
-                if (const en::Actor itemActor = *actorOptional) {
-                    return !Pathfinding::isObstacle(actor.getEngine(), glm::floor(itemActor.get<en::Transform>().getWorldPosition()));
-                }
-            }
-
-            return false;
-        };
-
-        const auto unsetClosestObstacle = [](en::Actor& actor, Blackboard& blackboard) {
-            blackboard.unset<en::GridPosition>(closestObstacleName);
         };
 
         const auto isClosestObstacleInShootingRange = [](en::Actor& actor, Blackboard& blackboard) {
@@ -173,19 +163,68 @@ namespace {
             return false;
         };
 
+        return make_unique<Sequence>(
+            make_unique<Selector>(
+                make_unique<ConditionAction>(hasValidClosestObstacle),
+                make_unique<ConditionAction>(findClosestObstacle)
+            ),
+            make_unique<DelayAction>(0.1f),
+            make_unique<ConditionAction>(isClosestObstacleInShootingRange),
+            make_unique<ShootAction>(closestObstacleName),
+            makeUnset<en::GridPosition>(closestObstacleName)
+        );
+    }
+
+    std::unique_ptr<ai::BehaviorTree> makeBehaviorTree() {
+
+        using namespace ai;
+        using std::make_unique;
+
+        const auto hasValidTargetItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
+
+            if (const en::Actor itemActor = blackboard.getActorChecked(targetItemName)) {
+                const bool isObstructed = Pathfinding::isObstacle(actor.getEngine(), glm::floor(itemActor.get<en::Transform>().getWorldPosition()));
+                return !isObstructed;
+            }
+
+            return false;
+        };
+
         const auto grabItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
 
-            if (const auto optional = blackboard.get<en::Actor>(targetItemName)) {
-                if (en::Actor itemActor = *optional) {
-                    if (const auto* const transform = itemActor.tryGet<en::Transform>()) {
-                        if (2.f * 2.f < glm::distance2(transform->getWorldPosition(), actor.get<en::Transform>().getWorldPosition())) {
-                            return false;
-                        }
-                    }
+            if (blackboard.getActorChecked(grabbedItemName)) {
+                return false;
+            }
 
-                    itemActor.destroy();
-                    return true;
+            if (en::Actor itemActor = blackboard.getActorChecked(targetItemName)) {
+
+                const auto& ownTransform = actor.get<en::Transform>();
+                auto& itemTransform = itemActor.get<en::Transform>();
+
+                if (2.f * 2.f > glm::distance2(ownTransform.getWorldPosition(), itemTransform.getWorldPosition())) {
+
+                    auto& item = itemActor.get<Item>();
+                    if (!item.isGrabbed) {
+
+                        item.isGrabbed = true;
+                        itemTransform.setParent(actor);
+                        itemTransform.setLocalPosition({0.5f, 0.f, 0.f});
+                        blackboard.set<en::Actor>(grabbedItemName, itemActor);
+                        return true;
+                    }
                 }
+            }
+
+            return false;
+        };
+
+        const auto dropItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
+
+            if (en::Actor grabbedItem = blackboard.getActorChecked(grabbedItemName)) {
+
+                grabbedItem.destroy();
+                blackboard.unset<en::Actor>(grabbedItemName);
+                return true;
             }
 
             return false;
@@ -200,24 +239,17 @@ namespace {
                 make_unique<Selector>(
                     make_unique<Sequence>(
                         make_unique<MoveAction>(targetItemName),
-                        make_unique<InlineAction>(grabItem)
+                        make_unique<ConditionAction>(grabItem),
+                        make_unique<MoveAction>(stockpileLocationName),
+                        make_unique<ConditionAction>(dropItem)
                     ),
                     makeUnset<en::Actor>(targetItemName)
                 )
             ),
-            make_unique<Sequence>(
-                make_unique<Selector>(
-                    make_unique<ConditionAction>(isClosestObstacleInShootingRange),
-                    make_unique<ConditionAction>(findClosestObstacle)
-                ),
-                make_unique<DelayAction>(0.1f),
-                make_unique<Selector>(
-                    make_unique<ShootAction>(closestObstacleName),
-                    makeUnset<en::GridPosition>(closestObstacleName)
-                ),
-                makeUnset<en::GridPosition>(closestObstacleName)
-            )
+            makeShootAtClosestObstacleSubtree()
         ));
+
+        behaviorTree->getBlackboard().set<en::GridPosition>(stockpileLocationName, {0, 0});
 
         return behaviorTree;
     }

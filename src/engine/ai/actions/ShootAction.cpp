@@ -77,6 +77,6 @@ ActionOutcome ShootAction::execute() {
         return ActionOutcome::Fail;
     }
 
-    makeBullet(m_actor, glm::vec2(targetPosition) + glm::vec2(0.5f));
+    makeBullet(m_actor, glm::vec2(targetPosition));
     return ActionOutcome::Success;
 }
