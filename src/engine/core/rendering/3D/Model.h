@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include "Name.h"
 #include "Mesh.h"
 #include "Resources.h"
 
@@ -19,13 +20,13 @@ namespace en {
         friend struct ModelImpl;
 
     public:
-        static std::shared_ptr<Model> load(const std::string& filepath);
+        static std::shared_ptr<Model> load(const Name& filepath);
         Model() = default;
 
         const std::vector<Mesh>& getMeshes() const;
 
     private:
-        std::string m_filepath;
+        Name m_filepath;
         std::vector<Mesh> m_meshes;
     };
 

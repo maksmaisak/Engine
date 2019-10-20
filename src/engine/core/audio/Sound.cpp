@@ -80,7 +80,7 @@ namespace en {
     template<>
     struct ResourceLoader<sf::SoundBuffer> {
 
-        inline static std::shared_ptr<sf::SoundBuffer> load(const std::string& filepath) {
+        inline static std::shared_ptr<sf::SoundBuffer> load(const Name& filepath) {
 
             auto buffer = std::make_shared<sf::SoundBuffer>();
             if (!buffer->loadFromFile(filepath)) {

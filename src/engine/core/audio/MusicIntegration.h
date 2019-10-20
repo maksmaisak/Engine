@@ -25,7 +25,7 @@ namespace en {
     template<>
     struct ResourceLoader<sf::Music> {
 
-        static std::shared_ptr<sf::Music> load(const std::string& filepath);
+        static std::shared_ptr<sf::Music> load(const Name& filepath);
     };
 }
 

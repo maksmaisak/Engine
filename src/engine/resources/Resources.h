@@ -5,11 +5,11 @@
 #ifndef ENGINE_RESOURCES_H
 #define ENGINE_RESOURCES_H
 
-#include "ResourceLoader.h"
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <type_traits>
 #include <algorithm>
+#include "ResourceLoader.h"
 
 namespace en {
 
@@ -27,7 +27,7 @@ namespace en {
 
     public:
 
-        using iterator = typename std::map<std::string, std::shared_ptr<TResource>>::const_iterator;
+        using iterator = typename std::unordered_map<Name, std::shared_ptr<TResource>>::const_iterator;
 
         /// Gets a resource by given key.
         /// If not already present, tries create one using a load function.
@@ -38,7 +38,7 @@ namespace en {
         /// If no valid load function could be determined, you get a compile error.
         /// If the load function can't be called with the given arguments, it will be called with the key AND the arguments.
         template<typename TLoader = ResourceLoader<TResource>, typename... Args>
-        inline static std::shared_ptr<TResource> get(const std::string& key, Args&&... args) {
+        inline static std::shared_ptr<TResource> get(const Name& key, Args&&... args) {
 
             const auto foundIterator = m_resources.find(key);
             if (foundIterator != m_resources.end()) {
@@ -47,9 +47,11 @@ namespace en {
 
             std::shared_ptr<TResource> resource;
 
-            if constexpr (!std::is_base_of_v<NoLoader, TLoader>) {
+            constexpr bool isLoaderAvailable = !std::is_base_of_v<NoLoader, TLoader>;
+            if constexpr (isLoaderAvailable) {
 
-                if constexpr (sizeof...(Args) > 0 || canLoadWithNoArgs_v<TLoader>) {
+                constexpr bool canLoadWithGivenArgs = sizeof...(Args) > 0 || canLoadWithNoArgs_v<TLoader>;
+                if constexpr (canLoadWithGivenArgs) {
                     resource = TLoader::load(std::forward<Args>(args)...);
                 } else {
                     resource = TLoader::load(key);
@@ -94,12 +96,12 @@ namespace en {
         inline static iterator end()   {return m_resources.cend();  }
 
     private:
-        static std::map<std::string, std::shared_ptr<TResource>> m_resources;
+        static std::unordered_map<Name, std::shared_ptr<TResource>> m_resources;
     };
 
     // Using inline static to avoid defining this out of the class body causes clang to segfault :(
     template<typename TResource>
-    std::map<std::string, std::shared_ptr<TResource>> Resources<TResource>::m_resources;
+    std::unordered_map<Name, std::shared_ptr<TResource>> Resources<TResource>::m_resources;
 }
 
 #endif //ENGINE_RESOURCES_H

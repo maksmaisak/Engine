@@ -10,35 +10,47 @@
 #include <type_traits>
 #include <cassert>
 #include <memory>
+#include "Name.h"
 
 namespace en {
 
     struct NoLoader {};
 
-    // Base template
-    template<typename TResource, typename SFINAEDummy = void>
+    /// Base template
+    template<typename TResource, typename = void>
     struct ResourceLoader : NoLoader {};
 
-    // If TResource::load(const std::string&) exists and returns either a std::shared_ptr<TResource> or a TResource*
+    // If TResource::load(const Name&) exists and returns either a std::shared_ptr<TResource> or a TResource*
     template<typename TResource>
-    struct ResourceLoader<TResource, std::enable_if_t<std::is_invocable_v<decltype(&TResource::load), const std::string&>>> {
+    struct ResourceLoader<TResource, std::enable_if_t<std::is_invocable_v<decltype(&TResource::load), const Name&>>> {
 
-        inline static std::shared_ptr<TResource> load(const std::string& filename) {
+        inline static std::shared_ptr<TResource> load(const Name& filename) {
 
-            // If calling TResource::load(filename) returns a shared_ptr, return that.
-            // If it returns a regular pointer, wrap that in a shared_ptr and return it.
-            if constexpr (std::is_convertible_v<std::invoke_result_t<decltype(&TResource::load), const std::string&>, std::shared_ptr<TResource>>)
+            using loadResult_t = std::invoke_result_t<decltype(&TResource::load), const Name&>;
+
+            constexpr bool loadReturnsSharedPtr = std::is_convertible_v<loadResult_t, std::shared_ptr<TResource>>;
+            if constexpr (loadReturnsSharedPtr) {
                 return TResource::load(filename);
-            else
+            }
+
+            constexpr bool loadReturnsRawPtr = std::is_convertible_v<loadResult_t, TResource*>;
+            if constexpr (loadReturnsRawPtr) {
                 return std::shared_ptr<TResource>(TResource::load(filename));
+            }
+
+            static_assert(
+                loadReturnsSharedPtr || loadReturnsRawPtr,
+                "TResource::load(filename) must return either a shared_ptr<TResource> or a raw pointer to TResource!"
+            );
+            return nullptr;
         }
     };
 
-    // An example for the sf::Font type
+    /// An example specialization for the sf::Font type
     template<>
     struct ResourceLoader<sf::Font> {
 
-        inline static std::shared_ptr<sf::Font> load(const std::string& filename) {
+        inline static std::shared_ptr<sf::Font> load(const Name& filename) {
 
             const auto fontPtr = std::make_shared<sf::Font>();
             const bool didLoadFont = fontPtr->loadFromFile(filename);

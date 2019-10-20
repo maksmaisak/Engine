@@ -40,7 +40,7 @@ namespace en {
 #endif
 #define AI_CONFIG_PP_RVC_FLAGS aiComponent_MATERIALS | aiComponent_COLORS | aiComponent_ANIMATIONS | aiComponent_BONEWEIGHTS | aiComponent_LIGHTS | aiComponent_TEXTURES | aiComponent_CAMERAS
 
-std::shared_ptr<Model> Model::load(const std::string& filepath) {
+std::shared_ptr<Model> Model::load(const Name& filepath) {
 
     auto model = std::make_shared<Model>();
     model->m_filepath = filepath;
@@ -53,7 +53,7 @@ std::shared_ptr<Model> Model::load(const std::string& filepath) {
         aiProcess_CalcTangentSpace;
 
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(filepath, postProcessSteps);
+    const aiScene* scene = importer.ReadFile(filepath.getString(), postProcessSteps);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 
         std::cerr << "Could not load model from " << filepath << ":" << std::endl;

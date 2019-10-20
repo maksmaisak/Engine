@@ -7,7 +7,7 @@
 
 using namespace en;
 
-std::shared_ptr<sf::Music> ResourceLoader<sf::Music>::load(const std::string& filepath) {
+std::shared_ptr<sf::Music> ResourceLoader<sf::Music>::load(const Name& filepath) {
 
     auto music = std::make_shared<sf::Music>();
     if (!music->openFromFile(filepath)) {
