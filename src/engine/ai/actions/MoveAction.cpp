@@ -23,7 +23,7 @@ namespace {
         if (const auto actorOptional = blackboard.get<en::Actor>(key)) {
             if (const en::Actor actor = *actorOptional) {
                 if (const auto* const transform = actor.tryGet<en::Transform>()) {
-                    return en::GridPosition(glm::floor(transform->getWorldPosition()));
+                    return transform->getGridPosition();
                 }
             }
         }
@@ -48,7 +48,7 @@ ActionOutcome MoveAction::execute() {
     }
 
     const en::GridPosition targetPosition = *targetPositionOptional;
-    const en::GridPosition currentPosition = glm::floor(m_actor.get<en::Transform>().getWorldPosition());
+    const en::GridPosition currentPosition = m_actor.get<en::Transform>().getGridPosition();
     if (currentPosition == targetPosition) {
         return ActionOutcome::Success;
     }

@@ -26,9 +26,10 @@
 
 namespace {
 
-    const en::Name closestObstacleName = "closestObstacleName";
+    const en::Name closestObstacleName = "closestObstacle";
     const en::Name targetItemName = "targetItem";
-    const en::Name stockpileLocationName = "stockpileLocationName";
+    const en::Name stockpileCenterName = "stockpileCenter";
+    const en::Name stockpileTargetLocationName = "stockpileLocation";
     const en::Name grabbedItemName = "grabbedItem";
 
     struct Item {
@@ -109,9 +110,9 @@ namespace {
                 return infinity;
             }
 
-            const en::GridPosition position = glm::floor(transform->getWorldPosition());
+            const en::GridPosition position = transform->getGridPosition();
 
-            const std::optional<en::GridPosition> stockpileLocation = blackboard.get<en::GridPosition>(stockpileLocationName);
+            const std::optional<en::GridPosition> stockpileLocation = blackboard.get<en::GridPosition>(stockpileTargetLocationName);
             if (stockpileLocation && position == *stockpileLocation) {
                 return infinity;
             }
@@ -167,7 +168,7 @@ namespace {
             if (const auto closestObstacleOptional = blackboard.get<en::GridPosition>(closestObstacleName)) {
                 return 10.f * 10.f > glm::distance2(
                     glm::vec2(*closestObstacleOptional),
-                    glm::vec2(glm::floor(actor.get<en::Transform>().getWorldPosition()))
+                    glm::vec2(actor.get<en::Transform>().getGridPosition())
                 );
             }
 
@@ -194,11 +195,30 @@ namespace {
         const auto hasValidTargetItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
 
             if (const en::Actor itemActor = blackboard.getActorChecked(targetItemName)) {
-                const bool isObstructed = Pathfinding::isObstacle(actor.getEngine(), glm::floor(itemActor.get<en::Transform>().getWorldPosition()));
+                const bool isObstructed = Pathfinding::isObstacle(actor.getEngine(), itemActor.get<en::Transform>().getGridPosition());
                 return !isObstructed;
             }
 
             return false;
+        };
+
+        const auto hasValidStockpileTarget = [](en::Actor& actor, Blackboard& blackboard) -> bool {
+
+            if (const auto targetStockpileTarget = blackboard.get<en::GridPosition>(stockpileTargetLocationName)) {
+
+                if (!Pathfinding::isObstacle(actor.getEngine(), *targetStockpileTarget)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        const auto findStockpileTarget = [](en::Actor& actor, Blackboard& blackboard) -> bool {
+
+            // TODO find unoccupied area in assigned zone
+            blackboard.set<en::GridPosition>(stockpileTargetLocationName, blackboard.get<en::GridPosition>(stockpileCenterName).value_or(en::GridPosition(0,0)));
+            return true;
         };
 
         const auto grabItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
@@ -233,11 +253,11 @@ namespace {
 
             const auto getDropPosition = [&]() -> en::GridPosition {
 
-                if (const auto gridPositionOptional = blackboard.get<en::GridPosition>(stockpileLocationName)) {
+                if (const auto gridPositionOptional = blackboard.get<en::GridPosition>(stockpileTargetLocationName)) {
                     return *gridPositionOptional;
                 }
 
-                return glm::floor(actor.get<en::Transform>().getWorldPosition());
+                return actor.get<en::Transform>().getGridPosition();
             };
 
             if (en::Actor grabbedItem = blackboard.getActorChecked(grabbedItemName)) {
@@ -264,7 +284,11 @@ namespace {
                     make_unique<Sequence>(
                         make_unique<MoveAction>(targetItemName),
                         make_unique<ConditionAction>(grabItem),
-                        make_unique<MoveAction>(stockpileLocationName),
+                        make_unique<Selector>(
+                            make_unique<ConditionAction>(hasValidStockpileTarget),
+                            make_unique<ConditionAction>(findStockpileTarget)
+                        ),
+                        make_unique<MoveAction>(stockpileTargetLocationName),
                         make_unique<ConditionAction>(dropItem)
                     ),
                     makeUnset<en::Actor>(targetItemName)
@@ -273,7 +297,7 @@ namespace {
             makeShootAtClosestObstacleSubtree()
         ));
 
-        behaviorTree->getBlackboard().set<en::GridPosition>(stockpileLocationName, {0, 0});
+        behaviorTree->getBlackboard().set<en::GridPosition>(stockpileCenterName, {0, 0});
 
         return behaviorTree;
     }

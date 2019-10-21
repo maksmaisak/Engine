@@ -204,6 +204,11 @@ glm::vec3 Transform::getForward() const {
     return glm::normalize(dir);
 }
 
+en::GridPosition Transform::getGridPosition() const {
+
+    return glm::floor(getWorldPosition());
+}
+
 void Transform::initializeMetatable(LuaState& lua) {
 
     lua.setField("move", [](ComponentReference<Transform> tf, float x, float y, float z) {

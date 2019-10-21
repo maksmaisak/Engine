@@ -9,9 +9,9 @@
 #include "glm.h"
 #include <glm/gtc/quaternion.hpp>
 
-#include "Entity.h"
 #include "ComponentsToLua.h"
-#include "LuaStack.h"
+#include "Entity.h"
+#include "Grid.h"
 
 namespace en {
 
@@ -48,6 +48,7 @@ namespace en {
         glm::vec3 getWorldPosition() const;
         glm::quat getWorldRotation() const;
         glm::vec3 getForward() const;
+        en::GridPosition getGridPosition() const;
 
         // TODO add setWorldPosition/Rotation
         Transform& setLocalPosition(const glm::vec3& localPosition);
