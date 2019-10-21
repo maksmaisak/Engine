@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 21/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_ENTITY_H
-#define SAXION_Y2Q1_CPP_ENTITY_H
+#ifndef ENGINE_ENTITY_H
+#define ENGINE_ENTITY_H
 
 #include <cinttypes>
 #include <type_traits>
@@ -12,10 +12,10 @@
 namespace en {
 
     struct EntityInfo {
-        static const unsigned int NumIdBits = 32;
-        static const unsigned int NumVersionBits = 64 - NumIdBits;
-        static const std::uint64_t IdMask      = ~(0ull) >> NumVersionBits;
-        static const std::uint64_t VersionMask = ~(0ull) << NumIdBits;
+        static constexpr unsigned int NumIdBits = 32;
+        static constexpr unsigned int NumVersionBits = 64 - NumIdBits;
+        static constexpr std::uint64_t IdMask      = ~(0ull) >> NumVersionBits;
+        static constexpr std::uint64_t VersionMask = ~(0ull) << NumIdBits;
 
         using entity_type  = std::uint64_t;
         using id_type      = std::uint32_t;
@@ -24,7 +24,7 @@ namespace en {
 
     /// The low 32 bits are the entity number, the high 32 bits are the version number.
     using Entity = EntityInfo::entity_type;
-    const Entity nullEntity = {};
+    constexpr Entity nullEntity = static_cast<Entity>(0);
 
     inline EntityInfo::id_type getId(const Entity entity) noexcept {
         return static_cast<EntityInfo::id_type>(entity);
@@ -47,4 +47,4 @@ namespace en {
     }
 }
 
-#endif //SAXION_Y2Q1_CPP_ENTITY_H
+#endif //ENGINE_ENTITY_H

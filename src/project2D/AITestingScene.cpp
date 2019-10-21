@@ -100,22 +100,33 @@ namespace {
 
         en::Engine& engine = actor.getEngine();
 
-        const auto getDistance = [&, ownPosition = glm::vec2(actor.get<en::Transform>().getWorldPosition())](en::Entity e) {
+        const auto getDistanceTo = [&, ownPosition = glm::vec2(actor.get<en::Transform>().getWorldPosition())](en::Entity e) {
 
-            if (const auto* const transform = engine.actor(e).tryGet<en::Transform>()) {
-                const en::GridPosition position = glm::floor(transform->getWorldPosition());
-                if (!ai::Pathfinding::isObstacle(engine, position)) {
-                    return glm::distance2(ownPosition, glm::vec2(position));
-                }
+            constexpr float infinity = std::numeric_limits<float>::infinity();
+
+            const auto* const transform = engine.actor(e).tryGet<en::Transform>();
+            if (!transform) {
+                return infinity;
             }
 
-            return std::numeric_limits<float>::infinity();
+            const en::GridPosition position = glm::floor(transform->getWorldPosition());
+
+            const std::optional<en::GridPosition> stockpileLocation = blackboard.get<en::GridPosition>(stockpileLocationName);
+            if (stockpileLocation && position == *stockpileLocation) {
+                return infinity;
+            }
+
+            if (ai::Pathfinding::isObstacle(engine, position)) {
+                return infinity;
+            }
+
+            return glm::distance2(ownPosition, glm::vec2(position));
         };
 
         // TODO Spatial partitioning of items. Something exposed like `getTrackedEntitiesAt(en::GridPosition);`
         const auto entitiesRange = engine.getRegistry().with<en::Transform, en::Sprite, Item>();
         const auto it = std::min_element(entitiesRange.begin(), entitiesRange.end(), [&](en::Entity a, en::Entity b) {
-            return getDistance(a) < getDistance(b);
+            return getDistanceTo(a) < getDistanceTo(b);
         });
 
         if (it != entitiesRange.end()) {
@@ -220,10 +231,23 @@ namespace {
 
         const auto dropItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
 
+            const auto getDropPosition = [&]() -> en::GridPosition {
+
+                if (const auto gridPositionOptional = blackboard.get<en::GridPosition>(stockpileLocationName)) {
+                    return *gridPositionOptional;
+                }
+
+                return glm::floor(actor.get<en::Transform>().getWorldPosition());
+            };
+
             if (en::Actor grabbedItem = blackboard.getActorChecked(grabbedItemName)) {
 
-                grabbedItem.destroy();
                 blackboard.unset<en::Actor>(grabbedItemName);
+
+                grabbedItem.get<en::Transform>()
+                    .setParent(en::nullEntity)
+                    .setLocalPosition(glm::vec3(glm::vec2(getDropPosition()) + 0.5f, 0.f));
+
                 return true;
             }
 

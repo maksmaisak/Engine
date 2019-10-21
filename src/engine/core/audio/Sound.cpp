@@ -18,7 +18,7 @@ Sound::Sound(const std::shared_ptr<sf::SoundBuffer>& buffer) : m_buffer(buffer) 
     }
 }
 
-Sound::Sound(const std::string& filepath) : Sound(Resources<sf::SoundBuffer>::get(filepath)) {}
+Sound::Sound(const Name& filepath) : Sound(Resources<sf::SoundBuffer>::get(filepath)) {}
 
 sf::Sound& Sound::getUnderlyingSound() {
     return m_sound;

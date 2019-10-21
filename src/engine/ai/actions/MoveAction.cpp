@@ -48,7 +48,7 @@ ActionOutcome MoveAction::execute() {
     }
 
     const en::GridPosition targetPosition = *targetPositionOptional;
-    const en::GridPosition currentPosition = m_actor.get<en::Transform>().getWorldPosition();
+    const en::GridPosition currentPosition = glm::floor(m_actor.get<en::Transform>().getWorldPosition());
     if (currentPosition == targetPosition) {
         return ActionOutcome::Success;
     }

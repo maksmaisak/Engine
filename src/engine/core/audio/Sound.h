@@ -10,19 +10,17 @@
 
 namespace en {
 
-    class LuaState;
-
     class Sound {
 
     public:
         Sound(const std::shared_ptr<sf::SoundBuffer>& buffer);
-        Sound(const std::string& filepath);
+        Sound(const class Name& filepath);
         virtual ~Sound() = default;
 
         bool isValid() const;
         sf::Sound& getUnderlyingSound();
 
-        static void initializeMetatable(LuaState& lua);
+        static void initializeMetatable(class LuaState& lua);
 
     private:
         std::shared_ptr<sf::SoundBuffer> m_buffer;
