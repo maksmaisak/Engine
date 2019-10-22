@@ -12,7 +12,7 @@ void AABBCollider::updateTransform(const glm::mat4& transform) {
     center = transform[3];
 }
 
-utils::Bounds AABBCollider::getBounds() {
+utils::Bounds3D AABBCollider::getBounds() {
     return {center - halfSize, center + halfSize};
 }
 

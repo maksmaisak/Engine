@@ -96,7 +96,7 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
         return {false, 0.f};
     }
 
-    utils::Bounds bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
+    utils::Bounds3D bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
     bounds.expandByMovement(movement);
 
     std::stack<OctreeNode*> nodes;
@@ -144,7 +144,7 @@ std::tuple<bool, float> PhysicsSystemOctree::move(Entity entity, Transform& tf, 
 
 void PhysicsSystemOctree::removeInvalidEntitiesFromTree() {
 
-    const auto isInvalidEntity = [this](Entity e, const utils::Bounds& bounds) -> bool {
+    const auto isInvalidEntity = [this](Entity e, const utils::Bounds3D& bounds) -> bool {
         // TODO bool registry.has<Types...>()
         return !m_registry->tryGet<Rigidbody>(e) || !m_registry->tryGet<Transform>(e);
     };
@@ -154,8 +154,8 @@ void PhysicsSystemOctree::removeInvalidEntitiesFromTree() {
 
 void PhysicsSystemOctree::updateTree(Entity entity, const Rigidbody& rb, const Transform& tf) {
 
-    const utils::Bounds bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
-    const utils::Bounds* oldBounds = m_previousBounds.tryGet(entity);
+    const utils::Bounds3D bounds = m_octreeRoot.getBounds().clamp(rb.collider->getBounds());
+    const utils::Bounds3D* oldBounds = m_previousBounds.tryGet(entity);
     if (!oldBounds)
         m_octreeRoot.add(entity, bounds);
     else
@@ -191,7 +191,7 @@ void PhysicsSystemOctree::draw() {
         if (numEntities == 0)
             return;
 
-        const utils::Bounds& bounds = node.getBounds();
+        const utils::Bounds3D& bounds = node.getBounds();
         const glm::vec3& center = (bounds.min + bounds.max) * 0.5f;
         const glm::vec3& halfSize = bounds.max - center;
 

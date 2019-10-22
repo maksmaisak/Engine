@@ -142,7 +142,7 @@ std::tuple<bool, float> PhysicsSystemQuadtree::move(Entity entity, Transform& tf
 
 void PhysicsSystemQuadtree::removeInvalidEntitiesFromTree() {
 
-    const auto isInvalidEntity = [this](Entity e, const utils::Bounds& bounds) -> bool {
+    const auto isInvalidEntity = [this](Entity e, const utils::Bounds2D& bounds) -> bool {
         // TODO bool registry.has<Types...>()
         return !m_registry->tryGet<Rigidbody>(e) || !m_registry->tryGet<Transform>(e);
     };

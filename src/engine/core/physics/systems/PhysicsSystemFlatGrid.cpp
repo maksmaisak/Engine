@@ -21,7 +21,7 @@ namespace {
 
     using vec3Int = glm::vec<3, std::int64_t>;
 
-    inline std::pair<vec3Int, vec3Int> getBoundsOnGrid(const utils::Bounds& bounds) {
+    inline std::pair<vec3Int, vec3Int> getBoundsOnGrid(const utils::Bounds3D& bounds) {
 
         const auto size = glm::vec3(GRID_CELL_SIZE);
         const auto minIndex = glm::vec3(0);
@@ -114,7 +114,7 @@ std::tuple<bool, float> PhysicsSystemFlatGrid::move(Entity entity, Transform& tf
     if (rb.collider) {
 
         //const utils::BoundingSphere sphereA = rb.collider->getBoundingSphere();
-        utils::Bounds bounds = rb.collider->getBounds();
+        utils::Bounds3D bounds = rb.collider->getBounds();
         bounds.expandByMovement(movement);
         auto [min, max] = getBoundsOnGrid(bounds);
         min = glm::max(vec3Int(min) - vec3Int(1), vec3Int(0));

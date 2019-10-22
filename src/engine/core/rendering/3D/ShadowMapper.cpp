@@ -21,7 +21,7 @@ namespace {
     constexpr float MaxShadowDistance = 300.f;
     constexpr float ShadowCastersBoundsPadding = 5.f;
 
-    utils::Bounds computeCameraFrustumBounds(Engine& engine) {
+    utils::Bounds3D computeCameraFrustumBounds(Engine& engine) {
 
         const Actor mainCamera = engine.getMainCamera();
         if (!mainCamera) {
@@ -43,7 +43,7 @@ namespace {
             clipToWorld * glm::vec4( 1,  1,  1, 1)
         };
 
-        utils::Bounds bounds {
+        utils::Bounds3D bounds {
             glm::vec3(std::numeric_limits<float>::max()),
             glm::vec3(std::numeric_limits<float>::lowest())
         };
@@ -57,9 +57,9 @@ namespace {
 
     /// Computes the worldspace AABB of all shadow-receiving entities in the camera frustum.
     /// If there aren't any such entities in the camera frustum, returns false.
-    bool computeShadowReceiversBounds(Engine& engine, utils::Bounds& outBounds) {
+    bool computeShadowReceiversBounds(Engine& engine, utils::Bounds3D& outBounds) {
 
-        const utils::Bounds constrainingBounds = computeCameraFrustumBounds(engine);
+        const utils::Bounds3D constrainingBounds = computeCameraFrustumBounds(engine);
 
         outBounds = {
             glm::vec3(std::numeric_limits<float>::max()),
@@ -86,7 +86,7 @@ namespace {
         return anyShadowReceivers;
     }
 
-    glm::mat4 getDirectionalLightspaceTransform(const Light& light, const Transform& lightTransform, const utils::Bounds& shadowReceiversBounds) {
+    glm::mat4 getDirectionalLightspaceTransform(const Light& light, const Transform& lightTransform, const utils::Bounds3D& shadowReceiversBounds) {
 
         const glm::mat4 worldToLightView = glm::lookAt(glm::vec3(0.f), lightTransform.getForward(), {0.f, 1.f, 0.f});
         const glm::vec3& min = shadowReceiversBounds.min - ShadowCastersBoundsPadding;
@@ -102,7 +102,7 @@ namespace {
             worldToLightView * glm::vec4(max.x, max.y, max.z, 1.f)
         };
 
-        utils::Bounds transformedBounds {
+        utils::Bounds3D transformedBounds {
             glm::vec3(std::numeric_limits<float>::max()),
             glm::vec3(std::numeric_limits<float>::lowest())
         };

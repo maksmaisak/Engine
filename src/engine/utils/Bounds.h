@@ -6,57 +6,37 @@
 #define ENGINE_BOUNDS_H
 
 #include "glm.h"
+#include "Grid.h"
 
 namespace utils {
 
-    struct Bounds2D;
-
+    template<glm::length_t L, typename T = float, glm::qualifier Q = glm::defaultp>
     struct Bounds {
 
-        Bounds();
-        Bounds(const glm::vec3& min, const glm::vec3& max);
-        Bounds(const Bounds2D& other);
+        using vec_t = glm::vec<L, T, Q>;
+
+        inline Bounds() :
+            min(static_cast<T>(0)),
+            max(static_cast<T>(0))
+        {}
+
+        inline Bounds(const vec_t& min, const vec_t& max) :
+            min(min),
+            max(max)
+        {}
+
+        template<glm::length_t LOther, typename TOther, glm::qualifier QOther = glm::defaultp>
+        inline Bounds(const Bounds<LOther, TOther, QOther>& other) :
+            min(other.min),
+            max(other.max)
+        {}
 
         template<typename TIterator>
-        inline static Bounds from(TIterator begin, TIterator end) {
+        inline Bounds from(TIterator begin, TIterator end) {
 
             Bounds bounds {
-                glm::vec3(std::numeric_limits<float>::max()),
-                glm::vec3(std::numeric_limits<float>::lowest())
-            };
-
-            for (TIterator it = begin; it != end; ++it) {
-                 bounds.add(*it);
-            }
-
-            return bounds;
-        }
-
-        bool contains(const glm::vec3& position) const;
-        bool intersects(const Bounds& other) const;
-
-        glm::vec3 clamp(const glm::vec3& other) const;
-        Bounds clamp(const Bounds& other) const;
-
-        void add(const glm::vec3& point);
-        void expandByMovement(const glm::vec3& movement);
-
-        glm::vec3 min;
-        glm::vec3 max;
-    };
-
-    struct Bounds2D {
-
-        Bounds2D();
-        Bounds2D(const glm::vec2& min, const glm::vec2& max);
-        Bounds2D(const Bounds& other);
-        
-        template<typename TIterator>
-        inline static Bounds2D from(TIterator begin, TIterator end) {
-
-            Bounds2D bounds {
-                glm::vec2(std::numeric_limits<float>::max()),
-                glm::vec2(std::numeric_limits<float>::lowest())
+                vec_t(std::numeric_limits<T>::max()),
+                vec_t(std::numeric_limits<T>::lowest())
             };
 
             for (TIterator it = begin; it != end; ++it) {
@@ -66,18 +46,72 @@ namespace utils {
             return bounds;
         }
 
-        bool contains(const glm::vec2& position) const;
-        bool intersects(const Bounds2D& other) const;
+        inline bool contains(const vec_t& position) const {
 
-        glm::vec2 clamp(const glm::vec2& other) const;
-        Bounds2D clamp(const Bounds2D& other) const;
+            for (glm::length_t i = 0; i < L; ++i) {
+                if (position[i] > max[i] || position[i] < min[i]) {
+                    return false;
+                }
+            }
 
-        void add(const glm::vec2& point);
-        void expandByMovement(const glm::vec2& movement);
+            return true;
+        }
 
-        glm::vec2 min;
-        glm::vec2 max;
+        inline bool intersects(const Bounds& other) const {
+
+            for (glm::length_t i = 0; i < L; ++i) {
+                if (other.min[i] > max[i] || other.max[i] < min[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        inline vec_t clamp(const vec_t& point) const {
+
+            return glm::clamp(point, min, max);
+        }
+
+        inline Bounds clamp(const Bounds& other) const {
+
+            static_assert(
+                std::is_floating_point_v<T>,
+                "Bounds::clamp is only supported for floating-point values."
+            );
+
+            const vec_t otherHalfSize = (other.max - other.min) * static_cast<T>(0.5);
+            const vec_t shrunkMin = min + otherHalfSize;
+            const vec_t shrunkMax = max - otherHalfSize;
+            const vec_t center = glm::clamp(other.max - otherHalfSize, shrunkMin, shrunkMax);
+
+            return {center - otherHalfSize, center + otherHalfSize};
+        }
+
+        inline void add(const vec_t& point) {
+
+            min = glm::min(min, point);
+            max = glm::max(max, point);
+        }
+
+        inline void expandByMovement(const vec_t& movement) {
+
+            for (glm::length_t i = 0; i < L; ++i) {
+                if (movement[i] > static_cast<T>(0)) {
+                    max[i] += movement[i];
+                } else {
+                    min[i] += movement[i];
+                }
+            }
+        }
+
+        vec_t min;
+        vec_t max;
     };
+
+    using Bounds2D = Bounds<2, float>;
+    using Bounds3D = Bounds<3, float>;
+    using Bounds2DGrid = Bounds<2, en::GridCoordinate>;
 
     struct BoundingSphere {
         glm::vec3 position;

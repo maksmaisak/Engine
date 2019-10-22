@@ -17,7 +17,7 @@ namespace en {
         AABBCollider(const glm::vec3& halfSize = glm::vec3(1.f));
 
         void updateTransform(const glm::mat4& transform) override;
-        utils::Bounds getBounds() override;
+        utils::Bounds3D getBounds() override;
         utils::BoundingSphere getBoundingSphere() override;
 
         std::optional<Hit> collide(Collider& other, const glm::vec3& movement) override;

@@ -22,18 +22,18 @@ namespace en {
         OctreeNode(const glm::vec3& center, const glm::vec3& halfSize, int maxDepth = 3, std::size_t capacity = 10, int depth = 0);
         OctreeNode(OctreeNode* parent, const glm::vec3& center, const glm::vec3& halfSize);
         const std::array<std::unique_ptr<OctreeNode>, 8>& getChildren() const;
-        const std::vector<std::pair<Entity, utils::Bounds>> getEntities() const;
+        const std::vector<std::pair<Entity, utils::Bounds3D>> getEntities() const;
         std::size_t getTotalNumEntities() const;
         std::size_t getCapacity() const;
-        utils::Bounds getBounds() const;
-        utils::Bounds getChildBounds(int childIndex) const;
+        utils::Bounds3D getBounds() const;
+        utils::Bounds3D getChildBounds(int childIndex) const;
         bool isLeafNode() const;
 
-        void add   (Entity entity, const utils::Bounds& bounds);
-        void remove(Entity entity, const utils::Bounds& searchInBounds);
-        void update(Entity entity, const utils::Bounds& oldBounds, const utils::Bounds& newBounds);
+        void add   (Entity entity, const utils::Bounds3D& bounds);
+        void remove(Entity entity, const utils::Bounds3D& searchInBounds);
+        void update(Entity entity, const utils::Bounds3D& oldBounds, const utils::Bounds3D& newBounds);
 
-        void removeIf(const std::function<bool(Entity, const utils::Bounds& bounds)>& condition);
+        void removeIf(const std::function<bool(Entity, const utils::Bounds3D& bounds)>& condition);
 
     private:
 
@@ -42,7 +42,7 @@ namespace en {
 
         void mergeIfNeeded();
         void splitIfNeeded();
-        void addAndSplitIfNeeded(Entity entity, const utils::Bounds& bounds);
+        void addAndSplitIfNeeded(Entity entity, const utils::Bounds3D& bounds);
         void removeAndMergeParentIfNeeded(Entity entity);
 
         inline friend std::ostream& operator<<(std::ostream& stream, const OctreeNode& node) {
@@ -60,7 +60,7 @@ namespace en {
         std::array<std::unique_ptr<OctreeNode>, 8> m_children;
         OctreeNode* m_parent = nullptr;
 
-        std::vector<std::pair<Entity, utils::Bounds>> m_entities;
+        std::vector<std::pair<Entity, utils::Bounds3D>> m_entities;
     };
 }
 
