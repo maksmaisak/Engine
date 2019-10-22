@@ -69,7 +69,7 @@ std::tuple<bool, float> PhysicsSystemBoundingSphereNarrowphase::move(Entity enti
 
     if (rb.collider) {
 
-        utils::BoundingSphere sphereA = rb.collider->getBoundingSphere();
+        BoundingSphere sphereA = rb.collider->getBoundingSphere();
         sphereA.radius += glm::length(movement);
 
         for (Entity other : entities) {
@@ -81,7 +81,7 @@ std::tuple<bool, float> PhysicsSystemBoundingSphereNarrowphase::move(Entity enti
             if (!otherRb.collider)
                 continue;
 
-            const utils::BoundingSphere sphereB = otherRb.collider->getBoundingSphere();
+            const BoundingSphere sphereB = otherRb.collider->getBoundingSphere();
             if (glm::distance2(sphereA.position, sphereB.position) > glm::length2(sphereA.radius + sphereB.radius))
                 continue;
 

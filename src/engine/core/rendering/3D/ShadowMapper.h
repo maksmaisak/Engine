@@ -28,7 +28,7 @@ namespace en {
 
         std::shared_ptr<class ShaderProgram> m_directionalDepthShader;
         std::shared_ptr<class ShaderProgram> m_positionalDepthShader;
-        utils::Bounds3D m_shadowReceiversBounds;
+        Bounds3D m_shadowReceiversBounds;
     };
 }
 

@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 22/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_ENTITIESVIEW_H
-#define SAXION_Y2Q1_CPP_ENTITIESVIEW_H
+#ifndef ENGINE_ENTITIESVIEW_H
+#define ENGINE_ENTITIESVIEW_H
 
 #include <algorithm>
 #include <set>
@@ -71,7 +71,7 @@ namespace en {
         EntitiesView(ComponentPool<TComponent>&... pools) :
             m_pools{&pools...},
             m_smallestPoolPtr(getSmallestPoolPtr(std::forward<ComponentPool<TComponent>&>(pools)...))
-            {};
+        {};
 
         inline iterator begin() const {
             return iterator(m_pools, m_smallestPoolPtr->cbegin(), m_smallestPoolPtr->cend());
@@ -90,6 +90,10 @@ namespace en {
             return first != end() ? *first : en::nullEntity;
         }
 
+        inline bool any() const {
+            return tryGetOne();
+        }
+
     private:
 
         std::tuple<ComponentPool<TComponent>*...> m_pools;
@@ -106,4 +110,4 @@ namespace en {
 
 }
 
-#endif //SAXION_Y2Q1_CPP_ENTITIESVIEW_H
+#endif //ENGINE_ENTITIESVIEW_H

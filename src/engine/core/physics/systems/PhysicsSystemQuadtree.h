@@ -27,7 +27,7 @@ namespace en {
         std::tuple<bool, float> move(Entity entity, Transform& tf, Rigidbody& rb, float dt);
 
         QuadtreeNode m_quadtreeRoot;
-        ComponentPool<utils::Bounds2D> m_previousBounds;
+        ComponentPool<Bounds2D> m_previousBounds;
         DebugVolumeRenderer m_volumeRenderer;
     };
 }

@@ -22,18 +22,18 @@ namespace en {
         QuadtreeNode(const glm::vec2& center, const glm::vec2& halfSize, int maxDepth = 3, std::size_t capacity = 10, int depth = 0);
         QuadtreeNode(QuadtreeNode* parent, const glm::vec2& center, const glm::vec2& halfSize);
         const std::array<std::unique_ptr<QuadtreeNode>, 4>& getChildren() const;
-        const std::vector<std::pair<Entity, utils::Bounds2D>>& getEntities() const;
+        const std::vector<std::pair<Entity, Bounds2D>>& getEntities() const;
         std::size_t getTotalNumEntities() const;
         std::size_t getCapacity() const;
-        utils::Bounds2D getBounds() const;
-        utils::Bounds2D getChildBounds(int childIndex) const;
+        Bounds2D getBounds() const;
+        Bounds2D getChildBounds(int childIndex) const;
         bool isLeafNode() const;
 
-        void add   (Entity entity, const utils::Bounds2D& bounds);
-        void remove(Entity entity, const utils::Bounds2D& searchInBounds);
-        void update(Entity entity, const utils::Bounds2D& oldBounds, const utils::Bounds2D& newBounds);
+        void add   (Entity entity, const Bounds2D& bounds);
+        void remove(Entity entity, const Bounds2D& searchInBounds);
+        void update(Entity entity, const Bounds2D& oldBounds, const Bounds2D& newBounds);
 
-        void removeIf(const std::function<bool(Entity, const utils::Bounds2D& bounds)>& condition);
+        void removeIf(const std::function<bool(Entity, const Bounds2D& bounds)>& condition);
 
     private:
 
@@ -42,7 +42,7 @@ namespace en {
 
         void mergeIfNeeded();
         void splitIfNeeded();
-        void addAndSplitIfNeeded(Entity entity, const utils::Bounds2D& bounds);
+        void addAndSplitIfNeeded(Entity entity, const Bounds2D& bounds);
         void removeAndMergeParentIfNeeded(Entity entity);
 
         inline friend std::ostream& operator<<(std::ostream& stream, const QuadtreeNode& node) {
@@ -60,7 +60,7 @@ namespace en {
         std::array<std::unique_ptr<QuadtreeNode>, 4> m_children;
         QuadtreeNode* m_parent = nullptr;
 
-        std::vector<std::pair<Entity, utils::Bounds2D>> m_entities;
+        std::vector<std::pair<Entity, Bounds2D>> m_entities;
     };
 }
 

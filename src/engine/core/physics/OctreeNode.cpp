@@ -42,11 +42,11 @@ std::size_t OctreeNode::getTotalNumEntities() const {
 
 const std::array<std::unique_ptr<en::OctreeNode>, 8>& OctreeNode::getChildren() const {return m_children;}
 
-const std::vector<std::pair<Entity, utils::Bounds3D>> OctreeNode::getEntities() const {return m_entities;}
+const std::vector<std::pair<Entity, Bounds3D>> OctreeNode::getEntities() const {return m_entities;}
 
 std::size_t OctreeNode::getCapacity() const {return m_capacity;}
 
-utils::Bounds3D OctreeNode::getBounds() const {
+Bounds3D OctreeNode::getBounds() const {
 
     return {
         m_center - m_halfSize,
@@ -55,7 +55,7 @@ utils::Bounds3D OctreeNode::getBounds() const {
 }
 
 /// Use this instead of calling getBounds on a child to preserve cache.
-utils::Bounds3D OctreeNode::getChildBounds(int childIndex) const {
+Bounds3D OctreeNode::getChildBounds(int childIndex) const {
 
     const glm::vec3 min = {
         (childIndex & 1) ? m_center.x : m_center.x - m_halfSize.x,
@@ -72,7 +72,7 @@ utils::Bounds3D OctreeNode::getChildBounds(int childIndex) const {
     return {min, max};
 }
 
-void OctreeNode::add(Entity entity, const utils::Bounds3D& bounds) {
+void OctreeNode::add(Entity entity, const Bounds3D& bounds) {
 
     if (!isLeafNode()) {
 
@@ -87,7 +87,7 @@ void OctreeNode::add(Entity entity, const utils::Bounds3D& bounds) {
     }
 }
 
-void OctreeNode::remove(Entity entity, const utils::Bounds3D& searchInBounds) {
+void OctreeNode::remove(Entity entity, const Bounds3D& searchInBounds) {
 
     if (!isLeafNode()) {
 
@@ -101,7 +101,7 @@ void OctreeNode::remove(Entity entity, const utils::Bounds3D& searchInBounds) {
     }
 }
 
-void OctreeNode::update(Entity entity, const utils::Bounds3D& oldBounds, const utils::Bounds3D& newBounds) {
+void OctreeNode::update(Entity entity, const Bounds3D& oldBounds, const Bounds3D& newBounds) {
 
     // Remove from nodes that intersect the oldBounds BUT not the newBounds.
     // Add to nodes that intersect the newBounds BUT not the oldBounds.
@@ -110,7 +110,7 @@ void OctreeNode::update(Entity entity, const utils::Bounds3D& oldBounds, const u
 
         for (int i = 0; i < 8; ++i) {
 
-            const utils::Bounds3D& childBounds = getChildBounds(i);
+            const Bounds3D& childBounds = getChildBounds(i);
 
             const bool wasInChild      = m_children[i] && childBounds.intersects(oldBounds);
             const bool shouldBeInChild = childBounds.intersects(newBounds);
@@ -126,7 +126,7 @@ void OctreeNode::update(Entity entity, const utils::Bounds3D& oldBounds, const u
         return;
     }
 
-    const utils::Bounds3D& bounds = getBounds();
+    const Bounds3D& bounds = getBounds();
     const bool wasHere = oldBounds.intersects(bounds);
     const bool shouldBeHere = newBounds.intersects(bounds);
 
@@ -175,7 +175,7 @@ bool OctreeNode::isLeafNode() const {
     return m_numChildren == 0;
 }
 
-void OctreeNode::removeIf(const std::function<bool(Entity, const utils::Bounds3D&)>& condition) {
+void OctreeNode::removeIf(const std::function<bool(Entity, const Bounds3D&)>& condition) {
 
     if (!isLeafNode()) {
 
@@ -198,7 +198,7 @@ void OctreeNode::removeIf(const std::function<bool(Entity, const utils::Bounds3D
     }
 }
 
-void OctreeNode::addAndSplitIfNeeded(Entity entity, const utils::Bounds3D& bounds) {
+void OctreeNode::addAndSplitIfNeeded(Entity entity, const Bounds3D& bounds) {
 
     const auto it = std::find_if(m_entities.begin(), m_entities.end(), [entity](const auto& pair){
         return pair.first == entity;
@@ -237,7 +237,7 @@ void OctreeNode::splitIfNeeded() {
 
     for (int i = 0; i < 8; ++i) {
 
-        const utils::Bounds3D childBounds = getChildBounds(i);
+        const Bounds3D childBounds = getChildBounds(i);
 
         for (const auto& [e, entityBounds] : m_entities)
             if (childBounds.intersects(entityBounds))

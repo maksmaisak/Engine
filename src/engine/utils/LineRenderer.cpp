@@ -93,7 +93,7 @@ void LineRenderer::addLineSegment(const glm::vec2& start, const glm::vec2& end, 
     addLineSegment(glm::vec3(start, 1.f), glm::vec3(end, 1.f), color, lineWidth);
 }
 
-void LineRenderer::addAABB(const utils::Bounds2D& bounds, const glm::vec4& color, float lineWidth) {
+void LineRenderer::addAABB(const Bounds2D& bounds, const glm::vec4& color, float lineWidth) {
 
     addLineSegment({bounds.min.x, bounds.min.y, 1.f}, {bounds.min.x, bounds.max.y, 1.f}, color, lineWidth);
     addLineSegment({bounds.min.x, bounds.max.y, 1.f}, {bounds.max.x, bounds.max.y, 1.f}, color, lineWidth);

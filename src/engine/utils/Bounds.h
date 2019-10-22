@@ -8,7 +8,7 @@
 #include "glm.h"
 #include "Grid.h"
 
-namespace utils {
+namespace en {
 
     template<glm::length_t L, typename T = float, glm::qualifier Q = glm::defaultp>
     struct Bounds {

@@ -23,14 +23,14 @@ void OBBCollider::updateTransform(const glm::mat4& transform) {
     rotation = glm::mat3(orientation);
 }
 
-utils::Bounds3D OBBCollider::getBounds() {
+Bounds3D OBBCollider::getBounds() {
 
     const glm::mat3 absRotation = {glm::abs(rotation[0]), glm::abs(rotation[1]), glm::abs(rotation[2])};
     const glm::vec3 rotatedHalfSize = absRotation * halfSize;
     return {center - rotatedHalfSize, center + rotatedHalfSize};
 }
 
-utils::BoundingSphere OBBCollider::getBoundingSphere() {
+BoundingSphere OBBCollider::getBoundingSphere() {
     return {center, glm::length(halfSize)};
 }
 

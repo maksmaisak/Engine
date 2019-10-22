@@ -34,7 +34,7 @@ const std::array<std::unique_ptr<QuadtreeNode>, 4>& QuadtreeNode::getChildren() 
     return m_children;
 }
 
-const std::vector<std::pair<Entity, utils::Bounds2D>>& QuadtreeNode::getEntities() const {
+const std::vector<std::pair<Entity, Bounds2D>>& QuadtreeNode::getEntities() const {
     return m_entities;
 }
 
@@ -50,7 +50,7 @@ std::size_t QuadtreeNode::getTotalNumEntities() const {
 
 std::size_t QuadtreeNode::getCapacity() const {return m_capacity;}
 
-utils::Bounds2D QuadtreeNode::getBounds() const {
+Bounds2D QuadtreeNode::getBounds() const {
 
     return {
         m_center - m_halfSize,
@@ -59,7 +59,7 @@ utils::Bounds2D QuadtreeNode::getBounds() const {
 }
 
 /// Use this instead of calling getBounds on a child to preserve cache.
-utils::Bounds2D QuadtreeNode::getChildBounds(int childIndex) const {
+Bounds2D QuadtreeNode::getChildBounds(int childIndex) const {
 
     const glm::vec2 min = {
         (childIndex & 1) ? m_center.x : m_center.x - m_halfSize.x,
@@ -74,7 +74,7 @@ utils::Bounds2D QuadtreeNode::getChildBounds(int childIndex) const {
     return {min, max};
 }
 
-void QuadtreeNode::add(Entity entity, const utils::Bounds2D& bounds) {
+void QuadtreeNode::add(Entity entity, const Bounds2D& bounds) {
 
     if (!isLeafNode()) {
 
@@ -88,7 +88,7 @@ void QuadtreeNode::add(Entity entity, const utils::Bounds2D& bounds) {
     }
 }
 
-void QuadtreeNode::remove(Entity entity, const utils::Bounds2D& searchInBounds) {
+void QuadtreeNode::remove(Entity entity, const Bounds2D& searchInBounds) {
 
     if (!isLeafNode()) {
 
@@ -102,7 +102,7 @@ void QuadtreeNode::remove(Entity entity, const utils::Bounds2D& searchInBounds) 
     }
 }
 
-void QuadtreeNode::update(Entity entity, const utils::Bounds2D& oldBounds, const utils::Bounds2D& newBounds) {
+void QuadtreeNode::update(Entity entity, const Bounds2D& oldBounds, const Bounds2D& newBounds) {
 
     // Remove from nodes that intersect the oldBounds BUT not the newBounds.
     // Add to nodes that intersect the newBounds BUT not the oldBounds.
@@ -111,7 +111,7 @@ void QuadtreeNode::update(Entity entity, const utils::Bounds2D& oldBounds, const
 
         for (int i = 0; i < 4; ++i) {
 
-            const utils::Bounds2D& childBounds = getChildBounds(i);
+            const Bounds2D& childBounds = getChildBounds(i);
 
             const bool wasInChild      = m_children[i] && childBounds.intersects(oldBounds);
             const bool shouldBeInChild = childBounds.intersects(newBounds);
@@ -127,7 +127,7 @@ void QuadtreeNode::update(Entity entity, const utils::Bounds2D& oldBounds, const
         return;
     }
 
-    const utils::Bounds2D& bounds = getBounds();
+    const Bounds2D& bounds = getBounds();
     const bool wasHere = oldBounds.intersects(bounds);
     const bool shouldBeHere = newBounds.intersects(bounds);
 
@@ -175,7 +175,7 @@ bool QuadtreeNode::isLeafNode() const {
     return m_numChildren == 0;
 }
 
-void QuadtreeNode::removeIf(const std::function<bool(Entity, const utils::Bounds2D&)>& condition) {
+void QuadtreeNode::removeIf(const std::function<bool(Entity, const Bounds2D&)>& condition) {
 
     if (!isLeafNode()) {
 
@@ -198,7 +198,7 @@ void QuadtreeNode::removeIf(const std::function<bool(Entity, const utils::Bounds
     }
 }
 
-void QuadtreeNode::addAndSplitIfNeeded(Entity entity, const utils::Bounds2D& bounds) {
+void QuadtreeNode::addAndSplitIfNeeded(Entity entity, const Bounds2D& bounds) {
 
     const auto it = std::find_if(m_entities.begin(), m_entities.end(), [entity](const auto& pair){
         return pair.first == entity;
@@ -237,7 +237,7 @@ void QuadtreeNode::splitIfNeeded() {
 
     for (int i = 0; i < 4; ++i) {
 
-        const utils::Bounds2D childBounds = getChildBounds(i);
+        const Bounds2D childBounds = getChildBounds(i);
 
         for (const auto& [e, entityBounds] : m_entities)
             if (childBounds.intersects(entityBounds))

@@ -18,8 +18,8 @@ namespace en {
         SphereCollider(float radius = 1.f);
 
         void updateTransform(const glm::mat4& transform) override;
-        utils::Bounds3D getBounds() override;
-        utils::BoundingSphere getBoundingSphere() override;
+        Bounds3D getBounds() override;
+        BoundingSphere getBoundingSphere() override;
 
         std::optional<Hit> collide(Collider& other, const glm::vec3& movement) override;
         std::optional<Hit> collide(SphereCollider& other, const glm::vec3& movement) override;

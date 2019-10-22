@@ -33,18 +33,17 @@ namespace {
             auto& transform = bullet.get<en::Transform>();
             transform.move(velocity * dt);
 
-            const utils::Bounds2D spriteBounds = bullet.get<en::Sprite>().getAABB(transform.getWorldTransform());
-            const en::GridPosition min = glm::floor(spriteBounds.min);
-            const en::GridPosition max = glm::floor(spriteBounds.max);
+            const en::Bounds2D spriteBounds = bullet.get<en::Sprite>().getAABB(transform.getWorldTransform());
+            const en::Bounds2DGrid spriteGridBounds = {glm::floor(spriteBounds.min), glm::floor(spriteBounds.max)};
 
             en::EntityRegistry& registry = bullet.getEngine().getRegistry();
             for (en::Entity e : registry.with<en::TileLayer>()) {
                 auto& tileLayer = registry.get<en::TileLayer>(e);
 
-                for (en::GridCoordinate y = min.y; y <= max.y; ++y) {
-                    for (en::GridCoordinate x = min.x; x <= max.x; ++x) {
+                for (en::GridCoordinate y = spriteGridBounds.min.y; y <= spriteGridBounds.max.y; ++y) {
+                    for (en::GridCoordinate x = spriteGridBounds.min.x; x <= spriteGridBounds.max.x; ++x) {
 
-                        const utils::Bounds2D tileBounds = utils::Bounds2D({x, y}, {x + 1, y + 1});
+                        const auto tileBounds = en::Bounds2D({x, y}, {x + 1, y + 1});
                         if (spriteBounds.intersects(tileBounds)) {
 
                             en::Tile& tile = tileLayer.at({x, y});

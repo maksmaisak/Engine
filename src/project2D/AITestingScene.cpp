@@ -23,6 +23,7 @@
 #include "DelayAction.h"
 #include "Pathfinding.h"
 #include "Sprite.h"
+#include "Bounds.h"
 
 namespace {
 
@@ -34,6 +35,11 @@ namespace {
 
     struct Item {
         bool isGrabbed = false;
+    };
+
+    struct StockpileZone {
+
+        en::Bounds2DGrid area;
     };
 
     void makeItems(en::Engine& engine) {

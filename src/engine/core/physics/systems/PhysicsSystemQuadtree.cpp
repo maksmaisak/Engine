@@ -94,7 +94,7 @@ std::tuple<bool, float> PhysicsSystemQuadtree::move(Entity entity, Transform& tf
         return {false, 0.f};
     }
 
-    utils::Bounds2D bounds = m_quadtreeRoot.getBounds().clamp(rb.collider->getBounds());
+    Bounds2D bounds = m_quadtreeRoot.getBounds().clamp(rb.collider->getBounds());
     bounds.expandByMovement({movement.x, movement.z});
 
     std::stack<QuadtreeNode*> nodes;
@@ -142,7 +142,7 @@ std::tuple<bool, float> PhysicsSystemQuadtree::move(Entity entity, Transform& tf
 
 void PhysicsSystemQuadtree::removeInvalidEntitiesFromTree() {
 
-    const auto isInvalidEntity = [this](Entity e, const utils::Bounds2D& bounds) -> bool {
+    const auto isInvalidEntity = [this](Entity e, const Bounds2D& bounds) -> bool {
         // TODO bool registry.has<Types...>()
         return !m_registry->tryGet<Rigidbody>(e) || !m_registry->tryGet<Transform>(e);
     };
@@ -152,8 +152,8 @@ void PhysicsSystemQuadtree::removeInvalidEntitiesFromTree() {
 
 void PhysicsSystemQuadtree::updateTree(Entity entity, const Rigidbody& rb, const Transform& tf) {
 
-    const utils::Bounds2D bounds = m_quadtreeRoot.getBounds().clamp(rb.collider->getBounds());
-    const utils::Bounds2D* oldBounds = m_previousBounds.tryGet(entity);
+    const Bounds2D bounds = m_quadtreeRoot.getBounds().clamp(rb.collider->getBounds());
+    const Bounds2D* oldBounds = m_previousBounds.tryGet(entity);
     if (!oldBounds)
         m_quadtreeRoot.add(entity, bounds);
     else
@@ -189,7 +189,7 @@ void PhysicsSystemQuadtree::draw() {
         if (numEntities == 0)
             return;
 
-        const utils::Bounds2D& bounds = node.getBounds();
+        const Bounds2D& bounds = node.getBounds();
         const glm::vec2& center = (bounds.min + bounds.max) * 0.5f;
         const glm::vec2& halfSize = bounds.max - center;
 

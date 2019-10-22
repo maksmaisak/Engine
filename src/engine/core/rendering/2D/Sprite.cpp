@@ -6,9 +6,9 @@
 
 using namespace en;
 
-utils::Bounds2D Sprite::getAABB(const glm::mat4& matrixModel) const {
+Bounds2D Sprite::getAABB(const glm::mat4& matrixModel) const {
 
-    utils::Bounds2D bounds {
+    Bounds2D bounds {
         glm::vec2(std::numeric_limits<float>::max()),
         glm::vec2(std::numeric_limits<float>::lowest())
     };

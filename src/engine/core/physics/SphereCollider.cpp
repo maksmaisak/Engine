@@ -12,12 +12,12 @@ void SphereCollider::updateTransform(const glm::mat4& transform) {
     position = transform[3];
 }
 
-utils::Bounds3D SphereCollider::getBounds() {
+Bounds3D SphereCollider::getBounds() {
     const glm::vec3 halfSize = glm::vec3(radius);
     return {position - halfSize, position + halfSize};
 }
 
-utils::BoundingSphere SphereCollider::getBoundingSphere() {
+BoundingSphere SphereCollider::getBoundingSphere() {
     return {position, radius};
 }
 
