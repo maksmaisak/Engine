@@ -34,6 +34,16 @@ namespace ai {
 
         en::Actor getActorChecked(const en::Name& key) const;
 
+        template<typename TComponent>
+        inline TComponent* getComponentChecked(const en::Name& key) const {
+
+            if (en::Actor actor = getActorChecked(key)) {
+                return actor.tryGet<TComponent>();
+            }
+
+            return nullptr;
+        }
+
         template<typename T>
         inline void set(const en::Name& key, const T& value) {
 

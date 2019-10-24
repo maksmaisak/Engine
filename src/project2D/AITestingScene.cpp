@@ -4,6 +4,7 @@
 
 #include "AITestingScene.h"
 #include <random>
+#include "LineRenderer.h"
 #include "AIController.h"
 #include "Camera.h"
 #include "Transform.h"
@@ -29,7 +30,7 @@ namespace {
 
     const en::Name closestObstacleName = "closestObstacle";
     const en::Name targetItemName = "targetItem";
-    const en::Name stockpileCenterName = "stockpileCenter";
+    const en::Name stockpileName = "stockpileCenter";
     const en::Name stockpileTargetLocationName = "stockpileLocation";
     const en::Name grabbedItemName = "grabbedItem";
 
@@ -37,8 +38,7 @@ namespace {
         bool isGrabbed = false;
     };
 
-    struct StockpileZone {
-
+    struct Zone {
         en::Bounds2DGrid area;
     };
 
@@ -103,7 +103,7 @@ namespace {
         return false;
     }
 
-    bool findClosestItem(en::Actor& actor, ai::Blackboard& blackboard) {
+    bool findClosestItemNotInStockpile(en::Actor& actor, ai::Blackboard& blackboard) {
 
         en::Engine& engine = actor.getEngine();
 
@@ -118,9 +118,10 @@ namespace {
 
             const en::GridPosition position = transform->getGridPosition();
 
-            const std::optional<en::GridPosition> stockpileLocation = blackboard.get<en::GridPosition>(stockpileTargetLocationName);
-            if (stockpileLocation && position == *stockpileLocation) {
-                return infinity;
+            if (const Zone* const stockpile = blackboard.getComponentChecked<Zone>(stockpileName)) {
+                if (stockpile->area.contains(position)) {
+                    return infinity;
+                }
             }
 
             if (ai::Pathfinding::isObstacle(engine, position)) {
@@ -186,10 +187,10 @@ namespace {
                 make_unique<ConditionAction>(hasValidClosestObstacle),
                 make_unique<ConditionAction>(findClosestObstacle)
             ),
-            make_unique<DelayAction>(0.1f),
             make_unique<ConditionAction>(isClosestObstacleInShootingRange),
             make_unique<ShootAction>(closestObstacleName),
-            makeUnset<en::GridPosition>(closestObstacleName)
+            makeUnset<en::GridPosition>(closestObstacleName),
+            make_unique<DelayAction>(0.1f)
         );
     }
 
@@ -210,20 +211,51 @@ namespace {
 
         const auto hasValidStockpileTarget = [](en::Actor& actor, Blackboard& blackboard) -> bool {
 
-            if (const auto targetStockpileTarget = blackboard.get<en::GridPosition>(stockpileTargetLocationName)) {
-
-                if (!Pathfinding::isObstacle(actor.getEngine(), *targetStockpileTarget)) {
-                    return true;
-                }
+            const auto targetStockpileTarget = blackboard.get<en::GridPosition>(stockpileTargetLocationName);
+            if (!targetStockpileTarget) {
+                return false;
             }
 
-            return false;
+            if (Pathfinding::isObstacle(actor.getEngine(), *targetStockpileTarget)) {
+                return false;
+            }
+
+            en::Engine& engine = actor.getEngine();
+            const auto items = engine.getRegistry().with<en::Transform, en::Sprite, Item>();
+            const bool isOccupied = std::any_of(items.begin(), items.end(), [&](en::Entity e) {
+                const en::GridPosition itemPosition = engine.actor(e).get<en::Transform>().getGridPosition();
+                return itemPosition == *targetStockpileTarget;
+            });
+
+            return !isOccupied;
         };
 
         const auto findStockpileTarget = [](en::Actor& actor, Blackboard& blackboard) -> bool {
 
-            // TODO find unoccupied area in assigned zone
-            blackboard.set<en::GridPosition>(stockpileTargetLocationName, blackboard.get<en::GridPosition>(stockpileCenterName).value_or(en::GridPosition(0,0)));
+            const Zone* const stockpile = blackboard.getComponentChecked<Zone>(stockpileName);
+            if (!stockpile) {
+                return false;
+            }
+
+            const en::GridPosition stockpileSize = stockpile->area.max + en::GridCoordinate(1) - stockpile->area.min;
+            auto isOccupied = std::vector<bool>(stockpileSize.x * stockpileSize.y, false);
+
+            en::Engine& engine = actor.getEngine();
+            for (en::Entity e : engine.getRegistry().with<en::Transform, en::Sprite, Item>()) {
+                const en::GridPosition itemGridPosition = engine.actor(e).get<en::Transform>().getGridPosition();
+                if (stockpile->area.contains(itemGridPosition)) {
+                    const en::GridPosition posInStockpile = itemGridPosition - stockpile->area.min;
+                    isOccupied.at(posInStockpile.y * stockpileSize.x + posInStockpile.x) = true;
+                }
+            }
+            const auto it = std::find_if_not(isOccupied.begin(), isOccupied.end(), [](bool isOccupied){return isOccupied;});
+            if (it == isOccupied.end()) {
+                return false;
+            }
+
+            const std::size_t index = it - isOccupied.begin();
+            const en::GridPosition unoccupiedGridPosition = {index % stockpileSize.x, index / stockpileSize.x};
+            blackboard.set<en::GridPosition>(stockpileTargetLocationName, unoccupiedGridPosition);
             return true;
         };
 
@@ -284,7 +316,7 @@ namespace {
             make_unique<Sequence>(
                 make_unique<Selector>(
                     make_unique<ConditionAction>(hasValidTargetItem),
-                    make_unique<ConditionAction>(findClosestItem)
+                    make_unique<ConditionAction>(findClosestItemNotInStockpile)
                 ),
                 make_unique<Selector>(
                     make_unique<Sequence>(
@@ -303,8 +335,6 @@ namespace {
             makeShootAtClosestObstacleSubtree()
         ));
 
-        behaviorTree->getBlackboard().set<en::GridPosition>(stockpileCenterName, {0, 0});
-
         return behaviorTree;
     }
 }
@@ -320,6 +350,21 @@ void AITestingScene::open() {
 
     makeItems(engine);
 
+    en::Actor zoneActor = engine.makeActor("Zone");
+    zoneActor.add<Zone>(en::Bounds2DGrid({0, 0}, {5, 5}));
+
+    engine.makeActor("ZoneRenderer").add<en::InlineBehavior>(en::InlineBehavior::Draw, [](en::Actor& actor) {
+
+        en::LineRenderer& lineRenderer = en::LineRenderer::get(actor.getEngine());
+        for (en::Entity e : actor.getEngine().getRegistry().with<Zone>()) {
+
+            const Zone& zone = actor.getEngine().actor(e).get<Zone>();
+            const en::Bounds2D bounds = {zone.area.min, zone.area.max + en::GridCoordinate(1)};
+            lineRenderer.addAABB(bounds);
+        }
+    });
+
     ai::AIController& aiController = ai::AIController::create(engine);
     aiController.setBehaviorTree(makeBehaviorTree());
+    aiController.getBehaviorTree()->getBlackboard().set<en::Actor>(stockpileName, zoneActor);
 }
