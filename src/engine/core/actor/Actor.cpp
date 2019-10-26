@@ -103,6 +103,18 @@ void Actor::destroyImmediate() {
     m_registry->destroy(m_entity);
 }
 
+bool en::operator==(const Actor& lhs, const Actor& rhs) {
+
+    return
+        lhs.m_engine == rhs.m_engine &&
+        lhs.m_entity == rhs.m_entity;
+}
+
+bool en::operator!=(const Actor& lhs, const Actor& rhs) {
+
+    return !(lhs == rhs);
+}
+
 void Actor::initializeMetatable(LuaState& lua) {
 
     lua.setField("get", &pushByTypeName);

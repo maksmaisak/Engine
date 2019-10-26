@@ -55,6 +55,9 @@ namespace en {
         inline Engine& getEngine() const {return *m_engine;}
         Name getName() const;
 
+        friend bool operator==(const Actor& lhs, const Actor& rhs);
+        friend bool operator!=(const Actor& lhs, const Actor& rhs);
+
     private:
         Engine* m_engine = nullptr;
         EntityRegistry* m_registry = nullptr;

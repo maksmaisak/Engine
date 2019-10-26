@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 28/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_CUSTOMTYPEINDEX_H
-#define SAXION_Y2Q1_CPP_CUSTOMTYPEINDEX_H
+#ifndef ENGINE_CUSTOMTYPEINDEX_H
+#define ENGINE_CUSTOMTYPEINDEX_H
 
 #include <numeric>
 #include <vector>
@@ -62,4 +62,4 @@ namespace utils {
     };
 }
 
-#endif //SAXION_Y2Q1_CPP_CUSTOMTYPEINDEX_H
+#endif //ENGINE_CUSTOMTYPEINDEX_H

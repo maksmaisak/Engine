@@ -40,6 +40,10 @@ namespace {
         bool isGrabbed = false;
     };
 
+    struct Reservation {
+        en::Actor reserver;
+    };
+
     struct Zone {
         en::Bounds2DGrid area;
     };
@@ -105,19 +109,30 @@ namespace {
         return false;
     }
 
-    bool findClosestItemNotInStockpile(en::Actor& actor, ai::Blackboard& blackboard) {
+    bool findClosestItemNotInStockpile(en::Actor& aiActor, ai::Blackboard& blackboard) {
 
-        en::Engine& engine = actor.getEngine();
+        en::Engine& engine = aiActor.getEngine();
 
-        const auto getDistanceTo = [&, ownPosition = glm::vec2(actor.get<en::Transform>().getWorldPosition())](en::Entity e) {
+        constexpr float infinity = std::numeric_limits<float>::infinity();
 
-            constexpr float infinity = std::numeric_limits<float>::infinity();
+        const auto getDistanceToItem = [&, ownPosition = glm::vec2(aiActor.get<en::Transform>().getWorldPosition())](en::Entity e) {
 
-            const auto* const transform = engine.actor(e).tryGet<en::Transform>();
-            if (!transform) {
+            const en::Actor itemActor = engine.actor(e);
+
+            if (itemActor.get<Item>().isGrabbed) {
                 return infinity;
             }
 
+            if (const auto* const reservation = itemActor.tryGet<Reservation>()) {
+                if (reservation->reserver != aiActor) {
+                    return infinity;
+                }
+            }
+
+            const auto* const transform = itemActor.tryGet<en::Transform>();
+            if (!transform) {
+                return infinity;
+            }
             const en::GridPosition position = transform->getGridPosition();
 
             if (const Zone* const stockpile = blackboard.getComponentChecked<Zone>(stockpileName)) {
@@ -136,14 +151,20 @@ namespace {
         // TODO Spatial partitioning of items. Something exposed like `getTrackedEntitiesAt(en::GridPosition);`
         const auto entitiesRange = engine.getRegistry().with<en::Transform, en::Sprite, Item>();
         const auto it = std::min_element(entitiesRange.begin(), entitiesRange.end(), [&](en::Entity a, en::Entity b) {
-            return getDistanceTo(a) < getDistanceTo(b);
+            return getDistanceToItem(a) < getDistanceToItem(b);
         });
 
-        if (it != entitiesRange.end()) {
+        if (it != entitiesRange.end() && getDistanceToItem(*it) != infinity) {
 
-            const en::Actor itemActor = engine.actor(*it);
+            en::Actor itemActor = engine.actor(*it);
             assert(itemActor);
+
+            if (en::Actor previousItemActor = blackboard.getActorChecked(targetItemName)) {
+                previousItemActor.remove<Reservation>();
+            }
+
             blackboard.set<en::Actor>(targetItemName, itemActor);
+            itemActor.add<Reservation>(aiActor);
             return true;
         }
 
@@ -203,12 +224,32 @@ namespace {
 
         const auto hasValidTargetItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
 
-            if (const en::Actor itemActor = blackboard.getActorChecked(targetItemName)) {
-                const bool isObstructed = Pathfinding::isObstacle(actor.getEngine(), itemActor.get<en::Transform>().getGridPosition());
-                return !isObstructed;
+            const en::Actor itemActor = blackboard.getActorChecked(targetItemName);
+            if (!itemActor) {
+                return false;
             }
 
-            return false;
+            const bool isObstructed = Pathfinding::isObstacle(actor.getEngine(), itemActor.get<en::Transform>().getGridPosition());
+            if (isObstructed) {
+                return false;
+            }
+
+            const auto* const item = itemActor.tryGet<Item>();
+            if (!item) {
+                return false;
+            }
+
+            if (item->isGrabbed) {
+                return false;
+            }
+
+            if (const auto* const reservation = itemActor.tryGet<Reservation>()) {
+                if (reservation->reserver != actor) {
+                    return false;
+                }
+            }
+
+            return true;
         };
 
         const auto hasValidStockpileTarget = [](en::Actor& actor, Blackboard& blackboard) -> bool {
@@ -225,7 +266,12 @@ namespace {
             en::Engine& engine = actor.getEngine();
             const auto items = engine.getRegistry().with<en::Transform, en::Sprite, Item>();
             const bool isOccupied = std::any_of(items.begin(), items.end(), [&](en::Entity e) {
-                const en::GridPosition itemPosition = engine.actor(e).get<en::Transform>().getGridPosition();
+
+                const en::Actor itemActor = engine.actor(e);
+                if (itemActor.get<Item>().isGrabbed) {
+                    return false;
+                }
+                const en::GridPosition itemPosition = itemActor.get<en::Transform>().getGridPosition();
                 return itemPosition == *targetStockpileTarget;
             });
 
@@ -261,6 +307,12 @@ namespace {
             return true;
         };
 
+        const auto hasGrabbedItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
+
+            const en::Actor itemActor = blackboard.getActorChecked(grabbedItemName);
+            return itemActor;
+        };
+
         const auto grabItem = [](en::Actor& actor, Blackboard& blackboard) -> bool {
 
             if (blackboard.getActorChecked(grabbedItemName)) {
@@ -277,10 +329,13 @@ namespace {
                     auto& item = itemActor.get<Item>();
                     if (!item.isGrabbed) {
 
+                        blackboard.set<en::Actor>(grabbedItemName, itemActor);
+                        blackboard.unset<en::Actor>(targetItemName);
+
                         item.isGrabbed = true;
                         itemTransform.setParent(actor);
                         itemTransform.setLocalPosition({0.5f, 0.f, 0.f});
-                        blackboard.set<en::Actor>(grabbedItemName, itemActor);
+
                         return true;
                     }
                 }
@@ -304,6 +359,8 @@ namespace {
 
                 blackboard.unset<en::Actor>(grabbedItemName);
 
+                grabbedItem.remove<Reservation>();
+                grabbedItem.get<Item>().isGrabbed = false;
                 grabbedItem.get<en::Transform>()
                     .setParent(en::nullEntity)
                     .setLocalPosition(glm::vec3(glm::vec2(getDropPosition()) + 0.5f, 0.f));
@@ -314,27 +371,38 @@ namespace {
             return false;
         };
 
-        auto behaviorTree = make_unique<BehaviorTree>(make_unique<SimpleParallelAction>(
-            make_unique<Sequence>(
-                make_unique<Selector>(
-                    make_unique<ConditionAction>(hasValidTargetItem),
-                    make_unique<ConditionAction>(findClosestItemNotInStockpile)
-                ),
-                make_unique<Selector>(
-                    make_unique<Sequence>(
-                        make_unique<MoveAction>(targetItemName),
-                        make_unique<ConditionAction>(grabItem),
-                        make_unique<Selector>(
-                            make_unique<ConditionAction>(hasValidStockpileTarget),
-                            make_unique<ConditionAction>(findStockpileTarget)
-                        ),
-                        make_unique<MoveAction>(stockpileTargetLocationName),
-                        make_unique<ConditionAction>(dropItem)
+        auto behaviorTree = make_unique<BehaviorTree>(make_unique<Sequence>(
+
+            // Ensure grabbed item
+            make_unique<Selector>(
+                make_unique<ConditionAction>(hasGrabbedItem),
+                // Find and grab item
+                make_unique<Sequence>(
+                    // Ensure target item
+                    make_unique<Selector>(
+                        make_unique<ConditionAction>(hasValidTargetItem),
+                        make_unique<ConditionAction>(findClosestItemNotInStockpile)
                     ),
-                    makeUnset<en::Actor>(targetItemName)
+                    make_unique<ConditionDecorator>(
+                        hasValidTargetItem,
+                        make_unique<Sequence>(
+                            make_unique<MoveAction>(targetItemName),
+                            make_unique<ConditionAction>(grabItem)
+                        )
+                    )
                 )
             ),
-            makeShootAtClosestObstacleSubtree()
+
+            // Move item to stockpile
+            make_unique<Selector>(
+                make_unique<ConditionAction>(hasValidStockpileTarget),
+                make_unique<ConditionAction>(findStockpileTarget)
+            ),
+            make_unique<MoveAction>(stockpileTargetLocationName),
+            make_unique<ConditionDecorator>(
+                hasValidStockpileTarget,
+                make_unique<ConditionAction>(dropItem)
+            )
         ));
 
         return behaviorTree;
@@ -353,7 +421,7 @@ void AITestingScene::open() {
     makeItems(engine);
 
     en::Actor zoneActor = engine.makeActor("Zone");
-    zoneActor.add<Zone>(en::Bounds2DGrid({0, 0}, {5, 5}));
+    zoneActor.add<Zone>(en::Bounds2DGrid({0, 0}, {10, 10}));
 
     engine.makeActor("ZoneRenderer").add<en::InlineBehavior>(en::InlineBehavior::Draw, [](en::Actor& actor) {
 
@@ -366,9 +434,18 @@ void AITestingScene::open() {
         }
     });
 
-    ai::AIController& aiController = ai::AIController::create(engine);
-    aiController.setBehaviorTree(makeBehaviorTree());
-    aiController.getBehaviorTree()->getBlackboard().set<en::Actor>(stockpileName, zoneActor);
+    for (int i = 0; i < 10; ++i) {
+
+        ai::AIController& aiController = ai::AIController::create(engine);
+        aiController.setBehaviorTree(makeBehaviorTree());
+        aiController.getBehaviorTree()->getBlackboard().set<en::Actor>(stockpileName, zoneActor);
+
+        // shared_ptr instead of unique_ptr because the lambda needs to be copyable to fit into std::function
+        auto secondaryBehaviorTree = std::make_shared<ai::BehaviorTree>(makeShootAtClosestObstacleSubtree());
+        aiController.getActor().add<en::InlineBehavior>([secondaryBehaviorTree = std::move(secondaryBehaviorTree)](en::Actor& actor, float dt) {
+            secondaryBehaviorTree->execute(actor);
+        });
+    }
 
     engine.makeActor("TimescaleSetter").add<en::InlineBehavior>([](en::Actor& actor, float dt){
 
