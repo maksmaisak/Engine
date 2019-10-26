@@ -4,7 +4,6 @@
 
 #include "KeyboardHelper.h"
 #include <map>
-#include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <string>
 
@@ -149,28 +148,42 @@ namespace {
     }
 }
 
-bool KeyboardHelper::isHeld(const std::string& keyName) {
+bool KeyboardHelper::isHeld(sf::Keyboard::Key keyCode) {
 
-    const sf::Keyboard::Key keyCode = getKeyCode(keyName);
     return isValid(keyCode) ? isHeldNow[keyCode] : false;
 }
 
-bool KeyboardHelper::isDown(const std::string& keyName) {
+bool KeyboardHelper::isUp(sf::Keyboard::Key keyCode) {
 
-    const sf::Keyboard::Key keyCode = getKeyCode(keyName);
-    if (!isValid(keyCode))
+    if (!isValid(keyCode)) {
         return false;
+    }
+
+    return wasHeldLastUpdate[keyCode] && !isHeldNow[keyCode];
+}
+
+bool KeyboardHelper::isDown(sf::Keyboard::Key keyCode) {
+
+    if (!isValid(keyCode)) {
+        return false;
+    }
 
     return !wasHeldLastUpdate[keyCode] && isHeldNow[keyCode];
 }
 
+bool KeyboardHelper::isHeld(const std::string& keyName) {
+
+    return isHeld(getKeyCode(keyName));
+}
+
 bool KeyboardHelper::isUp(const std::string& keyName) {
 
-    const sf::Keyboard::Key keyCode = getKeyCode(keyName);
-    if (!isValid(keyCode))
-        return false;
+    return isUp(getKeyCode(keyName));
+}
 
-    return wasHeldLastUpdate[keyCode] && !isHeldNow[keyCode];
+bool KeyboardHelper::isDown(const std::string& keyName) {
+
+    return isDown(getKeyCode(keyName));
 }
 
 void KeyboardHelper::update() {

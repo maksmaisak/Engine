@@ -14,9 +14,14 @@ namespace utils {
     class KeyboardHelper : en::Receiver<sf::Event> {
 
     public:
+        static bool isDown(sf::Keyboard::Key keyCode);
+        static bool isHeld(sf::Keyboard::Key keyCode);
+        static bool isUp(sf::Keyboard::Key keyCode);
+
         static bool isDown(const std::string& keyName);
         static bool isHeld(const std::string& keyName);
         static bool isUp(const std::string& keyName);
+
         static void update();
 
     private:

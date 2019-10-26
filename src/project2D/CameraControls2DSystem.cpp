@@ -66,12 +66,14 @@ namespace {
     }
 }
 
-void CameraControls2DSystem::update(float dt) {
+void CameraControls2DSystem::update(float) {
 
     en::Actor cameraActor = m_engine->getMainCamera();
     if (!cameraActor) {
         return;
     }
+
+    const float dt = m_engine->getDeltaTimeRealtime();
 
     auto& camera = cameraActor.get<en::Camera>();
     camera.orthographicHalfSize += getZoomDelta() * ZoomSpeedMultiplier * dt;

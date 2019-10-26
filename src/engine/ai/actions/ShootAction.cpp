@@ -19,7 +19,7 @@ namespace {
 
         en::Actor bullet = shooterActor.getEngine().makeActor("Bullet shot by " + shooterActor.getName().getString());
         auto& bulletTransform = bullet.add<en::Transform>(shooterActor.get<en::Transform>().getWorldTransform())
-            .move(0.5f, 0.5f, 1.f)
+            .move(0.f, 0.f, 1.f)
             .setLocalScale(0.3f);
 
         auto& sprite = bullet.add<en::Sprite>();

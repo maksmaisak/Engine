@@ -59,6 +59,9 @@ namespace en {
         inline double getFps() const { return m_fps; }
         inline std::int64_t getFrameTimeMicroseconds() const { return m_frameTimeMicroseconds; }
         inline float getDeltaTime() const { return m_deltaTime; }
+        inline float getDeltaTimeRealtime() const { return m_deltaTimeRealtime; }
+        inline float getTimeScale() const { return m_timeScale; }
+        inline void setTimeScale(float timeScale) { m_timeScale = timeScale; }
 
         Actor actor(Entity entity) const;
         Actor makeActor();
@@ -72,7 +75,7 @@ namespace en {
     private:
         void initializeLua();
 
-        void update(float dt);
+        void fixedUpdate();
         void draw();
         void processWindowEvents();
 
@@ -90,6 +93,8 @@ namespace en {
         double m_fps = 0.f;
         std::int64_t m_frameTimeMicroseconds = 0;
         float m_deltaTime = 0.f;
+        float m_deltaTimeRealtime = 0.f;
+        float m_timeScale = 1.f;
 
         bool m_shouldExit = false;
     };

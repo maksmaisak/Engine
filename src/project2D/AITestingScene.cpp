@@ -4,6 +4,7 @@
 
 #include "AITestingScene.h"
 #include <random>
+#include <SFML/Window.hpp>
 #include "LineRenderer.h"
 #include "AIController.h"
 #include "Camera.h"
@@ -25,6 +26,7 @@
 #include "Pathfinding.h"
 #include "Sprite.h"
 #include "Bounds.h"
+#include "KeyboardHelper.h"
 
 namespace {
 
@@ -367,4 +369,24 @@ void AITestingScene::open() {
     ai::AIController& aiController = ai::AIController::create(engine);
     aiController.setBehaviorTree(makeBehaviorTree());
     aiController.getBehaviorTree()->getBlackboard().set<en::Actor>(stockpileName, zoneActor);
+
+    engine.makeActor("TimescaleSetter").add<en::InlineBehavior>([](en::Actor& actor, float dt){
+
+        const bool shouldIncrease = sf::Keyboard::isKeyPressed(sf::Keyboard::Period);
+        const bool shouldDecrease = sf::Keyboard::isKeyPressed(sf::Keyboard::Comma);
+        if (shouldIncrease ^ shouldDecrease) {
+
+            constexpr float multiplierPerSecond = 2.f;
+
+            en::Engine& engine = actor.getEngine();
+            const float currentTimeScale = engine.getTimeScale();
+            const float multiplier = glm::pow(multiplierPerSecond, engine.getDeltaTimeRealtime());
+            const float newTimeScale = shouldIncrease ?
+                currentTimeScale * multiplier :
+                currentTimeScale / multiplier;
+
+            const float newTimeScaleClamped = glm::clamp(newTimeScale, 0.01f, 20.f);
+            engine.setTimeScale(newTimeScaleClamped);
+        }
+    });
 }

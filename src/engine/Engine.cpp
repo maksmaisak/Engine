@@ -24,7 +24,7 @@ using namespace en;
 namespace {
 
     constexpr float FixedTimestep = 0.01f;
-    constexpr unsigned int MaxNumFixedUpdatedPerFrame = 3;
+    constexpr unsigned int MaxNumFixedUpdatesPerFrame = 3;
 
     void printGLContextVersionInfo() {
 
@@ -96,15 +96,19 @@ void Engine::run() {
 
     while (m_window.isOpen()) {
 
-        fixedUpdateLag += fixedUpdateClock.restart();
-        fixedUpdateLag = std::min(fixedUpdateLag, fixedTimestepSf * static_cast<float>(MaxNumFixedUpdatedPerFrame));
+        // Perform fixed updates if needed
+        fixedUpdateLag += fixedUpdateClock.restart() * m_timeScale;
+        fixedUpdateLag = std::min(fixedUpdateLag, fixedTimestepSf * static_cast<float>(MaxNumFixedUpdatesPerFrame) * std::max(1.f, m_timeScale));
         while (fixedUpdateLag >= fixedTimestepSf) {
 
             m_deltaTime = FixedTimestep;
-            update(m_deltaTime);
+            m_deltaTimeRealtime = FixedTimestep / m_timeScale;
+            fixedUpdate();
+
             fixedUpdateLag -= fixedTimestepSf;
         }
 
+        // Perform draw if needed
         if (drawClock.getElapsedTime() >= drawTimestepSf) {
 
             m_fps = static_cast<float>(1000000.0 / drawClock.restart().asMicroseconds());
@@ -115,14 +119,17 @@ void Engine::run() {
 
         } else {
 
-            // Wait until it has to either draw() or update()
             while (true) {
 
                 sf::sleep(sf::microseconds(1));
 
-                const bool shouldDraw = drawTimestepSf < drawClock.getElapsedTime();
-                const bool shouldUpdate = fixedTimestepSf < fixedUpdateLag + fixedUpdateClock.getElapsedTime();
-                if (shouldDraw || shouldUpdate) {
+                const bool shouldDraw = drawClock.getElapsedTime() >= drawTimestepSf;
+                if (shouldDraw) {
+                    break;
+                }
+
+                const bool shouldUpdate = fixedUpdateLag + fixedUpdateClock.getElapsedTime() * m_timeScale >= fixedTimestepSf;
+                if (shouldUpdate) {
                     break;
                 }
             }
@@ -140,11 +147,11 @@ void Engine::quit() {
     m_shouldExit = true;
 }
 
-void Engine::update(float dt) {
+void Engine::fixedUpdate() {
 
-    m_sceneManager.update(dt);
-    m_systems.update(dt);
-    m_scheduler.update(dt);
+    m_sceneManager.update(m_deltaTime);
+    m_systems.update(m_deltaTime);
+    m_scheduler.update(m_deltaTime);
 
     utils::KeyboardHelper::update();
     utils::MouseHelper::update();

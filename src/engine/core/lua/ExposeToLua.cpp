@@ -166,9 +166,9 @@ namespace {
         lua_pushvalue(lua, -1);
         lua_newtable(lua);
         {
-            lua.setField("isHeld", &utils::KeyboardHelper::isHeld);
-            lua.setField("isDown", &utils::KeyboardHelper::isDown);
-            lua.setField("isUp"  , &utils::KeyboardHelper::isUp);
+            lua.setField("isHeld", static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isHeld));
+            lua.setField("isDown", static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isDown));
+            lua.setField("isUp"  , static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isUp));
         }
         lua_setfield(lua, -2, "keyboard");
     }
