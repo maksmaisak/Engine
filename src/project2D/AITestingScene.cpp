@@ -26,7 +26,6 @@
 #include "Pathfinding.h"
 #include "Sprite.h"
 #include "Bounds.h"
-#include "KeyboardHelper.h"
 
 namespace {
 
@@ -196,10 +195,12 @@ namespace {
         const auto isClosestObstacleInShootingRange = [](en::Actor& actor, Blackboard& blackboard) {
 
             if (const auto closestObstacleOptional = blackboard.get<en::GridPosition>(closestObstacleName)) {
-                return 10.f * 10.f > glm::distance2(
+
+                const bool isInShootingRange = 10.f * 10.f > glm::distance2(
                     glm::vec2(*closestObstacleOptional),
                     glm::vec2(actor.get<en::Transform>().getGridPosition())
                 );
+                return isInShootingRange;
             }
 
             return false;

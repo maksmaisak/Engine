@@ -40,6 +40,7 @@ namespace en {
 
         CompoundSystem m_systems;
         class CompoundSystem* m_behaviors;
+
         utils::CustomTypeMap<struct Dummy, bool> m_behaviorSystemPresence;
     };
 
