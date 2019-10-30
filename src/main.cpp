@@ -3,6 +3,7 @@
 
 #include "Engine.h"
 #include "TransformHierarchySystem.h"
+#include "AIControllerDiagnosticsSystem.h"
 #include "DestroySystem.h"
 #include "DestroyByTimerSystem.h"
 #include "RenderSystems.h"
@@ -59,6 +60,7 @@ int main() {
         //systems.addSystem<en::PhysicsSystemOctree>().setGravity({0, -9.8, 0});
 
         systems.addSystem<CameraControls2DSystem>();
+        systems.addSystem<AIControllerDiagnosticsSystem>();
 
         systems.addSystem<en::UIEventSystem>();
         systems.addSystem<en::BehaviorsSystem>();

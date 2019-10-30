@@ -26,3 +26,8 @@ Bounds2D Sprite::getAABB(const glm::mat4& matrixModel) const {
     return bounds;
 }
 
+glm::mat4 Sprite::getRenderMatrix(const glm::mat4& matrixModel) const {
+
+    return matrixModel * glm::translate(glm::vec3(-pivot, 0.f));
+}
+

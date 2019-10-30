@@ -170,7 +170,7 @@ void Render2DSystem::renderSprites(const Bounds2D& cameraBounds, const glm::mat4
             if (cameraBounds.intersects(spriteAABB)) {
 
                 gl::setUniform(textureUniformLocation, texture, 0, GL_TEXTURE_2D);
-                gl::setUniform(matrixUniformLocation, matrixPV * matrixModel * glm::translate(glm::vec3(-sprite.pivot, 0.f)));
+                gl::setUniform(matrixUniformLocation, matrixPV * sprite.getRenderMatrix(matrixModel));
                 gl::setUniform(spriteColorUniformLocation, sprite.color);
                 quad->render(0, -1, 1);
             }
