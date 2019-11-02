@@ -20,12 +20,13 @@ namespace ai {
         /// The key may refer to either a GridPosition or an Actor
         explicit MoveAction(const en::Name& targetBlackboardKey);
 
+        void reset() override;
+        void display() override;
+
     protected:
         ActionOutcome execute() override;
 
     private:
-        void reset() override;
-
         ActionOutcome followPathfindingPath();
         void drawPathfindingPath();
 

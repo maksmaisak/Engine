@@ -3,6 +3,7 @@
 //
 
 #include "MoveAction.h"
+#include <imgui.h>
 #include "Transform.h"
 #include "GLMExtensions.h"
 #include "Pathfinding.h"
@@ -126,5 +127,25 @@ void MoveAction::drawPathfindingPath() {
         }
 
         previousPosition = position;
+    }
+}
+
+void MoveAction::display() {
+
+    if (ImGui::TreeNode(this, "Move")) {
+
+        ImGui::Text("Target: \"%s\"", m_targetBlackboardKey.getString().c_str());
+
+        if (!m_pathfindingPath) {
+            ImGui::Text("No path...");
+        } else {
+            ImGui::Text("Moving...");
+            ImGui::Text("Path: ");
+            for (const en::GridPosition& position : *m_pathfindingPath) {
+                ImGui::Text("(%lli, %lli)", position.x, position.y);
+            }
+        }
+
+        ImGui::TreePop();
     }
 }

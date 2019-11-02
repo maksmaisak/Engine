@@ -17,6 +17,7 @@ namespace ai {
     public:
         using CompoundAction::CompoundAction;
         void reset() override;
+        void display() override;
 
     protected:
         ActionOutcome execute() override;

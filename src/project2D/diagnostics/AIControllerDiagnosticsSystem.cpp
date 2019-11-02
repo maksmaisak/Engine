@@ -39,32 +39,49 @@ namespace {
         const glm::vec2 mousePositionInSprite = glm::inverse(localToWorld) * glm::vec4(position, 0.f, 1.f);
         return en::Bounds2D(glm::vec2(0.f), glm::vec2(1.f)).contains(mousePositionInSprite);
     }
+
+    en::Entity getCurrentlySelectedEntity(en::Engine& engine) {
+
+        if (en::Actor camera = engine.getMainCamera()) {
+
+            const glm::vec2 mousePosition = getMousePositionWorldspace(camera);
+            en::LineRenderer::get(engine).addAABB({mousePosition - glm::vec2(0.1f), mousePosition + glm::vec2(0.1f)});
+
+            for (en::Entity e : engine.getRegistry().with<en::Transform, en::Sprite, ai::AIController>()) {
+
+                const en::Actor actor = engine.actor(e);
+                const bool isMouseOver = intersectsSprite(mousePosition, actor);
+                if (isMouseOver) {
+                    return actor;
+                }
+            }
+        }
+
+        return en::nullEntity;
+    }
 }
+
+
+AIControllerDiagnosticsSystem::AIControllerDiagnosticsSystem() : m_lastSelectedEntity(0) {}
 
 void AIControllerDiagnosticsSystem::draw() {
 
-    if (en::Actor camera = m_engine->getMainCamera()) {
+    if (const en::Entity currentlySelectedEntity = getCurrentlySelectedEntity(*m_engine)) {
+        m_lastSelectedEntity = currentlySelectedEntity;
+    }
 
-        const glm::vec2 mousePosition = getMousePositionWorldspace(camera);
-        en::LineRenderer::get(*m_engine).addAABB({mousePosition - glm::vec2(0.1f), mousePosition + glm::vec2(0.1f)});
-
-        for (en::Entity e : m_registry->with<en::Transform, en::Sprite, ai::AIController>()) {
-
-            const en::Actor actor = m_engine->actor(e);
-            const bool isMouseOver = intersectsSprite(mousePosition, actor);
-            if (isMouseOver) {
-                showAIController(actor);
-                break;
-            }
-        }
+    if (m_lastSelectedEntity) {
+        showAIController(m_engine->actor(m_lastSelectedEntity));
     }
 }
 
 void AIControllerDiagnosticsSystem::showAIController(const en::Actor& actor) {
 
-    if (const ai::AIController* const aiController = actor.tryGet<ai::AIController>()) {
-        if (const ai::BehaviorTree* const behaviorTree = aiController->getBehaviorTree()) {
-            behaviorTree->display();
+    if (actor) {
+        if (const ai::AIController* const aiController = actor.tryGet<ai::AIController>()) {
+            if (const ai::BehaviorTree* const behaviorTree = aiController->getBehaviorTree()) {
+                behaviorTree->display();
+            }
         }
     }
 }

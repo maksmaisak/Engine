@@ -42,8 +42,15 @@ const Blackboard& BehaviorTree::getBlackboard() const {
 
 void BehaviorTree::display() const {
 
-    if (ImGui::Begin("BehaviorTree")) {
-        ImGui::Text("Text");
+    const std::string name = "BehaviorTree at " + std::to_string(reinterpret_cast<std::uintptr_t>(this));
+    if (ImGui::Begin(name.c_str())) {
+
+        if (!m_root) {
+            ImGui::Text("No root");
+        } else {
+            ImGui::Bullet();
+            m_root->display();
+        }
     }
 
     ImGui::End();

@@ -21,6 +21,7 @@ namespace ai {
         InlineAction(execute_t executeFunction, reset_t resetFunction = {});
         InlineAction(executeNoReturn_t executeFunction, reset_t resetFunction = {});
         void reset() override;
+        void display() override;
 
     protected:
         ActionOutcome execute() override;

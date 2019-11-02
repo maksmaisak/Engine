@@ -3,6 +3,7 @@
 //
 
 #include "Action.h"
+#include <imgui.h>
 
 using namespace ai;
 
@@ -17,4 +18,12 @@ ActionOutcome Action::execute(en::Actor& actor, Blackboard& blackboard) {
     assert(m_blackboard);
 
     return execute();
+}
+
+void Action::display() {
+
+    if (ImGui::TreeNode(this, "Action")) {
+        ImGui::Text("Action::display() not implemented.");
+        ImGui::TreePop();
+    }
 }

@@ -6,6 +6,7 @@
 #define ENGINE_AICONTROLLERDIAGNOSTICSSYSTEM_H
 
 #include "System.h"
+#include "Entity.h"
 
 namespace en {
     class Actor;
@@ -15,10 +16,13 @@ namespace en {
 class AIControllerDiagnosticsSystem : public en::System {
 
 public:
+    AIControllerDiagnosticsSystem();
     void draw() override;
 
 private:
     void showAIController(const en::Actor& actor);
+
+    en::Entity m_lastSelectedEntity;
 };
 
 #endif //ENGINE_AICONTROLLERDIAGNOSTICSSYSTEM_H

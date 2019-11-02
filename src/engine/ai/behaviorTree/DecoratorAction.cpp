@@ -3,6 +3,7 @@
 //
 
 #include "DecoratorAction.h"
+#include <imgui.h>
 
 using namespace ai;
 
@@ -16,5 +17,20 @@ void DecoratorAction::reset() {
 
     if (m_child) {
         m_child->reset();
+    }
+}
+
+void DecoratorAction::display() {
+
+    if (ImGui::TreeNode(this, "Decorator")) {
+
+        if (!m_child) {
+            ImGui::Text("No child");
+        } else {
+            ImGui::Bullet();
+            m_child->display();
+        }
+
+        ImGui::TreePop();
     }
 }

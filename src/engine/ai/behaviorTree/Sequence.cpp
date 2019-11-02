@@ -3,6 +3,7 @@
 //
 
 #include "Sequence.h"
+#include <imgui.h>
 
 using namespace ai;
 
@@ -38,4 +39,27 @@ void Sequence::reset() {
 
     CompoundAction::reset();
     m_currentIndex = 0;
+}
+
+void Sequence::display() {
+
+    if (ImGui::TreeNode(this, "Sequence")) {
+
+        for (std::size_t i = 0; i < m_actions.size(); ++i) {
+
+            if (!m_actions[i]) {
+                if (ImGui::TreeNode("Nullptr")) {
+                    ImGui::TreePop();
+                }
+                continue;
+            }
+
+            if (i == m_currentIndex) {
+                ImGui::Bullet();
+            }
+            m_actions[i]->display();
+        }
+
+        ImGui::TreePop();
+    }
 }
