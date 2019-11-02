@@ -12,8 +12,10 @@
 #include "RenderSkyboxSystem.h"
 #include "RenderUISystem.h"
 #include "RenderImguiSystem.h"
+#include "PostProcessingSystem.h"
 #include "RenderingSharedState.h"
 #include "Resources.h"
+#include "ScopedBind.h"
 
 using namespace en;
 
@@ -64,6 +66,7 @@ void RenderSystems::start() {
     addSystem<Render2DSystem>();
     addSystem<RenderUISystem>(m_renderingSharedState);
     addSystem<RenderImguiSystem>();
+    addSystem<PostProcessingSystem>(m_renderingSharedState);
 
     CompoundSystem::start();
 }
@@ -74,7 +77,12 @@ void RenderSystems::draw() {
         std::cerr << "Uncaught openGL error(s) before rendering." << std::endl;
     }
 
-    CompoundSystem::draw();
+    if (m_renderingSharedState->prePostProcessingFramebuffer) {
+        const gl::ScopedBind bind(m_renderingSharedState->prePostProcessingFramebuffer, GL_FRAMEBUFFER);
+        CompoundSystem::draw();
+    } else {
+        CompoundSystem::draw();
+    }
 
     if (m_renderingSharedState->enableDebugOutput) {
         renderDebug();

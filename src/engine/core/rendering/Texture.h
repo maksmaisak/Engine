@@ -51,7 +51,8 @@ namespace en {
         void updateData2D(GLvoid* pixelData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height);
         void updateData2D(GLvoid* pixelData, GLenum dataFormat = GL_UNSIGNED_BYTE);
 
-        GLuint getId() const;
+        gl::TextureObject& getGLTextureObject();
+        const gl::TextureObject& getGLTextureObject() const;
         bool isValid() const;
         Kind getKind() const;
         Size getSize() const;

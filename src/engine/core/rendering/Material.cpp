@@ -297,7 +297,7 @@ template<>
 void Material::setCustomUniformsOfType<std::shared_ptr<Texture>>(const Material::LocationToUniformValue<std::shared_ptr<Texture>>& values) {
 
     for (auto& [location, texture] : values) {
-        if (!setUniformTexture(location, texture->getId())) {
+        if (!setUniformTexture(location, texture->getGLTextureObject())) {
             break;
         }
     }

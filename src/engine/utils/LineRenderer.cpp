@@ -31,8 +31,8 @@ LineRenderer::LineRenderer(Actor& actor, std::size_t maxNumVerticesPerDrawCall) 
     Behavior(actor),
     m_maxNumVerticesPerDrawCall(maxNumVerticesPerDrawCall),
     m_wireframeShader(Resources<ShaderProgram>::get("line")),
-    m_vao(gl::ForceCreate{}),
-    m_vbo(gl::ForceCreate{})
+    m_vao(gl::ForceCreate),
+    m_vbo(gl::ForceCreate)
 {
     assert(m_wireframeShader);
 

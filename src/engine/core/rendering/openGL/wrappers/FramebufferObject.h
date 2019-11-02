@@ -15,8 +15,8 @@ namespace gl {
     class FramebufferObject : public Wrapper<makeFBO, deleteFBO> {
     public:
         using Wrapper::Wrapper;
-        void bind(GLenum target) const;
-        void unbind(GLenum target) const;
+        void bind(GLenum target = GL_FRAMEBUFFER) const;
+        void unbind(GLenum target = GL_FRAMEBUFFER) const;
     };
 }
 

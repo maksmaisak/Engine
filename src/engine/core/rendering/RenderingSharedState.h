@@ -22,6 +22,10 @@ namespace en {
         VertexRenderer vertexRenderer;
         std::unordered_map<std::shared_ptr<class Material>, Mesh> batches;
 
+        /// If this is set to a valid framebuffer, everything will be rendered into it instead of the screen.
+        /// In that case the framebuffer should be used as input for post-processing.
+        gl::FramebufferObject prePostProcessingFramebuffer;
+
         bool enableStaticBatching;
         bool enableDebugOutput;
         glm::vec2 referenceResolution;
