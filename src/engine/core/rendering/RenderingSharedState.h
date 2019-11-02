@@ -9,6 +9,7 @@
 #include "DepthMaps.h"
 #include "Mesh.h"
 #include "VertexRenderer.h"
+#include "FramebufferBundle.h"
 
 namespace en {
 
@@ -24,7 +25,7 @@ namespace en {
 
         /// If this is set to a valid framebuffer, everything will be rendered into it instead of the screen.
         /// In that case the framebuffer should be used as input for post-processing.
-        gl::FramebufferObject prePostProcessingFramebuffer;
+        gl::FramebufferBundle prePostProcessingFramebuffer;
 
         bool enableStaticBatching;
         bool enableDebugOutput;

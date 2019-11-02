@@ -41,9 +41,6 @@ namespace {
         // Enable antialiasing on lines
         glEnable(GL_LINE_SMOOTH);
 
-        // Convert output from fragment shaders from linear to sRGB
-        glEnable(GL_FRAMEBUFFER_SRGB);
-
         // Disable the byte-alignment restriction
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -77,11 +74,19 @@ void RenderSystems::draw() {
         std::cerr << "Uncaught openGL error(s) before rendering." << std::endl;
     }
 
-    if (m_renderingSharedState->prePostProcessingFramebuffer) {
-        const gl::ScopedBind bind(m_renderingSharedState->prePostProcessingFramebuffer, GL_FRAMEBUFFER);
+    const gl::FramebufferObject& prePostProcessingFbo = m_renderingSharedState->prePostProcessingFramebuffer.framebuffer;
+    if (prePostProcessingFbo) {
+
+        const gl::ScopedBind bind(prePostProcessingFbo, GL_FRAMEBUFFER);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         CompoundSystem::draw();
+
     } else {
+
+        // Convert output from fragment shaders from linear to sRGB
+        glEnable(GL_FRAMEBUFFER_SRGB);
         CompoundSystem::draw();
+        glDisable(GL_FRAMEBUFFER_SRGB);
     }
 
     if (m_renderingSharedState->enableDebugOutput) {

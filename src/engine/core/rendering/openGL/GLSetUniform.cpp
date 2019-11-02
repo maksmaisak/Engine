@@ -54,7 +54,7 @@ namespace gl {
 
         glActiveTexture(GL_TEXTURE0 + textureNum);
         glBindTexture(target, texture.getId());
-        glUniform1i(location, 0);
+        glUniform1i(location, textureNum);
 
         glCheckError();
     }

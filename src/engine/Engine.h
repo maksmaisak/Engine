@@ -38,6 +38,8 @@ namespace en {
     class Engine {
 
     public:
+        static Engine& get();
+
         Engine();
         virtual ~Engine();
         Engine(const Engine& other) = delete;

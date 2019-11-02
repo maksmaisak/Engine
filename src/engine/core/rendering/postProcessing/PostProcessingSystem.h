@@ -6,7 +6,9 @@
 #define ENGINE_POSTPROCESSINGSYSTEM_H
 
 #include "System.h"
+#include <vector>
 #include "TextureObject.h"
+#include "PostProcessingPassBloom.h"
 
 namespace en {
 
@@ -19,7 +21,7 @@ namespace en {
 
     private:
         std::shared_ptr<RenderingSharedState> m_renderingSharedState;
-        gl::TextureObject m_prePostProcessRenderTexture;
+        PostProcessingPassBloom m_postProcessPassBloom;
     };
 }
 

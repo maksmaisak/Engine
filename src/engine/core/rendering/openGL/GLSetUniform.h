@@ -15,8 +15,8 @@ namespace gl {
     template<typename T>
     void setUniform(GLint location, const T& value);
 
-    void setUniform(GLint location, const class TextureObject&, GLenum textureNum = 0, GLenum target = GL_TEXTURE_2D);
-    void setUniform(GLint location, const en::Texture* texture, GLenum textureNum = 0, GLenum target = GL_TEXTURE_2D);
+    void setUniform(GLint location, const class TextureObject&, GLenum textureNum, GLenum target = GL_TEXTURE_2D);
+    void setUniform(GLint location, const en::Texture* texture, GLenum textureNum, GLenum target = GL_TEXTURE_2D);
 }
 
 #endif //ENGINE_GLSETUNIFORM_H
