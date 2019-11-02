@@ -73,8 +73,12 @@ else()
 endif()
 
 target_link_libraries(Engine ${LUALIB} glm ${GLEWLIB} ${SFMLLIB} ${FREETYPELIB} ${ASSIMPLIB})
-if (WIN32)
+
+if(WIN32)
     target_link_libraries(Engine ${OPENGL_LIBRARIES})
 elseif (APPLE)
     target_link_libraries(Engine "-framework OpenGL")
 endif()
+
+find_package(ImGui-SFML REQUIRED)
+target_link_libraries(Engine ImGui-SFML::ImGui-SFML)

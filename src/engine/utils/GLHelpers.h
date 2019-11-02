@@ -39,7 +39,7 @@ inline GLenum glCheckError_(const char *file, int line) {
 #else
     #define glCheckError() glCheckError_(__FILE__, __LINE__)
     #define glCheckBefore(e) (glCheckError(), e)
-    #define glCheckBeforeAfter(e) glCheckError(); e; glCheckError()
+    #define glCheckBeforeAfter(e) (glCheckError(); e; glCheckError())
 #endif
 
 #endif //ENGINE_GLHELPERS_H

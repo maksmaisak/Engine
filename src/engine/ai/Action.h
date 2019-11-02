@@ -23,6 +23,7 @@ namespace ai {
         virtual ~Action() = default;
         ActionOutcome execute(en::Actor& actor, class Blackboard& blackboard);
         virtual inline void reset() {};
+        virtual void display();
 
     protected:
         virtual ActionOutcome execute() = 0;

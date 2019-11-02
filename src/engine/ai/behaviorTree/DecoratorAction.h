@@ -14,6 +14,7 @@ namespace ai {
     public:
         DecoratorAction(std::unique_ptr<Action> child);
         void reset() override;
+        void display() override;
 
     protected:
         std::unique_ptr<Action> m_child;

@@ -11,6 +11,7 @@
 #include "Render2DSystem.h"
 #include "RenderSkyboxSystem.h"
 #include "RenderUISystem.h"
+#include "RenderImguiSystem.h"
 #include "RenderingSharedState.h"
 #include "Resources.h"
 
@@ -62,6 +63,8 @@ void RenderSystems::start() {
     addSystem<RenderSkyboxSystem>();
     addSystem<Render2DSystem>();
     addSystem<RenderUISystem>(m_renderingSharedState);
+    addSystem<RenderImguiSystem>();
+
     CompoundSystem::start();
 }
 

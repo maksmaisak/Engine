@@ -5,6 +5,7 @@
 #include "AITestingScene.h"
 #include <random>
 #include <SFML/Window.hpp>
+#include <imgui.h>
 #include "LineRenderer.h"
 #include "AIController.h"
 #include "Camera.h"
@@ -26,7 +27,6 @@
 #include "Pathfinding.h"
 #include "Sprite.h"
 #include "Bounds.h"
-#include "KeyboardHelper.h"
 
 namespace {
 
@@ -196,10 +196,12 @@ namespace {
         const auto isClosestObstacleInShootingRange = [](en::Actor& actor, Blackboard& blackboard) {
 
             if (const auto closestObstacleOptional = blackboard.get<en::GridPosition>(closestObstacleName)) {
-                return 10.f * 10.f > glm::distance2(
+
+                const bool isInShootingRange = 10.f * 10.f > glm::distance2(
                     glm::vec2(*closestObstacleOptional),
                     glm::vec2(actor.get<en::Transform>().getGridPosition())
                 );
+                return isInShootingRange;
             }
 
             return false;
@@ -447,23 +449,30 @@ void AITestingScene::open() {
         });
     }
 
-    engine.makeActor("TimescaleSetter").add<en::InlineBehavior>([](en::Actor& actor, float dt){
+    engine.makeActor("TimescaleSetter").add<en::InlineBehavior>(en::InlineBehavior::Draw, [isControlsWindowOpen = true](en::Actor& actor) mutable {
 
-        const bool shouldIncrease = sf::Keyboard::isKeyPressed(sf::Keyboard::Period);
-        const bool shouldDecrease = sf::Keyboard::isKeyPressed(sf::Keyboard::Comma);
-        if (shouldIncrease ^ shouldDecrease) {
-
-            constexpr float multiplierPerSecond = 2.f;
-
-            en::Engine& engine = actor.getEngine();
-            const float currentTimeScale = engine.getTimeScale();
-            const float multiplier = glm::pow(multiplierPerSecond, engine.getDeltaTimeRealtime());
-            const float newTimeScale = shouldIncrease ?
-                currentTimeScale * multiplier :
-                currentTimeScale / multiplier;
-
-            const float newTimeScaleClamped = glm::clamp(newTimeScale, 0.01f, 20.f);
-            engine.setTimeScale(newTimeScaleClamped);
+        if (!isControlsWindowOpen) {
+            return;
         }
+
+        if (ImGui::Begin("Time", &isControlsWindowOpen)) {
+
+            bool timeScaleChanged = false;
+
+            float timeScale = actor.getEngine().getTimeScale();
+            if (ImGui::SliderFloat("timescale", &timeScale, 0.01f, 20.f)) {
+                timeScaleChanged = true;
+            }
+
+            if (ImGui::Button("Reset")) {
+                timeScaleChanged = true;
+                timeScale = 1.f;
+            }
+
+            if (timeScaleChanged) {
+                actor.getEngine().setTimeScale(timeScale);
+            }
+        }
+        ImGui::End();
     });
 }

@@ -3,6 +3,7 @@
 //
 
 #include "InlineAction.h"
+#include <imgui.h>
 
 using namespace ai;
 
@@ -43,4 +44,11 @@ ActionOutcome InlineAction::execute() {
     }
 
     return ActionOutcome::Fail;
+}
+
+void InlineAction::display() {
+
+    if (ImGui::TreeNode(this, "InlineAction from std::function")) {
+        ImGui::TreePop();
+    }
 }

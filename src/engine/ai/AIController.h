@@ -25,6 +25,7 @@ namespace ai {
         void update(float dt) override;
 
         BehaviorTree* getBehaviorTree();
+        const BehaviorTree* getBehaviorTree() const;
         void setBehaviorTree(std::unique_ptr<BehaviorTree> behaviorTree);
 
     private:

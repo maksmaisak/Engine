@@ -33,6 +33,10 @@ BehaviorTree* AIController::getBehaviorTree() {
     return m_behaviorTree.get();
 }
 
+const BehaviorTree* AIController::getBehaviorTree() const {
+    return m_behaviorTree.get();
+}
+
 void AIController::setBehaviorTree(std::unique_ptr<BehaviorTree> behaviorTree) {
     m_behaviorTree = std::move(behaviorTree);
 }

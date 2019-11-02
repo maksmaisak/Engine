@@ -3,6 +3,7 @@
 //
 
 #include "BehaviorTree.h"
+#include <imgui.h>
 
 using namespace ai;
 
@@ -37,4 +38,20 @@ const Blackboard& BehaviorTree::getBlackboard() const {
 
     assert(m_blackboard);
     return *m_blackboard;
+}
+
+void BehaviorTree::display() const {
+
+    const std::string name = "BehaviorTree at " + std::to_string(reinterpret_cast<std::uintptr_t>(this));
+    if (ImGui::Begin(name.c_str())) {
+
+        if (!m_root) {
+            ImGui::Text("No root");
+        } else {
+            ImGui::Bullet();
+            m_root->display();
+        }
+    }
+
+    ImGui::End();
 }

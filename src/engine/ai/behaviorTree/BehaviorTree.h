@@ -24,6 +24,9 @@ namespace ai {
         Blackboard& getBlackboard();
         const Blackboard& getBlackboard() const;
 
+        /// Display the current state of the behavior tree using imgui
+        void display() const;
+
     private:
 
         std::unique_ptr<Blackboard> m_blackboard;
