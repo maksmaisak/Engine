@@ -9,10 +9,11 @@
 #include <vector>
 #include "TextureObject.h"
 #include "PostProcessingPassBloom.h"
+#include "Receiver.h"
 
 namespace en {
 
-    class PostProcessingSystem : public System {
+    class PostProcessingSystem : public System, Receiver<sf::Event> {
 
     public:
         explicit PostProcessingSystem(std::shared_ptr<struct RenderingSharedState> renderingSharedState);
@@ -20,6 +21,9 @@ namespace en {
         void draw() override;
 
     private:
+        void receive(const sf::Event& event) override;
+        void setUp(const glm::u32vec2& size);
+
         std::shared_ptr<RenderingSharedState> m_renderingSharedState;
         PostProcessingPassBloom m_postProcessPassBloom;
     };

@@ -24,7 +24,7 @@ namespace en {
     class PostProcessingPassBloom {
 
     public:
-        PostProcessingPassBloom();
+        void setUp(const glm::u32vec2& size);
         void render(const gl::TextureObject& sourceTexture);
 
         BloomSettings m_settings;

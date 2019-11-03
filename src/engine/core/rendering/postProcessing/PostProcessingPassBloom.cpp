@@ -101,11 +101,10 @@ namespace {
     }
 }
 
-PostProcessingPassBloom::PostProcessingPassBloom() {
+void PostProcessingPassBloom::setUp(const glm::u32vec2& size) {
 
-    const auto [width, height] = Engine::get().getWindow().getSize();
     for (gl::FramebufferBundle& fb : m_blurFramebuffers) {
-        fb = PostProcessingUtilities::makeFramebuffer({width, height});
+        fb = PostProcessingUtilities::makeFramebuffer(size);
     }
 }
 

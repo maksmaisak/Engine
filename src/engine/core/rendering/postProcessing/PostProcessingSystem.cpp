@@ -21,13 +21,24 @@ PostProcessingSystem::PostProcessingSystem(std::shared_ptr<struct RenderingShare
 void PostProcessingSystem::start() {
 
     const auto [width, height] = m_engine->getWindow().getSize();
-    m_renderingSharedState->prePostProcessingFramebuffer = PostProcessingUtilities::makeFramebuffer({width, height});
+    setUp({width, height});
 }
 
 void PostProcessingSystem::draw() {
 
     const gl::ScopedBind bindZeroFBO(gl::FramebufferObject{}, GL_FRAMEBUFFER);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     m_postProcessPassBloom.render(m_renderingSharedState->prePostProcessingFramebuffer.colorTexture);
+}
+
+void PostProcessingSystem::receive(const sf::Event& event) {
+
+    if (event.type == sf::Event::Resized) {
+        setUp({event.size.width, event.size.height});
+    }
+}
+
+void PostProcessingSystem::setUp(const glm::u32vec2& size) {
+
+    m_renderingSharedState->prePostProcessingFramebuffer = PostProcessingUtilities::makeFramebuffer(size);
+    m_postProcessPassBloom.setUp(size);
 }
