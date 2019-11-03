@@ -7,8 +7,9 @@
 
 #include "System.h"
 #include <vector>
+#include <memory>
 #include "TextureObject.h"
-#include "PostProcessingPassBloom.h"
+#include "PostProcessingPass.h"
 #include "Receiver.h"
 
 namespace en {
@@ -25,7 +26,7 @@ namespace en {
         void setUp(const glm::u32vec2& size);
 
         std::shared_ptr<RenderingSharedState> m_renderingSharedState;
-        PostProcessingPassBloom m_postProcessPassBloom;
+        std::vector<std::unique_ptr<PostProcessingPass>> m_postProcessingPasses;
     };
 }
 

@@ -5,6 +5,7 @@
 #ifndef ENGINE_POSTPROCESSINGPASSBLOOM_H
 #define ENGINE_POSTPROCESSINGPASSBLOOM_H
 
+#include "PostProcessingPass.h"
 #include "TextureObject.h"
 #include "FramebufferBundle.h"
 
@@ -21,11 +22,11 @@ namespace en {
         float intensity = 1.f;
     };
 
-    class PostProcessingPassBloom {
+    class PostProcessingPassBloom : public PostProcessingPass {
 
     public:
-        void setUp(const glm::u32vec2& size);
-        void render(const gl::TextureObject& sourceTexture);
+        void setUp(const glm::u32vec2& size) override;
+        void render(const gl::TextureObject& sourceTexture) override;
 
         BloomSettings m_settings;
 
