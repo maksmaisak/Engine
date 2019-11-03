@@ -17,7 +17,8 @@ namespace en {
         gl::FramebufferBundle makeFramebuffer(const glm::u32vec2& size);
         std::shared_ptr<ShaderProgram> getPostProcessingShader(const std::string& name);
         void renderQuad();
-    };
+        void blit(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target, bool clearTarget = true);
+    }
 }
 
 #endif //ENGINE_POSTPROCESSINGUTILITIES_H

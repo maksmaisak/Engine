@@ -31,6 +31,7 @@ namespace en {
 
     private:
         void updateSettings();
+        void isolateBrightFragments(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target);
         void blur();
         void bloomCombine(const gl::TextureObject& originalTexture, const gl::TextureObject& blurredTexture);
 
