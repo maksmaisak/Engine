@@ -61,29 +61,30 @@ void PostProcessingPassBloom::setUp(const glm::u32vec2& size) {
 
 void PostProcessingPassBloom::render(const gl::TextureObject& sourceTexture) {
 
-    updateSettings();
-
     isolateBrightFragments(sourceTexture, m_blurFramebuffers[1].framebuffer);
     blur();
     bloomCombine(sourceTexture, m_blurFramebuffers[1].colorTexture);
 }
 
-void PostProcessingPassBloom::updateSettings() {
+void PostProcessingPassBloom::displayImGui() {
 
     if (ImGui::Begin("Post Processing")) {
 
         if (ImGui::CollapsingHeader("Bloom")) {
 
-            ImGui::Text("Filtering");
-            ImGui::SliderFloat("Brightness threshold", &m_settings.brightnessThreshold, 0.f, 10.f);
+            if (updateIsEnabled()) {
 
-            ImGui::Text("Blur");
-            ImGui::SliderFloat("Standard deviation", &m_settings.blurStandardDeviation, 0.01f, 10.f);
-            ImGui::SliderInt("Kernel size", &m_settings.blurKernelSize, 1, MaxKernelSize);
-            ImGui::SliderInt("Num iterations", &m_settings.numBlurIterations, 1, 10);
+                ImGui::Text("Filtering");
+                ImGui::SliderFloat("Brightness threshold", &m_settings.brightnessThreshold, 0.f, 10.f);
 
-            ImGui::Text("Contribution");
-            ImGui::SliderFloat("Bloom intensity", &m_settings.intensity, 0.f, 5.f);
+                ImGui::Text("Blur");
+                ImGui::SliderFloat("Standard deviation", &m_settings.blurStandardDeviation, 0.01f, 10.f);
+                ImGui::SliderInt("Kernel size", &m_settings.blurKernelSize, 1, MaxKernelSize);
+                ImGui::SliderInt("Num iterations", &m_settings.numBlurIterations, 1, 10);
+
+                ImGui::Text("Contribution");
+                ImGui::SliderFloat("Bloom intensity", &m_settings.intensity, 0.f, 5.f);
+            }
         }
     }
     ImGui::End();

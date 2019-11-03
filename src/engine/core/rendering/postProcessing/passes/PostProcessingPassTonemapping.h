@@ -12,6 +12,7 @@ namespace en {
     class PostProcessingPassTonemapping : public PostProcessingPass {
 
     public:
+        void displayImGui() override;
         void render(const gl::TextureObject& sourceTexture) override;
     };
 }

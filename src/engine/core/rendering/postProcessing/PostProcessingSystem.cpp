@@ -30,18 +30,22 @@ void PostProcessingSystem::start() {
 
 void PostProcessingSystem::draw() {
 
-    assert(std::all_of(
-        m_postProcessingPasses.begin(),
-        m_postProcessingPasses.end(),
-        [](const std::unique_ptr<en::PostProcessingPass>& pass) -> bool {return pass.get();}
-    ));
+    std::vector<en::PostProcessingPass*> enabledPasses;
+    for (const std::unique_ptr<en::PostProcessingPass>& pass : m_postProcessingPasses) {
+
+        assert(pass);
+        pass->displayImGui();
+        if (pass->getIsEnabled()) {
+            enabledPasses.push_back(pass.get());
+        }
+    }
 
     static const gl::FramebufferObject screenFramebuffer = {};
 
-    for (std::size_t i = 0; i < m_postProcessingPasses.size(); ++i) {
+    for (std::size_t i = 0; i < enabledPasses.size(); ++i) {
 
         const bool isFirst = i == 0;
-        const bool isLast = i == m_postProcessingPasses.size() - 1;
+        const bool isLast = i == enabledPasses.size() - 1;
         const bool drawToSecondBuffer = i % 2 == 1;
 
         const gl::TextureObject& source = isFirst ?
@@ -59,13 +63,19 @@ void PostProcessingSystem::draw() {
         {
             const gl::ScopedBind bindFramebuffer(target, GL_FRAMEBUFFER);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            m_postProcessingPasses[i]->render(source);
+            enabledPasses[i]->render(source);
         }
 
         if (isLast) {
             glDisable(GL_FRAMEBUFFER_SRGB);
         }
+    }
+
+    if (enabledPasses.size() == 0) {
+
+        glEnable(GL_FRAMEBUFFER_SRGB);
+        PostProcessingUtilities::blit(m_renderingSharedState->prePostProcessingFramebuffer.colorTexture, screenFramebuffer);
+        glDisable(GL_FRAMEBUFFER_SRGB);
     }
 }
 

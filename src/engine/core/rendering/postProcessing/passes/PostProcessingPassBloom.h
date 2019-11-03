@@ -26,12 +26,12 @@ namespace en {
 
     public:
         void setUp(const glm::u32vec2& size) override;
+        void displayImGui() override;
         void render(const gl::TextureObject& sourceTexture) override;
 
         BloomSettings m_settings;
 
     private:
-        void updateSettings();
         void isolateBrightFragments(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target);
         void blur();
         void bloomCombine(const gl::TextureObject& originalTexture, const gl::TextureObject& blurredTexture);

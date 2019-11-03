@@ -16,13 +16,25 @@ namespace en {
     class PostProcessingPass {
 
     public:
+        PostProcessingPass();
         virtual ~PostProcessingPass() = default;
 
         /// Set up framebuffers with the given size in pixels.
-        inline virtual void setUp(const glm::u32vec2& size) {};
+        virtual void setUp(const glm::u32vec2& size);
 
         /// Render data processed from the given texture to the currently bound framebuffer.
         virtual void render(const gl::TextureObject& sourceTexture) = 0;
+
+        /// Expose settings via imgui.
+        virtual void displayImGui();
+
+        bool getIsEnabled() const;
+        bool setIsEnabled(bool isEnabled);
+
+    protected:
+        bool updateIsEnabled();
+
+        bool m_isEnabled;
     };
 }
 

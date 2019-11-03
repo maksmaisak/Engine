@@ -10,23 +10,20 @@
 
 using namespace en;
 
+void PostProcessingPassTonemapping::displayImGui() {
+
+    if (ImGui::Begin("Post Processing")) {
+        if (ImGui::CollapsingHeader("Tonemapping")) {
+            updateIsEnabled();
+        }
+    }
+    ImGui::End();
+}
+
 void PostProcessingPassTonemapping::render(const gl::TextureObject& sourceTexture) {
 
     static const std::shared_ptr<ShaderProgram> shader = PostProcessingUtilities::getPostProcessingShader("postProcessing/tonemapping");
     static const GLint sourceTextureLocation = shader->getUniformLocation("sourceTexture");
-
-    static bool shouldUse = true;
-    if (ImGui::Begin("Post Processing")) {
-        if (ImGui::CollapsingHeader("Tonemapping")) {
-            ImGui::Checkbox("Enabled", &shouldUse);
-        }
-    }
-    ImGui::End();
-
-    if (!shouldUse) {
-        PostProcessingUtilities::blit(sourceTexture);
-        return;
-    }
 
     shader->use();
     gl::setUniform(sourceTextureLocation, sourceTexture, 0);

@@ -12,7 +12,7 @@
 
 using namespace en;
 
-gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec2& size) {
+gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec2& size, bool withDepth) {
 
     gl::FramebufferObject fbo(gl::ForceCreate);
 
@@ -31,11 +31,14 @@ gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
     }
 
-    gl::RenderbufferObject rbo(gl::ForceCreate);
-    {
-        const gl::ScopedBind bindRbo(rbo, GL_RENDERBUFFER);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, size.x, size.y);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
+    gl::RenderbufferObject rbo;
+    if (withDepth) {
+        rbo.create();
+        {
+            const gl::ScopedBind bindRbo(rbo, GL_RENDERBUFFER);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, size.x, size.y);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
+        }
     }
 
     const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
