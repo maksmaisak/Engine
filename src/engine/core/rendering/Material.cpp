@@ -356,7 +356,7 @@ Material::BuiltinUniformLocations Material::cacheBuiltinUniformLocations() {
     u.numPointLights = m_shader->getUniformLocation("numPointLights");
     for (int i = 0; i < MAX_NUM_POINT_LIGHTS; ++i) {
 
-        std::string prefix = "pointLights[" + std::to_string(i) + "].";
+        const std::string prefix = "pointLights[" + std::to_string(i) + "].";
         auto& locations = u.pointLights[i];
 
         locations.color = m_shader->getUniformLocation(prefix + "color");
@@ -377,7 +377,7 @@ Material::BuiltinUniformLocations Material::cacheBuiltinUniformLocations() {
     u.numDirectionalLights = m_shader->getUniformLocation("numDirectionalLights");
     for (int i = 0; i < MAX_NUM_DIRECTIONAL_LIGHTS; ++i) {
 
-        std::string prefix = "directionalLights[" + std::to_string(i) + "].";
+        const std::string prefix = "directionalLights[" + std::to_string(i) + "].";
         auto& locations = u.directionalLights[i];
 
         locations.color = m_shader->getUniformLocation(prefix + "color");
@@ -398,7 +398,7 @@ Material::BuiltinUniformLocations Material::cacheBuiltinUniformLocations() {
     u.numSpotLights = m_shader->getUniformLocation("numSpotLights");
     for (int i = 0; i < MAX_NUM_SPOT_LIGHTS; ++i) {
 
-        std::string prefix = "spotLights[" + std::to_string(i) + "].";
+        const std::string prefix = "spotLights[" + std::to_string(i) + "].";
         auto& locations = u.spotLights[i];
 
         locations.color = m_shader->getUniformLocation(prefix + "color");
@@ -438,7 +438,7 @@ void Material::detectAllUniforms() {
     std::vector<UniformInfo> uniforms = m_shader->getAllUniforms();
 
     //std::cout << "Uniforms: " << std::endl;
-    for (auto& info : uniforms) {
+    for (const UniformInfo& info : uniforms) {
         //std::cout << info.location << " : " << info.name << std::endl;
         m_uniforms[info.name] = info;
     }
@@ -446,7 +446,7 @@ void Material::detectAllUniforms() {
 }
 
 void Material::setUniformsPointLight(
-    const Material::BuiltinUniformLocations::PointLightLocations& locations,
+    const BuiltinUniformLocations::PointLightLocations& locations,
     const Light& light,
     const Transform& tf
 ) {
@@ -464,7 +464,7 @@ void Material::setUniformsPointLight(
 }
 
 void Material::setUniformDirectionalLight(
-    const Material::BuiltinUniformLocations::DirectionalLightLocations& locations,
+    const BuiltinUniformLocations::DirectionalLightLocations& locations,
     const Light& light,
     const Transform& tf
 ) {

@@ -3,7 +3,10 @@
 //
 
 #include "PostProcessingPassBloom.h"
+#include <algorithm>
+#include <array>
 #include <imgui.h>
+#include <cmath>
 #include "PostProcessingUtilities.h"
 #include "Engine.h"
 #include "ScopedBind.h"
@@ -15,80 +18,183 @@
 
 using namespace en;
 
+namespace {
+
+    constexpr std::size_t MaxKernelSize = 64;
+    using Kernel = std::array<float, MaxKernelSize>;
+
+    float gauss(std::size_t i, float standardDeviation = 1.f) {
+
+        const float s = standardDeviation;
+        const float x = i;
+
+        // would prefer constexpr, but std::sqrt isn't constexpr
+        static const float sqrt2Pi = std::sqrt(6.28318530717958647692528676655900576f);
+
+        const float value = std::exp(x * x / (-2.f * s * s)) / (s * sqrt2Pi);
+        return value;
+    }
+
+    void doPass(const std::shared_ptr<ShaderProgram>& shader, GLint uniformLocation, const gl::TextureObject& sourceTexture) {
+
+        shader->use();
+        gl::setUniform(uniformLocation, sourceTexture, 0);
+        PostProcessingUtilities::renderQuad();
+    }
+
+    void blitFrom(const gl::TextureObject& sourceTexture) {
+
+        static const std::shared_ptr<ShaderProgram> shader = PostProcessingUtilities::getPostProcessingShader("blit");
+        static const GLint textureLocation = shader->getUniformLocation("sourceTexture");
+        doPass(shader, textureLocation, sourceTexture);
+    }
+
+    void isolateBrightFragments(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target, float brightnessThreshold = 1.f) {
+
+        static const std::shared_ptr<ShaderProgram> shader = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/isolateBrightFragments");
+        static const GLint textureLocation = shader->getUniformLocation("sourceTexture");
+        static const GLint brightnessThresholdLocation = shader->getUniformLocation("threshold");
+
+        shader->use();
+        gl::setUniform(textureLocation, sourceTexture, 0);
+        gl::setUniform(brightnessThresholdLocation, brightnessThreshold);
+
+        const gl::ScopedBind bindFBO(target, GL_FRAMEBUFFER);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        PostProcessingUtilities::renderQuad();
+    }
+
+    template<bool horizontal>
+    void blurDimensionFrom(const gl::TextureObject& sourceTexture, GLint kernelSize, const Kernel* kernel) {
+
+        static const std::shared_ptr<ShaderProgram> shader = PostProcessingUtilities::getPostProcessingShader(horizontal ?
+            "postProcessing/bloom/blurHorizontal" :
+            "postProcessing/bloom/blurVertical"
+        );
+        static const GLint textureLocation = shader->getUniformLocation("sourceTexture");
+        static const GLint kernelSizeLocation = shader->getUniformLocation("kernelSize");
+        static const std::array<GLint, MaxKernelSize> kernelLocations = [&]() {
+            std::array<GLint, MaxKernelSize> locations {};
+            std::generate(locations.begin(), locations.end(), [&, i = 0]() mutable {
+                return shader->getUniformLocation("kernel[" + std::to_string(i++) + "]");
+            });
+            return locations;
+        }();
+        static const GLint maxSupportedKernelSize = [&]() {
+            const auto firstUnsupportedValueIt = std::find_if(kernelLocations.begin(), kernelLocations.end(), [](GLint l) { return l < 0; });
+            return std::min<GLint>(MaxKernelSize, static_cast<GLint>(firstUnsupportedValueIt - kernelLocations.begin()));
+        }();
+
+        const GLint usedKernelSize = std::min(maxSupportedKernelSize, kernelSize);
+
+        shader->use();
+        gl::setUniform(textureLocation, sourceTexture, 0);
+        gl::setUniform(kernelSizeLocation, usedKernelSize);
+
+        if (kernel) {
+            for (GLint i = 0; i < usedKernelSize; i++) {
+                gl::setUniform(kernelLocations[i], (*kernel)[i]);
+            }
+        }
+
+        PostProcessingUtilities::renderQuad();
+    }
+}
+
 PostProcessingPassBloom::PostProcessingPassBloom() {
 
     const auto [width, height] = Engine::get().getWindow().getSize();
-    m_intermediateFramebuffer = PostProcessingUtilities::makeFramebuffer({width, height});
+    for (gl::FramebufferBundle& fb : m_blurFramebuffers) {
+        fb = PostProcessingUtilities::makeFramebuffer({width, height});
+    }
 }
 
 void PostProcessingPassBloom::render(const gl::TextureObject& sourceTexture) {
 
-    const std::shared_ptr<ShaderProgram> blit = PostProcessingUtilities::getPostProcessingShader("blit");
-    const std::shared_ptr<ShaderProgram> isolateBrightFragments = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/isolateBrightFragments");
-    const std::shared_ptr<ShaderProgram> blurHorizontal = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/blurHorizontal");
-    const std::shared_ptr<ShaderProgram> blurVertical = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/blurVertical");
-    const std::shared_ptr<ShaderProgram> bloomCombine = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/bloomCombine");
+    updateSettings();
 
-    glDisable(GL_FRAMEBUFFER_SRGB);
-
-    {
-        const gl::ScopedBind bindFBO(m_intermediateFramebuffer.framebuffer, GL_FRAMEBUFFER);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        isolateBrightFragments->use();
-        gl::setUniform(isolateBrightFragments->getUniformLocation("sourceTexture"), sourceTexture, 0);
-        renderQuad();
-
-        blurHorizontal->use();
-        gl::setUniform(blurHorizontal->getUniformLocation("sourceTexture"), m_intermediateFramebuffer.colorTexture, 0);
-        renderQuad();
-
-        blurVertical->use();
-        gl::setUniform(blurVertical->getUniformLocation("sourceTexture"), m_intermediateFramebuffer.colorTexture, 0);
-        renderQuad();
-    }
-
-    static float intensity = 1.f;
-    ImGui::SliderFloat("Bloom intensity", &intensity, 0.f, 5.f);
-
-    bloomCombine->use();
-    bloomCombine->setUniformValue("intensity", intensity);
-    gl::setUniform(bloomCombine->getUniformLocation("sourceTexture"), sourceTexture, 0);
-    gl::setUniform(bloomCombine->getUniformLocation("blurredTexture"), m_intermediateFramebuffer.colorTexture, 1);
-
-    glEnable(GL_FRAMEBUFFER_SRGB);
-    renderQuad();
-    glDisable(GL_FRAMEBUFFER_SRGB);
+    isolateBrightFragments(sourceTexture, m_blurFramebuffers[1].framebuffer, m_settings.brightnessThreshold);
+    blur();
+    bloomCombine(sourceTexture, m_blurFramebuffers[1].colorTexture);
 }
 
-void PostProcessingPassBloom::renderQuad() {
+void PostProcessingPassBloom::updateSettings() {
 
-    static gl::VertexArrayObject vao;
-    static gl::VertexBufferObject vbo;
+    if (ImGui::Begin("Post Processing")) {
 
-    if (!vao) {
+        if (ImGui::BeginChild("Bloom")) {
 
-        vao.create();
-        const gl::ScopedBind bindVAO(vao);
+            ImGui::Text("Filtering");
+            ImGui::SliderFloat("Brightness threshold", &m_settings.brightnessThreshold, 0.f, 10.f);
 
-        vbo.create();
-        const gl::ScopedBind bindVBO(vbo, GL_ARRAY_BUFFER);
+            ImGui::Text("Blur");
+            ImGui::SliderFloat("Standard deviation", &m_settings.blurStandardDeviation, 0.01f, 10.f);
+            ImGui::SliderInt("Kernel size", &m_settings.blurKernelSize, 1, MaxKernelSize);
+            ImGui::SliderInt("Num iterations", &m_settings.numBlurIterations, 1, 10);
 
-        constexpr float quadVertices[] {
-            // positions       // uvs
-            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
-             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        };
+            ImGui::Text("Contribution");
+            ImGui::SliderFloat("Bloom intensity", &m_settings.intensity, 0.f, 5.f);
+        }
+        ImGui::EndChild();
+    }
+    ImGui::End();
+}
 
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+void PostProcessingPassBloom::blur() {
+
+    static const std::shared_ptr<ShaderProgram> shader = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/gaussianBlur");
+    static const GLint sourceTextureLocation = shader->getUniformLocation("sourceTexture");
+    static const GLint isHorizontalLocation = shader->getUniformLocation("isHorizontal");
+    static const GLint kernelSizeLocation = shader->getUniformLocation("kernelSize");
+    static const std::array<GLint, MaxKernelSize> kernelLocations = []() {
+        std::array<GLint, MaxKernelSize> locations {};
+        std::generate(locations.begin(), locations.end(), [i = 0]() mutable {
+            return shader->getUniformLocation("kernel[" + std::to_string(i++) + "]");
+        });
+        return locations;
+    }();
+    static const GLint maxSupportedKernelSize = [&]() {
+        const auto firstUnsupportedValueIt = std::find_if(kernelLocations.begin(), kernelLocations.end(), [](GLint l) { return l < 0; });
+        return std::min<GLint>(MaxKernelSize, static_cast<GLint>(firstUnsupportedValueIt - kernelLocations.begin()));
+    }();
+
+    shader->use();
+    const GLint usedKernelSize = std::min(maxSupportedKernelSize, m_settings.blurKernelSize);
+    gl::setUniform(kernelSizeLocation, usedKernelSize);
+    for (GLint i = 0; i < usedKernelSize; i++) {
+        gl::setUniform(kernelLocations[i], gauss(i, m_settings.blurStandardDeviation));
     }
 
-    const gl::ScopedBind bindVAO(vao);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    const auto blurDimension = [&](bool isHorizontal) {
+
+        gl::setUniform(isHorizontalLocation, isHorizontal ? 1 : 0);
+        gl::setUniform(sourceTextureLocation, m_blurFramebuffers[isHorizontal ? 1 : 0].colorTexture, 0);
+
+        const gl::ScopedBind bindFBO(m_blurFramebuffers[isHorizontal ? 0 : 1].framebuffer, GL_FRAMEBUFFER);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        PostProcessingUtilities::renderQuad();
+    };
+
+    for (int i = 0; i < m_settings.numBlurIterations; ++i) {
+
+        blurDimension(true);
+        blurDimension(false);
+    }
+}
+
+void PostProcessingPassBloom::bloomCombine(const gl::TextureObject& originalTexture, const gl::TextureObject& blurredTexture) {
+
+    static const std::shared_ptr<ShaderProgram> bloomCombine = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/bloomCombine");
+    static const GLint sourceTextureLocation  = bloomCombine->getUniformLocation("sourceTexture");
+    static const GLint blurredTextureLocation = bloomCombine->getUniformLocation("blurredTexture");
+    static const GLint intensityLocation = bloomCombine->getUniformLocation("intensity");
+
+    bloomCombine->use();
+    gl::setUniform(intensityLocation, m_settings.intensity);
+    gl::setUniform(sourceTextureLocation, originalTexture, 0);
+    gl::setUniform(blurredTextureLocation, blurredTexture, 1);
+
+    glEnable(GL_FRAMEBUFFER_SRGB);
+    PostProcessingUtilities::renderQuad();
+    glDisable(GL_FRAMEBUFFER_SRGB);
 }

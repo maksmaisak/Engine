@@ -7,9 +7,19 @@
 
 #include "TextureObject.h"
 #include "FramebufferBundle.h"
-#include "PostProcessingUtilities.h"
 
 namespace en {
+
+    struct BloomSettings {
+
+        float brightnessThreshold = 0.8f;
+
+        float blurStandardDeviation = 4.f;
+        int blurKernelSize = 24;
+        int numBlurIterations = 1;
+
+        float intensity = 1.f;
+    };
 
     class PostProcessingPassBloom {
 
@@ -17,10 +27,14 @@ namespace en {
         PostProcessingPassBloom();
         void render(const gl::TextureObject& sourceTexture);
 
-    private:
-        static void renderQuad();
+        BloomSettings m_settings;
 
-        gl::FramebufferBundle m_intermediateFramebuffer;
+    private:
+        void updateSettings();
+        void blur();
+        void bloomCombine(const gl::TextureObject& originalTexture, const gl::TextureObject& blurredTexture);
+
+        gl::FramebufferBundle m_blurFramebuffers[2];
     };
 }
 

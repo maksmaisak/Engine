@@ -27,7 +27,7 @@ void PostProcessingSystem::start() {
 void PostProcessingSystem::draw() {
 
     const gl::ScopedBind bindZeroFBO(gl::FramebufferObject{}, GL_FRAMEBUFFER);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_postProcessPassBloom.render(m_renderingSharedState->prePostProcessingFramebuffer.colorTexture);
 }

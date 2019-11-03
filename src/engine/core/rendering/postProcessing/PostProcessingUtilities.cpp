@@ -7,6 +7,8 @@
 #include "ShaderProgram.h"
 #include "Resources.h"
 #include "Config.h"
+#include "VertexArrayObject.h"
+#include "VertexBufferObject.h"
 
 using namespace en;
 
@@ -50,4 +52,36 @@ std::shared_ptr<ShaderProgram> PostProcessingUtilities::getPostProcessingShader(
 
     /// Use the blit vertex shader so that you only need to implement a fragment shader when creating new post processing effects.
     return Resources<ShaderProgram>::get(name, config::SHADER_PATH + "blit.vs", config::SHADER_PATH + name + ".fs");
+}
+
+void PostProcessingUtilities::renderQuad() {
+
+    static gl::VertexArrayObject vao;
+    static gl::VertexBufferObject vbo;
+
+    if (!vao) {
+
+        vao.create();
+        const gl::ScopedBind bindVAO(vao);
+
+        vbo.create();
+        const gl::ScopedBind bindVBO(vbo, GL_ARRAY_BUFFER);
+
+        constexpr float quadVertices[] {
+            // positions       // uvs
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+
+    const gl::ScopedBind bindVAO(vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

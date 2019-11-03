@@ -59,8 +59,8 @@ int main() {
         //systems.addSystem<en::PhysicsSystemQuadtree>().setGravity({0, -9.8, 0});
         //systems.addSystem<en::PhysicsSystemOctree>().setGravity({0, -9.8, 0});
 
-        systems.addSystem<CameraControls2DSystem>();
-        systems.addSystem<AIControllerDiagnosticsSystem>();
+        //systems.addSystem<CameraControls2DSystem>();
+        //systems.addSystem<AIControllerDiagnosticsSystem>();
 
         systems.addSystem<en::UIEventSystem>();
         systems.addSystem<en::BehaviorsSystem>();
@@ -71,13 +71,13 @@ int main() {
     }
 
     //openStartLuaScene(*engine);
-    engine->getSceneManager().setCurrentScene<AITestingScene>();
+    //engine->getSceneManager().setCurrentScene<AITestingScene>();
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{20, 0, glm::vec3(20.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{400, 1000, glm::vec3(50.f)});
     //engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
-    //engine->getSceneManager().setCurrentScene<LightingScene>();
+    engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 
     engine->run();
