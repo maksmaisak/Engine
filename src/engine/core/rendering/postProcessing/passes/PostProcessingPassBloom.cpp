@@ -72,7 +72,7 @@ void PostProcessingPassBloom::updateSettings() {
 
     if (ImGui::Begin("Post Processing")) {
 
-        if (ImGui::BeginChild("Bloom")) {
+        if (ImGui::CollapsingHeader("Bloom")) {
 
             ImGui::Text("Filtering");
             ImGui::SliderFloat("Brightness threshold", &m_settings.brightnessThreshold, 0.f, 10.f);
@@ -85,7 +85,6 @@ void PostProcessingPassBloom::updateSettings() {
             ImGui::Text("Contribution");
             ImGui::SliderFloat("Bloom intensity", &m_settings.intensity, 0.f, 5.f);
         }
-        ImGui::EndChild();
     }
     ImGui::End();
 }
@@ -149,7 +148,5 @@ void PostProcessingPassBloom::bloomCombine(const gl::TextureObject& originalText
     gl::setUniform(sourceTextureLocation, originalTexture, 0);
     gl::setUniform(blurredTextureLocation, blurredTexture, 1);
 
-    glEnable(GL_FRAMEBUFFER_SRGB);
     PostProcessingUtilities::renderQuad();
-    glDisable(GL_FRAMEBUFFER_SRGB);
 }

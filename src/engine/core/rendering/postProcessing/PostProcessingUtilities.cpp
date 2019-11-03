@@ -88,13 +88,18 @@ void PostProcessingUtilities::renderQuad() {
 
 void PostProcessingUtilities::blit(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target, bool clearTarget) {
 
+    const gl::ScopedBind bindFBO(target, GL_FRAMEBUFFER);
+    blit(sourceTexture, clearTarget);
+}
+
+void PostProcessingUtilities::blit(const gl::TextureObject& sourceTexture, bool clearTarget) {
+
     static const std::shared_ptr<ShaderProgram> shader = getPostProcessingShader("blit");
     static const GLint sourceTextureLocation = shader->getUniformLocation("sourceTexture");
 
     shader->use();
     gl::setUniform(sourceTextureLocation, sourceTexture, 0);
 
-    const gl::ScopedBind bindFBO(target, GL_FRAMEBUFFER);
     if (clearTarget) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }

@@ -18,6 +18,7 @@ namespace en {
         std::shared_ptr<ShaderProgram> getPostProcessingShader(const std::string& name);
         void renderQuad();
         void blit(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target, bool clearTarget = true);
+        void blit(const gl::TextureObject& sourceTexture, bool clearTarget = true);
     }
 }
 
