@@ -19,7 +19,7 @@ namespace {
         gl::FramebufferObject fbo;
         fbo.create();
         {
-            const auto bindFBO = gl::ScopedBind<gl::FramebufferObject>(fbo, GL_FRAMEBUFFER);
+            const auto bindFBO = gl::ScopedBind(fbo, GL_FRAMEBUFFER);
 
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture, 0);
             glDrawBuffer(GL_NONE);

@@ -36,7 +36,9 @@ void RenderImguiSystem::draw() {
     glCheckError();
     ImGui::Render();
     glCheckError();
+    glDisable(GL_DEPTH_TEST);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    glEnable(GL_DEPTH_TEST);
     glCheckError();
 
     // Setup for next frame

@@ -5,7 +5,7 @@
 #ifndef ENGINE_RECEIVER_H
 #define ENGINE_RECEIVER_H
 
-#include <set>
+#include <unordered_set>
 
 namespace en {
 
@@ -52,14 +52,14 @@ namespace en {
             }
         }
 
-        static std::set<Receiver*> m_receivers;
+        static std::unordered_set<Receiver*> m_receivers;
     };
 
     template<typename TMessage, typename... Rest>
     class Receiver<TMessage, Rest...> : Receiver<TMessage>, Receiver<Rest...> {};
 
     template<typename TMessage>
-    inline std::set<Receiver<TMessage>*> Receiver<TMessage>::m_receivers;
+    inline std::unordered_set<Receiver<TMessage>*> Receiver<TMessage>::m_receivers;
 }
 
 

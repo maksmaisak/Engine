@@ -47,15 +47,21 @@ namespace gl {
         glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(value));
     }
 
-    void setUniform(GLint location, const en::Texture* texture, GLenum textureNum, GLenum target) {
+    void setUniform(GLint location, const TextureObject& texture, GLenum textureNum, GLenum target) {
 
         glCheckError();
-        assert(texture && texture->isValid());
+        assert(texture);
 
         glActiveTexture(GL_TEXTURE0 + textureNum);
-        glBindTexture(target, texture->getId());
-        glUniform1i(location, 0);
+        glBindTexture(target, texture.getId());
+        glUniform1i(location, textureNum);
 
         glCheckError();
+    }
+
+    void setUniform(GLint location, const en::Texture* texture, GLenum textureNum, GLenum target) {
+
+        assert(texture && texture->isValid());
+        return setUniform(location, texture->getGLTextureObject(), textureNum, target);
     }
 }

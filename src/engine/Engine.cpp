@@ -26,6 +26,8 @@ namespace {
     constexpr float FixedTimestep = 0.01f;
     constexpr unsigned int MaxNumFixedUpdatesPerFrame = 3;
 
+    static Engine* g_engine = nullptr;
+
     void printGLContextVersionInfo() {
 
         std::cout << "Context info:" << std::endl;
@@ -61,11 +63,20 @@ namespace {
     }
 }
 
+Engine& Engine::get() {
+
+    assert(g_engine);
+    return *g_engine;
+}
+
 Engine::Engine() :
     m_lua(std::make_unique<LuaState>()),
     m_systems(*this),
     m_sceneManager(*this)
-{}
+{
+    assert(!g_engine && "Can't have more than one Engine!");
+    g_engine = this;
+}
 
 Engine::~Engine() {
 

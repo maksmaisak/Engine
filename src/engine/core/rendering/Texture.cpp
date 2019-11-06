@@ -98,10 +98,6 @@ Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const Creation
     }
 }
 
-GLuint Texture::getId() const {
-	return m_glTexture.getId();
-}
-
 bool Texture::isValid() const {
     return m_glTexture.isValid() && m_kind != Kind::None;
 }
@@ -112,6 +108,14 @@ Texture::Kind Texture::getKind() const {
 
 Texture::Size Texture::getSize() const {
     return m_size;
+}
+
+gl::TextureObject& Texture::getGLTextureObject() {
+    return m_glTexture;
+}
+
+const gl::TextureObject& Texture::getGLTextureObject() const {
+    return m_glTexture;
 }
 
 void Texture::setUpOpenGLTexture2D(const CreationSettings& settings, const GLvoid* imageData) {

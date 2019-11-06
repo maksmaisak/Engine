@@ -40,8 +40,8 @@ namespace {
 DebugVolumeRenderer::DebugVolumeRenderer(std::size_t maxNumVerticesPerDrawCall) :
     m_maxNumVerticesPerDrawCall(maxNumVerticesPerDrawCall),
     m_wireframeShader(Resources<ShaderProgram>::get("wireframe")),
-    m_vao(gl::ForceCreate{}),
-    m_vbo(gl::ForceCreate{})
+    m_vao(gl::ForceCreate),
+    m_vbo(gl::ForceCreate)
 {
     m_vertexData.reserve(100 * 7);
 

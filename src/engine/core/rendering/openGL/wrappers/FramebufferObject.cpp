@@ -19,17 +19,13 @@ void gl::deleteFBO(GLuint id) {
 void gl::FramebufferObject::bind(GLenum target) const {
 
     glCheckError();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-
+    glBindFramebuffer(target, m_id);
     glCheckError();
 }
 
 void gl::FramebufferObject::unbind(GLenum target) const {
 
     glCheckError();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    glBindFramebuffer(target, 0);
     glCheckError();
 }

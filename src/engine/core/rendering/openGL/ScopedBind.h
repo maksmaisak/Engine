@@ -26,33 +26,35 @@ namespace gl {
         {
             static_assert(
                 std::is_invocable_v<typename BindFunctionTraits::Signature, decltype(args)...>,
-                "This type can not be bound without specifying a bind target. Provide parameters needed by the `bind` function of the object being bound."
+                "This type can not be bound without specifying a bind target. "
+                "Provide all parameters needed by the `bind` function of the object being bound. "
+                "Optional parameters are not supported at the moment."
             );
 
             bind();
 
             if (m_innermostBind) {
-                m_innermostBind->m_innerBind = this;
+                m_outerBind = m_innermostBind;
+                assert(m_outerBind->m_innerBind == nullptr);
+                m_outerBind->m_innerBind = this;
             }
-            m_outerBind = m_innermostBind;
             m_innermostBind = this;
         }
 
         inline ~ScopedBind() {
-
             assert(m_bindable);
             assert(m_innermostBind == this);
             assert(m_innerBind == nullptr);
 
             m_innermostBind = m_outerBind;
 
+            // If there's a scoped bind before this one with the same bindArgs (i.e. the same binding target),
+            // rebind that one, otherwise unbind.
             if (m_outerBind) {
 
                 assert(m_outerBind->m_innerBind == this);
                 m_outerBind->m_innerBind = nullptr;
 
-                // If there's a scoped bind before this one with the same bindArgs (i.e. the same binding target),
-                // rebind that one, otherwise unbind.
                 ScopedBind* outerBind = m_outerBind;
                 while (outerBind) {
                     if (outerBind->m_bindTarget == m_bindTarget) {
@@ -72,13 +74,11 @@ namespace gl {
 
     private:
         inline void bind() {
-
             assert(m_bindable);
             std::apply([this](auto&&... args) {m_bindable->bind(std::forward<decltype(args)>(args)...);}, m_bindTarget);
         }
 
         inline void unbind() {
-
             assert(m_bindable);
             std::apply([this](auto&&... args) {m_bindable->unbind(std::forward<decltype(args)>(args)...);}, m_bindTarget);
         }

@@ -12,8 +12,10 @@
 #include "RenderSkyboxSystem.h"
 #include "RenderUISystem.h"
 #include "RenderImguiSystem.h"
+#include "PostProcessingSystem.h"
 #include "RenderingSharedState.h"
 #include "Resources.h"
+#include "ScopedBind.h"
 
 using namespace en;
 
@@ -39,9 +41,6 @@ namespace {
         // Enable antialiasing on lines
         glEnable(GL_LINE_SMOOTH);
 
-        // Convert output from fragment shaders from linear to sRGB
-        glEnable(GL_FRAMEBUFFER_SRGB);
-
         // Disable the byte-alignment restriction
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -64,6 +63,7 @@ void RenderSystems::start() {
     addSystem<Render2DSystem>();
     addSystem<RenderUISystem>(m_renderingSharedState);
     addSystem<RenderImguiSystem>();
+    addSystem<PostProcessingSystem>(m_renderingSharedState);
 
     CompoundSystem::start();
 }
@@ -74,7 +74,20 @@ void RenderSystems::draw() {
         std::cerr << "Uncaught openGL error(s) before rendering." << std::endl;
     }
 
-    CompoundSystem::draw();
+    const gl::FramebufferObject& prePostProcessingFbo = m_renderingSharedState->prePostProcessingFramebuffer.framebuffer;
+    if (prePostProcessingFbo) {
+
+        const gl::ScopedBind bind(prePostProcessingFbo, GL_FRAMEBUFFER);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CompoundSystem::draw();
+
+    } else {
+
+        // Convert output from fragment shaders from linear to sRGB
+        glEnable(GL_FRAMEBUFFER_SRGB);
+        CompoundSystem::draw();
+        glDisable(GL_FRAMEBUFFER_SRGB);
+    }
 
     if (m_renderingSharedState->enableDebugOutput) {
         renderDebug();
