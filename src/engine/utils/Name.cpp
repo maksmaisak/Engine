@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <cassert>
 #include <shared_mutex>
+#include <iostream>
 
 using namespace en;
 
@@ -20,14 +21,14 @@ namespace {
 
     NameTables& getNameTables() {
 
-        // Done through a static local to ensure that nameTables is initialized when needed.
-        // For example, to prevent static initialization order fiasco when there's a static Name.
+        // Done through a static local to ensure that nameTables is already initialized when it is first needed.
+        // E.g. to prevent static initialization order fiasco when there's a static Name.
         static NameTables nameTables;
         return nameTables;
     }
 }
 
-Name::Name()  : m_id(0) {}
+Name::Name() : m_id(0) {}
 
 Name::Name(const std::string& string) {
 
@@ -85,6 +86,7 @@ bool en::operator==(const Name& lhs, const Name& rhs) {
 }
 
 std::ostream& en::operator<<(std::ostream& stream, const Name& name) {
+
     return stream << name.getString();
 }
 

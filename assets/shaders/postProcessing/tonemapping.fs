@@ -5,13 +5,12 @@ in vec2 texCoords;
 out vec4 fragmentColor;
 
 uniform sampler2D sourceTexture;
+uniform float exposure;
 
 void main() {
 
 	vec3 hdrColor = texture(sourceTexture, texCoords).rgb;
-
-	// reinhard tone mapping
-	vec3 mapped = hdrColor / (hdrColor + vec3(1.f));
+	vec3 mapped = vec3(1.f) - exp(-hdrColor * exposure);
 
 	fragmentColor = vec4(mapped, 1.f);
 }
