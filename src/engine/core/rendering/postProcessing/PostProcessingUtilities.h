@@ -14,7 +14,7 @@ namespace en {
 
     namespace PostProcessingUtilities {
 
-        gl::FramebufferBundle makeFramebuffer(const glm::u32vec2& size, bool withDepth = true);
+        gl::FramebufferBundle makeFramebuffer(const glm::u32vec2& size, bool withDepth = false);
 
         std::shared_ptr<ShaderProgram> getPostProcessingShader(const std::string& name);
 

@@ -88,7 +88,7 @@ void PostProcessingSystem::receive(const sf::Event& event) {
 
 void PostProcessingSystem::setUp(const glm::u32vec2& size) {
 
-    m_renderingSharedState->prePostProcessingFramebuffer = PostProcessingUtilities::makeFramebuffer(size);
+    m_renderingSharedState->prePostProcessingFramebuffer = PostProcessingUtilities::makeFramebuffer(size, true);
 
     for (gl::FramebufferBundle& fb : m_intermediateBuffers) {
         fb = PostProcessingUtilities::makeFramebuffer(size);

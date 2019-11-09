@@ -15,7 +15,6 @@ using namespace en;
 gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec2& size, bool withDepth) {
 
     gl::FramebufferObject fbo(gl::ForceCreate);
-
     const gl::ScopedBind bindFbo(fbo, GL_FRAMEBUFFER);
 
     gl::TextureObject texture(gl::ForceCreate);
