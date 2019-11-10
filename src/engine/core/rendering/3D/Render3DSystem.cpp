@@ -43,7 +43,7 @@ void Render3DSystem::draw() {
     }
 
     m_shadowMapper->updateDepthMaps();
-    renderEntities();
+    render();
 }
 
 void Render3DSystem::updateBatches() {
@@ -81,24 +81,40 @@ void Render3DSystem::updateBatches() {
     }
 }
 
-void Render3DSystem::renderEntities() {
+void Render3DSystem::render() {
 
-    Actor mainCamera = m_engine->getMainCamera();
-    if (!mainCamera) {
-        return;
+    if (Actor mainCamera = m_engine->getMainCamera()) {
+
+        m_engine->getWindow().setViewport();
+
+        const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
+        const glm::mat4 matrixProjection = mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine);
+        renderBatches(matrixView, matrixProjection);
+        renderEntities(matrixView, matrixProjection);
     }
+}
 
-    const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
-    const glm::mat4 matrixProjection = mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine);
+void Render3DSystem::renderBatches(const glm::mat4& matrixView, const glm::mat4& matrixProjection) {
 
-    // Render batches
     for (const auto& [material, mesh] : m_renderingSharedState->batches) {
         material->render(&mesh, m_engine, &m_renderingSharedState->depthMaps, glm::mat4(1), matrixView, matrixProjection);
     }
+}
 
-    // Render entities
-    int numSavedByBatching = 0;
-    const Material* previousMaterial = nullptr;
+void Render3DSystem::renderEntities(const glm::mat4& matrixView, const glm::mat4& matrixProjection) {
+
+    auto useMaterial = [&, previousMaterial = (Material*)nullptr](Material* material, const glm::mat4& matrixModel) mutable {
+
+        if (previousMaterial == material) {
+            material->updateModelMatrix(matrixModel);
+        } else {
+            material->use(m_engine, &m_renderingSharedState->depthMaps, matrixModel, matrixView, matrixProjection);
+        }
+
+        previousMaterial = material;
+    };
+
+    std::size_t numDrawCallsSavedByBatching = 0;
     for (Entity e : m_registry->with<Transform, RenderInfo>()) {
 
         const auto& renderInfo = m_registry->get<RenderInfo>(e);
@@ -107,22 +123,16 @@ void Render3DSystem::renderEntities() {
         }
 
         if (renderInfo.isInBatch) {
-            numSavedByBatching += renderInfo.model->getMeshes().size();
+            numDrawCallsSavedByBatching += renderInfo.model->getMeshes().size();
             continue;
         }
 
-        const glm::mat4& matrixModel = m_registry->get<Transform>(e).getWorldTransform();
-        if (previousMaterial == renderInfo.material.get()) {
-            renderInfo.material->updateModelMatrix(matrixModel);
-        } else {
-            renderInfo.material->use(m_engine, &m_renderingSharedState->depthMaps, matrixModel, matrixView, matrixProjection);
-        }
-
+        Material* const material = renderInfo.material.get();
+        useMaterial(material, m_registry->get<Transform>(e).getWorldTransform());
         for (const Mesh& mesh : renderInfo.model->getMeshes()) {
-            renderInfo.material->setAttributesAndDraw(&mesh);
+            material->setAttributesAndDraw(&mesh);
         }
 
-        previousMaterial = renderInfo.material.get();
         checkRenderingError(m_engine->actor(e));
     }
 }

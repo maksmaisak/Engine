@@ -73,6 +73,23 @@ void Window::makeCurrent() {
     glfwMakeContextCurrent(m_window);
 }
 
+void Window::setViewport() {
+
+    const glm::u32vec2 size = getFramebufferSize();
+    glViewport(0, 0, size.x, size.y);
+}
+
+void Window::setViewport(const Bounds2D& normalizedBounds) {
+
+    const glm::u32vec2 size = getFramebufferSize();
+    glViewport(
+        size.x * normalizedBounds.min.x,
+        size.y * normalizedBounds.min.y,
+        size.x * normalizedBounds.max.x,
+        size.y * normalizedBounds.max.y
+    );
+}
+
 glm::u32vec2 Window::getFramebufferSize() const {
 
     int width = 0;
@@ -96,7 +113,6 @@ float Window::getAspectRatio() const {
 }
 
 bool Window::shouldClose() const {
-
     return glfwWindowShouldClose(m_window);
 }
 

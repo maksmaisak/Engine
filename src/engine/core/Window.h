@@ -8,6 +8,7 @@
 #include "glm.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "Bounds.h"
 
 struct GLFWwindow;
 
@@ -27,6 +28,8 @@ namespace en {
         Window();
         bool create(int width, int height, const std::string& title = "Engine", bool fullscreen = false);
         void makeCurrent();
+        void setViewport();
+        void setViewport(const Bounds2D& normalizedBounds);
 
         glm::u32vec2 getFramebufferSize() const;
         glm::u32vec2 getSize() const;

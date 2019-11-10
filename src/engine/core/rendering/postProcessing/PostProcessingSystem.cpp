@@ -70,7 +70,7 @@ void PostProcessingSystem::draw() {
         }
     }
 
-    if (enabledPasses.size() == 0) {
+    if (enabledPasses.empty()) {
 
         glEnable(GL_FRAMEBUFFER_SRGB);
         PostProcessingUtilities::blit(m_renderingSharedState->prePostProcessingFramebuffer.colorTexture, screenFramebuffer);

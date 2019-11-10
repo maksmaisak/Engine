@@ -6,7 +6,6 @@
 #define ENGINE_RENDERSYSTEMS_H
 
 #include "CompoundSystem.h"
-#include "DebugHud.h"
 #include "Receiver.h"
 #include "SceneManager.h"
 #include "Window.h"
@@ -29,7 +28,6 @@ namespace en {
         void renderDebug();
 
         std::shared_ptr<class RenderingSharedState> m_renderingSharedState;
-        std::unique_ptr<DebugHud> m_debugHud;
     };
 }
 

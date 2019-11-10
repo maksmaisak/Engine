@@ -32,7 +32,6 @@ namespace en {
         void addVertex(const glm::vec3& position, const glm::vec4& color, float lineWidth);
 
         std::size_t m_maxNumVerticesPerDrawCall;
-        std::shared_ptr<class ShaderProgram> m_wireframeShader;
         gl::VertexArrayObject m_vao;
         gl::VertexBufferObject m_vbo;
         std::vector<float> m_vertexData;

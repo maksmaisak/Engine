@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <GL/glew.h>
+#include <imgui.h>
 
 #include "Render3DSystem.h"
 #include "Render2DSystem.h"
@@ -71,7 +72,6 @@ void RenderSystems::start() {
 
     setOpenGLSettings();
     m_renderingSharedState->loadConfigFromLua(m_engine->getLuaState());
-    m_debugHud = std::make_unique<DebugHud>();
 
     addSystem<Render3DSystem>(m_renderingSharedState);
     addSystem<RenderSkyboxSystem>();
@@ -90,7 +90,8 @@ void RenderSystems::draw() {
     }
 
     const gl::FramebufferObject& prePostProcessingFbo = m_renderingSharedState->prePostProcessingFramebuffer.framebuffer;
-    if (prePostProcessingFbo) {
+    const bool usePostProcessing = prePostProcessingFbo.isValid();
+    if (usePostProcessing) {
 
         const gl::ScopedBind bind(prePostProcessingFbo, GL_FRAMEBUFFER);
         renderToCurrentFramebuffer();
@@ -117,12 +118,9 @@ void RenderSystems::receive(const Window::FramebufferSizeEvent& event) {
     glViewport(0, 0, event.width, event.height);
 }
 
-
 void RenderSystems::renderToCurrentFramebuffer() {
 
-    const glm::u32vec2 size = m_engine->getWindow().getFramebufferSize();
-    glViewport(0, 0, size.x, size.y);
-
+    m_engine->getWindow().setViewport();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //renderGLTest();
@@ -136,5 +134,6 @@ void RenderSystems::renderToCurrentFramebuffer() {
 
 void RenderSystems::renderDebug() {
 
-    m_debugHud->draw({m_engine->getFps(), m_engine->getFrameTimeMicroseconds()});
+    ImGui::Text("fps: %i", glm::iround(m_engine->getFps()));
+    ImGui::Text("render time: %f ms", m_engine->getFrameTimeMicroseconds() / 1000.0);
 }
