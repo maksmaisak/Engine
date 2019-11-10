@@ -12,10 +12,11 @@
 #include "PostProcessingPass.h"
 #include "FramebufferBundle.h"
 #include "Receiver.h"
+#include "Window.h"
 
 namespace en {
 
-    class PostProcessingSystem : public System, Receiver<sf::Event> {
+    class PostProcessingSystem : public System, Receiver<Window::FramebufferSizeEvent> {
 
     public:
         explicit PostProcessingSystem(std::shared_ptr<struct RenderingSharedState> renderingSharedState);
@@ -23,7 +24,7 @@ namespace en {
         void draw() override;
 
     private:
-        void receive(const sf::Event& event) override;
+        void receive(const Window::FramebufferSizeEvent& event) override;
         void setUp(const glm::u32vec2& size);
 
         std::shared_ptr<RenderingSharedState> m_renderingSharedState;

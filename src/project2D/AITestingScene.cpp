@@ -449,6 +449,7 @@ void AITestingScene::open() {
         });
     }
 
+    /*
     engine.makeActor("TimescaleSetter").add<en::InlineBehavior>(en::InlineBehavior::Draw, [isControlsWindowOpen = true](en::Actor& actor) mutable {
 
         if (!isControlsWindowOpen) {
@@ -474,5 +475,5 @@ void AITestingScene::open() {
             }
         }
         ImGui::End();
-    });
+    });*/
 }

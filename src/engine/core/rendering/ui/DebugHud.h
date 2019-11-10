@@ -1,13 +1,11 @@
 #ifndef DEBUGHUD_HPP
 #define DEBUGHUD_HPP
 
-#include <SFML/Graphics.hpp>
 #include <utility>
-#include "Text.h"
 
 namespace en {
 
-	class DebugHud {
+	class DebugHud final {
 
 	public:
 		struct Info {
@@ -15,17 +13,7 @@ namespace en {
 			std::int64_t frameTimeMicroseconds = 0;
 		};
 
-		DebugHud(class Engine& engine, class VertexRenderer& vertexRenderer);
-		virtual ~DebugHud() = default;
-
-		void draw();
-		void setDebugInfo(const Info& info);
-
-	private:
-		Engine* m_engine;
-		VertexRenderer* m_vertexRenderer;
-
-		en::Text m_text;
+		void draw(const Info& info);
 	};
 }
 

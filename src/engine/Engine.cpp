@@ -4,7 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <GL/glew.h>
-#include <SFML/Graphics.hpp>
+#include <GLFW/glfw3.h>
 
 #include "Engine.h"
 #include "ExposeToLua.h"
@@ -26,7 +26,7 @@ namespace {
     constexpr float FixedTimestep = 0.01f;
     constexpr unsigned int MaxNumFixedUpdatesPerFrame = 3;
 
-    static Engine* g_engine = nullptr;
+    Engine* g_engine = nullptr;
 
     void printGLContextVersionInfo() {
 
@@ -90,7 +90,7 @@ Engine::~Engine() {
 void Engine::initialize() {
 
     initializeLua();
-    initializeWindow(m_window);
+    initializeWindow();
     initializeGlew();
 }
 
@@ -105,7 +105,7 @@ void Engine::run() {
     const sf::Time drawTimestepSf = sf::microseconds(1000000.0 / m_framerateCap);
     sf::Clock drawClock;
 
-    while (m_window.isOpen()) {
+    while (!m_shouldExit && !m_window.shouldClose()) {
 
         // Perform fixed updates if needed
         fixedUpdateLag += fixedUpdateClock.restart() * m_timeScale;
@@ -127,6 +127,7 @@ void Engine::run() {
             sf::Clock frameClock;
             draw();
             m_frameTimeMicroseconds = frameClock.getElapsedTime().asMicroseconds();
+            glfwPollEvents();
 
         } else {
 
@@ -145,8 +146,6 @@ void Engine::run() {
                 }
             }
         }
-
-        processWindowEvents();
     }
 
     m_sceneManager.closeCurrentScene();
@@ -172,7 +171,7 @@ void Engine::draw() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_systems.draw();
-    m_window.display();
+    glfwSwapBuffers(m_window.getUnderlyingWindow());
 }
 
 void Engine::initializeLua() {
@@ -190,7 +189,7 @@ void Engine::initializeLua() {
     m_framerateCap = lua.tryGetField<unsigned int>("framerateCap").value_or(m_framerateCap);
 }
 
-void Engine::initializeWindow(sf::RenderWindow& window) {
+void Engine::initializeWindow() {
 
     std::cout << "Initializing window..." << std::endl;
 
@@ -198,39 +197,31 @@ void Engine::initializeWindow(sf::RenderWindow& window) {
     lua_getglobal(lua, "Config");
     const auto popConfig = lua::PopperOnDestruct(lua);
 
-    const unsigned int width      = lua.tryGetField<unsigned int>("width").value_or(800);
-    const unsigned int height     = lua.tryGetField<unsigned int>("height").value_or(600);
-    const bool vsync              = lua.tryGetField<bool>("vsync").value_or(true);
-    const bool fullscreen         = lua.tryGetField<bool>("fullscreen").value_or(false);
+    const int width = lua.tryGetField<int>("width").value_or(800);
+    const int height = lua.tryGetField<int>("height").value_or(600);
+    const bool vsync = lua.tryGetField<bool>("vsync").value_or(true);
+    const bool fullscreen = lua.tryGetField<bool>("fullscreen").value_or(false);
     const std::string windowTitle = lua.tryGetField<std::string>("windowTitle").value_or("Game");
 
+    /*
     const auto contextSettings = sf::ContextSettings(24, 8, 8, 4, 5, sf::ContextSettings::Attribute::Core | sf::ContextSettings::Attribute::Debug);
     window.create(sf::VideoMode(width, height), windowTitle, fullscreen ? sf::Style::Fullscreen : sf::Style::Default, contextSettings);
     window.setVerticalSyncEnabled(vsync);
     window.setKeyRepeatEnabled(false);
     window.setFramerateLimit(0);
-    window.setActive(true);
+    window.setActive(true);*/
+
+    const bool didCreateWindow = m_window.create(width, height, windowTitle, fullscreen);
+    if (!didCreateWindow) {
+        std::cerr << "Failed to initialize window" << std::endl;
+        return;
+    }
+    m_window.makeCurrent();
+    glfwSwapInterval(vsync ? 1 : 0);
 
     std::cout << "Window initialized." << std::endl << std::endl;
 
     printGLContextVersionInfo();
-}
-
-void Engine::processWindowEvents() {
-
-    sf::Event event{};
-    while (m_window.pollEvent(event)) {
-
-        if (event.type == sf::Event::Closed) {
-            m_shouldExit = true;
-        }
-
-        Receiver<sf::Event>::broadcast(event);
-    }
-
-    if (m_shouldExit) {
-        m_window.close();
-    }
 }
 
 Actor Engine::actor(Entity entity) const {

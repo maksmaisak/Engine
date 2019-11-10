@@ -18,8 +18,8 @@ void Camera::initializeMetatable(LuaState& lua) {
 
 glm::mat4 Camera::getCameraProjectionMatrix(Engine& engine, std::optional<float> rangeLimit) const {
 
-    const auto size = engine.getWindow().getSize();
-    const float aspectRatio = (float)size.x / size.y;
+    const auto size = engine.getWindow().getFramebufferSize();
+    const float aspectRatio = static_cast<float>(size.x) / size.y;
 
     const float farPlaneDistanceEffective = std::min(rangeLimit.value_or(farPlaneDistance), farPlaneDistance);
 
@@ -47,9 +47,10 @@ glm::mat4 Camera::getCameraProjectionMatrix(Engine& engine, std::optional<float>
 
 glm::vec2 Camera::getOrthographicExtents(Engine& engine) const {
 
-    const auto windowSize = engine.getWindow().getSize();
+    const glm::u32vec2 windowSize = engine.getWindow().getSize();
+    const float aspectRatio = static_cast<float>(windowSize.x) / windowSize.y;
     return {
-        orthographicHalfSize * ((float)windowSize.x / windowSize.y),
+        orthographicHalfSize * aspectRatio,
         orthographicHalfSize
     };
 }

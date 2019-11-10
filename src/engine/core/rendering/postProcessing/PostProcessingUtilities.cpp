@@ -14,8 +14,11 @@ using namespace en;
 
 gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec2& size, bool withDepth) {
 
+    glCheckError();
+
     gl::FramebufferObject fbo(gl::ForceCreate);
     const gl::ScopedBind bindFbo(fbo, GL_FRAMEBUFFER);
+    glCheckError();
 
     gl::TextureObject texture(gl::ForceCreate);
     {
@@ -29,6 +32,7 @@ gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
     }
+    glCheckError();
 
     gl::RenderbufferObject rbo;
     if (withDepth) {
@@ -39,9 +43,10 @@ gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
         }
     }
+    glCheckError();
 
     const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    assert(status == GL_FRAMEBUFFER_COMPLETE && "Framebuffer now complete!");
+    assert(status == GL_FRAMEBUFFER_COMPLETE && "Framebuffer not complete!");
 
     return {
         std::move(fbo),

@@ -5,26 +5,25 @@
 #ifndef ENGINE_MOUSEHELPER_H
 #define ENGINE_MOUSEHELPER_H
 
-#include <SFML/Window.hpp>
 #include "glm.h"
-
+#include "Window.h"
 #include "Receiver.h"
 
 namespace utils {
 
-    class MouseHelper : en::Receiver<sf::Event> {
+    class MouseHelper : en::Receiver<en::Window::MouseScroll> {
 
     public:
-        static bool isDown(sf::Mouse::Button button);
-        static bool isHeld(sf::Mouse::Button button);
-        static bool isUp(sf::Mouse::Button button);
-        static glm::vec2 getPosition(const sf::Window& window);
+        static bool isDown(int button);
+        static bool isHeld(int button);
+        static bool isUp(int button);
+        static glm::vec2 getPosition(const en::Window& window);
         static float getScrollDelta();
 
         static void update();
 
     private:
-        void receive(const sf::Event& info) override;
+        void receive(const en::Window::MouseScroll& info) override;
     };
 }
 

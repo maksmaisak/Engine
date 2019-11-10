@@ -21,12 +21,12 @@ namespace {
         const glm::mat4 cameraToClipspace = cameraActor.get<en::Camera>().getCameraProjectionMatrix(cameraActor.getEngine());
         const glm::mat4 clipspaceToWorldspace = cameraToWorldspace * glm::inverse(cameraToClipspace);
 
-        const sf::RenderWindow& window = cameraActor.getEngine().getWindow();
-        const sf::Vector2i mousePositionPixels = sf::Mouse::getPosition(window);
-        const sf::Vector2u windowSize = window.getSize();
+        const en::Window& window = cameraActor.getEngine().getWindow();
+        const glm::vec2 mousePositionPixels = utils::MouseHelper::getPosition(window);
+        const glm::vec2 windowSize = window.getSize();
         const glm::vec2 mousePositionNormalized {
-            mousePositionPixels.x / static_cast<float>(windowSize.x),
-            1.f - mousePositionPixels.y / static_cast<float>(windowSize.y)
+            mousePositionPixels.x / windowSize.x,
+            mousePositionPixels.y / windowSize.y
         };
         const glm::vec2 mousePositionClipspace = mousePositionNormalized * 2.f - 1.f;
 
@@ -60,7 +60,6 @@ namespace {
         return en::nullEntity;
     }
 }
-
 
 AIControllerDiagnosticsSystem::AIControllerDiagnosticsSystem() : m_lastSelectedEntity(0) {}
 

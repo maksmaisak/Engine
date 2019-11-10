@@ -25,9 +25,9 @@ namespace en {
     template<typename TResource>
     class Resources {
 
+        using map_t = std::unordered_map<Name, std::shared_ptr<TResource>>;
     public:
-
-        using iterator = typename std::unordered_map<Name, std::shared_ptr<TResource>>::const_iterator;
+        using iterator = typename map_t::const_iterator;
 
         /// Gets a resource by given key.
         /// If not already present, tries create one using a load function.
@@ -40,8 +40,10 @@ namespace en {
         template<typename TLoader = ResourceLoader<TResource>, typename... Args>
         inline static std::shared_ptr<TResource> get(const Name& key, Args&&... args) {
 
-            const auto foundIterator = m_resources.find(key);
-            if (foundIterator != m_resources.end()) {
+            map_t& resources = getResourcesMap();
+
+            const auto foundIterator = resources.find(key);
+            if (foundIterator != resources.end()) {
                 return foundIterator->second;
             }
 
@@ -67,7 +69,7 @@ namespace en {
                 }
             }
 
-            const auto [it, didAdd] = m_resources.emplace(key, std::move(resource));
+            const auto [it, didAdd] = resources.emplace(key, std::move(resource));
             assert(didAdd);
             return it->second;
         }
@@ -75,10 +77,12 @@ namespace en {
         /// Removes all resources not referenced elsewhere.
         inline static std::size_t removeUnused() {
 
+            map_t& resources = getResourcesMap();
+
             std::size_t numRemoved = 0;
-            for (auto it = m_resources.begin(); it != m_resources.end();) {
+            for (auto it = resources.begin(); it != resources.end();) {
                 if (it->second.unique()) {
-                    it = m_resources.erase(it);
+                    it = resources.erase(it);
                     ++numRemoved;
                 } else {
                     ++it;
@@ -89,19 +93,18 @@ namespace en {
         }
 
         inline static void clear() {
-            m_resources.clear();
+            getResourcesMap().clear();
         }
 
-        inline static iterator begin() {return m_resources.cbegin();}
-        inline static iterator end()   {return m_resources.cend();  }
+        inline static iterator begin() {return getResourcesMap().cbegin();}
+        inline static iterator end()   {return getResourcesMap().cend();  }
 
     private:
-        static std::unordered_map<Name, std::shared_ptr<TResource>> m_resources;
+        inline static map_t& getResourcesMap() {
+            static map_t resources;
+            return resources;
+        }
     };
-
-    // Using inline static to avoid defining this out of the class body causes clang to segfault :(
-    template<typename TResource>
-    std::unordered_map<Name, std::shared_ptr<TResource>> Resources<TResource>::m_resources;
 }
 
 #endif //ENGINE_RESOURCES_H

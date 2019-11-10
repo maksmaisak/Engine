@@ -1,17 +1,17 @@
 
 -- engine
-width  = 1920
-height = 1080
+width  = 800
+height = 600
 windowTitle = "Engine"
 fullscreen = false
-framerateCap = 2400000
+framerateCap = 240
 vsync = false
 enableStaticBatching = true
 enableDebugOutput    = true
 overlayPhiGrid       = false
 referenceResolution = {1920, 1080}
 --startScene = 'assets/scripts/test2DScene.lua'
-startScene = 'assets/scripts/UI/mainMenu.lua'
+--startScene = 'assets/scripts/UI/mainMenu.lua'
 --startScene = 'assets/scripts/scenes/level1.lua'
 --startScene = 'assets/scripts/scenes/test/luaScene.lua'
 --startScene = 'assets/scripts/scenes/test/testTweening.lua'

@@ -24,7 +24,6 @@ namespace en {
     private:
         void updateBatches();
         void renderEntities();
-        void setViewportAndClear();
 
         std::shared_ptr<RenderingSharedState> m_renderingSharedState;
         std::unique_ptr<ShadowMapper> m_shadowMapper;

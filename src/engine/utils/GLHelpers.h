@@ -9,7 +9,7 @@
 #include <iostream>
 #include <string>
 
-inline GLenum glCheckError_(const char *file, int line) {
+inline GLenum glCheckError_(const char* file, int line) {
 
     GLenum lastErrorCode = GL_NO_ERROR;
     GLenum errorCode;

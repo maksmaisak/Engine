@@ -15,12 +15,6 @@ namespace {
 
     constexpr std::size_t NumComponentsPerVertex = 3 + 1 + 4; // 3 for position, 1 for line width, 4 for color
     constexpr std::size_t InitialVertexCapacity = 100;
-
-    glm::vec2 getInverseWindowSize(Engine& engine) {
-
-        const sf::Vector2u size = engine.getWindow().getSize();
-        return {1.f / size.x, 1.f / size.y};
-    }
 }
 
 LineRenderer& LineRenderer::get(Engine& engine) {
@@ -68,7 +62,7 @@ void LineRenderer::render(const glm::mat4& matrixPVM) {
     const auto bindVAO = gl::ScopedBind(m_vao);
     const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
 
-    std:size_t startIndex = 0;
+    std::size_t startIndex = 0;
     while (startIndex < m_vertexData.size()) {
 
         const std::size_t numRenderedVertexComponents = std::min(m_vertexData.size() - startIndex, maxNumVertexComponentsPerDrawCall);
@@ -119,7 +113,7 @@ void LineRenderer::useWireframeShader(const glm::mat4& matrixPVM) {
     assert(m_wireframeShader);
     m_wireframeShader->use();
     m_wireframeShader->setUniformValue("matrixPVM", matrixPVM);
-    const sf::Vector2u viewportSize = getEngine().getWindow().getSize();
-    m_wireframeShader->setUniformValue("viewportSize", glm::vec2(viewportSize.x, viewportSize.y));
-    m_wireframeShader->setUniformValue("inverseViewportSize", glm::vec2(1.f / viewportSize.x, 1.f / viewportSize.y));
+    const glm::vec2 viewportSize = getEngine().getWindow().getFramebufferSize();
+    m_wireframeShader->setUniformValue("viewportSize", viewportSize);
+    m_wireframeShader->setUniformValue("inverseViewportSize", 1.f / viewportSize);
 }

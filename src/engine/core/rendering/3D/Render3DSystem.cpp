@@ -88,8 +88,6 @@ void Render3DSystem::renderEntities() {
         return;
     }
 
-    setViewportAndClear();
-
     const glm::mat4 matrixView = glm::inverse(mainCamera.get<Transform>().getWorldTransform());
     const glm::mat4 matrixProjection = mainCamera.get<Camera>().getCameraProjectionMatrix(*m_engine);
 
@@ -127,12 +125,4 @@ void Render3DSystem::renderEntities() {
         previousMaterial = renderInfo.material.get();
         checkRenderingError(m_engine->actor(e));
     }
-}
-
-void Render3DSystem::setViewportAndClear() {
-
-    const auto size = m_engine->getWindow().getSize();
-    glViewport(0, 0, size.x, size.y);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glCheckError();
 }

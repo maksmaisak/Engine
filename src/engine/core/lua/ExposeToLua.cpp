@@ -108,8 +108,11 @@ namespace {
         lua_newtable(lua);
         {
             lua.setField("getSize", [&window = engine.getWindow()]() -> glm::vec2 {
-                auto size = window.getSize();
-                return {size.x, size.y};
+                return window.getSize();
+            });
+
+            lua.setField("getFramebufferSize", [&window = engine.getWindow()]() -> glm::vec2 {
+                return window.getFramebufferSize();
             });
         }
         lua_setfield(lua, -2, "window");

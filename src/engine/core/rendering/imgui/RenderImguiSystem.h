@@ -10,16 +10,13 @@
 
 namespace en {
 
-    class RenderImguiSystem : public System, Receiver<sf::Event> {
+    class RenderImguiSystem : public System {
 
     public:
         ~RenderImguiSystem() override;
 
         void start() override;
         void draw() override;
-
-    private:
-        void receive(const sf::Event& event) override;
     };
 }
 
