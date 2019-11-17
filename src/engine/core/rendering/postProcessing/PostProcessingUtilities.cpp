@@ -12,7 +12,7 @@
 
 using namespace en;
 
-gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec2& size, bool withDepth) {
+gl::FramebufferBundle gl::makeFramebuffer(const glm::u32vec2& size, bool withDepth) {
 
     glCheckError();
 
@@ -55,13 +55,13 @@ gl::FramebufferBundle PostProcessingUtilities::makeFramebuffer(const glm::u32vec
     };
 }
 
-std::shared_ptr<ShaderProgram> PostProcessingUtilities::getPostProcessingShader(const std::string& name) {
+std::shared_ptr<ShaderProgram> gl::getPostProcessingShader(const std::string& name) {
 
     /// Use the blit vertex shader so that you only need to implement a fragment shader when creating new post processing effects.
     return Resources<ShaderProgram>::get(name, config::SHADER_PATH + "blit.vs", config::SHADER_PATH + name + ".fs");
 }
 
-void PostProcessingUtilities::renderQuad() {
+void gl::renderQuad() {
 
     static gl::VertexArrayObject vao;
     static gl::VertexBufferObject vbo;
@@ -93,13 +93,13 @@ void PostProcessingUtilities::renderQuad() {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-void PostProcessingUtilities::blit(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target, bool clearTarget) {
+void gl::blit(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target, bool clearTarget) {
 
     const gl::ScopedBind bindFBO(target, GL_FRAMEBUFFER);
     blit(sourceTexture, clearTarget);
 }
 
-void PostProcessingUtilities::blit(const gl::TextureObject& sourceTexture, bool clearTarget) {
+void gl::blit(const gl::TextureObject& sourceTexture, bool clearTarget) {
 
     static const std::shared_ptr<ShaderProgram> shader = getPostProcessingShader("blit");
     static const GLint sourceTextureLocation = shader->getUniformLocation("sourceTexture");

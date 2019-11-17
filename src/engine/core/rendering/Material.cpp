@@ -17,6 +17,7 @@
 #include "TupleUtils.h"
 #include "GameTime.h"
 #include "LuaState.h"
+#include "Font.h"
 
 using namespace en;
 using namespace std::string_literals;
@@ -307,7 +308,7 @@ template<>
 void Material::setCustomUniformsOfType<Material::FontAtlas>(const Material::LocationToUniformValue<FontAtlas>& values) {
 
     for (auto& [location, setting] : values) {
-        if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getNativeHandle())) {
+        if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getGLTextureObject())) {
             break;
         }
     }

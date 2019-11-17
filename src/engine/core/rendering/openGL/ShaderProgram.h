@@ -51,7 +51,7 @@ namespace en {
 		void use() const;
 
 		GLint getUniformLocation(const std::string& uniformName) const;
-		GLint getAttributeLocation (const std::string& attributeLocation) const;
+		GLint getAttributeLocation(const std::string& attributeLocation) const;
 
 		template<typename T>
 		void setUniformValue(const std::string& name, T&& value);

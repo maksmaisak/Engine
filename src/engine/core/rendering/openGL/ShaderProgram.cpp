@@ -3,10 +3,21 @@
 #include <fstream>
 #include <sstream>
 #include "GLHelpers.h"
+#include "Config.h"
 
 using namespace en;
 
 namespace {
+
+    static_assert(std::is_convertible_v<decltype(ResourceLoader<ShaderProgram>::load(std::declval<const std::string&>(), std::declval<const PreprocessorDefinitions&>())), std::shared_ptr<ShaderProgram>>);
+    static_assert(std::is_convertible_v<decltype(ResourceLoader<ShaderProgram>::load(std::declval<const std::string&>())), std::shared_ptr<ShaderProgram>>);
+    static_assert(std::is_convertible_v<decltype(ResourceLoader<ShaderProgram>::load(std::declval<const std::string&>(), std::declval<const std::string&>())), std::shared_ptr<ShaderProgram>>);
+    static_assert(std::is_convertible_v<decltype(ResourceLoader<ShaderProgram>::load(config::SHADER_PATH + "blit.vs", config::SHADER_PATH + "blur.fs")), std::shared_ptr<ShaderProgram>>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const Name&>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const std::string&>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const Name&>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const std::string&, const PreprocessorDefinitions&>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const Name&, const PreprocessorDefinitions&>);
 
     std::optional<std::string> getSource(const std::string& filepath, const PreprocessorDefinitions& preprocessorDefinitions) {
 

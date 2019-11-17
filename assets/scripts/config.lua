@@ -16,6 +16,7 @@ referenceResolution = {1920, 1080}
 --startScene = 'assets/scripts/scenes/test/luaScene.lua'
 --startScene = 'assets/scripts/scenes/test/testTweening.lua'
 --startScene = 'assets/scripts/scenes/test/renderingShowcase.lua'
+startScene = 'assets/scripts/scenes/test/testUI.lua'
 
 defaultSkybox = {
     right  = "textures/skybox/SkyboxMap_right.png" ,

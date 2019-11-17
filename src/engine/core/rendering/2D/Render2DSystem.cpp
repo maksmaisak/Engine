@@ -75,7 +75,7 @@ Render2DSystem::Render2DSystem() :
         settings.wrapT = GL_CLAMP_TO_BORDER;
         settings.minFilter = GL_NEAREST;
         settings.magFilter = GL_NEAREST;
-        m_mapDataTexture = std::make_shared<Texture>(Texture::Size(MapDataTextureResolution), settings);
+        m_mapDataTexture = std::make_shared<Texture>(Texture::Size(MapDataTextureResolution), nullptr, settings);
     }
 
     {

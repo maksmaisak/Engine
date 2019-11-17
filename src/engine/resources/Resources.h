@@ -13,14 +13,29 @@
 
 namespace en {
 
-    template<typename TLoader, typename = void>
-    struct canLoadWithNoArgs : std::false_type {};
+    namespace detail {
 
-    template<typename TLoader>
-    struct canLoadWithNoArgs<TLoader, decltype(TLoader::load())> : std::true_type {};
+        template<typename T, typename... Args>
+        struct has_valid_load_function {
 
-    template<typename TLoader>
-    inline constexpr bool canLoadWithNoArgs_v = canLoadWithNoArgs<TLoader>::value;
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "NotImplementedFunctions"
+            template<typename T_>
+            static auto test(int) -> std::void_t<decltype(T_::load(std::declval<Args>()...))>;
+
+            template<typename>
+            static auto test(...) -> struct dummy;
+#pragma clang diagnostic pop
+
+            inline static constexpr bool value = std::is_void_v<decltype(test<T>(0))>;
+        };
+
+        template<typename T, typename... Args>
+        inline static constexpr bool has_valid_load_function_v = has_valid_load_function<T, Args...>::value;
+
+        template<class T>
+        struct dependent_false : std::false_type {};
+    }
 
     template<typename TResource>
     class Resources {
@@ -37,7 +52,7 @@ namespace en {
         /// - the constructor of TResource, if exists.
         /// If no valid load function could be determined, you get a compile error.
         /// If the load function can't be called with the given arguments, it will be called with the key AND the arguments.
-        template<typename TLoader = ResourceLoader<TResource>, typename... Args>
+        template<typename... Args>
         inline static std::shared_ptr<TResource> get(const Name& key, Args&&... args) {
 
             map_t& resources = getResourcesMap();
@@ -47,29 +62,7 @@ namespace en {
                 return foundIterator->second;
             }
 
-            std::shared_ptr<TResource> resource;
-
-            constexpr bool isLoaderAvailable = !std::is_base_of_v<NoLoader, TLoader>;
-            if constexpr (isLoaderAvailable) {
-
-                constexpr bool canLoadWithGivenArgs = sizeof...(Args) > 0 || canLoadWithNoArgs_v<TLoader>;
-                if constexpr (canLoadWithGivenArgs) {
-                    resource = TLoader::load(std::forward<Args>(args)...);
-                } else {
-                    resource = TLoader::load(key);
-                }
-
-            } else {
-
-                // Fall back to constructor if there is no valid loader.
-                if constexpr (std::is_constructible_v<TResource, Args...>) {
-                    resource = std::make_shared<TResource>(std::forward<Args>(args)...);
-                } else {
-                    resource = std::make_shared<TResource>(key, std::forward<Args>(args)...);
-                }
-            }
-
-            const auto [it, didAdd] = resources.emplace(key, std::move(resource));
+            const auto [it, didAdd] = resources.emplace(key, makeResource(key, std::forward<Args>(args)...));
             assert(didAdd);
             return it->second;
         }
@@ -100,6 +93,48 @@ namespace en {
         inline static iterator end()   {return getResourcesMap().cend();  }
 
     private:
+
+        template<typename T>
+        inline static constexpr bool false_v = false;
+
+        template<typename... Args>
+        inline static std::shared_ptr<TResource> makeResource(const Name& key, Args&&... args) {
+
+            using Loader = ResourceLoader<TResource>;
+
+            if constexpr (detail::has_valid_load_function_v<Loader, decltype(std::forward<Args>(args))...>) {
+                return Loader::load(std::forward<Args>(args)...);
+
+            } else if constexpr (detail::has_valid_load_function_v<Loader, decltype(key), decltype(std::forward<Args>(args))...>) {
+                return Loader::load(key, std::forward<Args>(args)...);
+
+            } else if constexpr (detail::has_valid_load_function_v<TResource, decltype(std::forward<Args>(args))...>) {
+                return TResource::load(std::forward<Args>(args)...);
+
+            } else if constexpr (detail::has_valid_load_function_v<TResource, decltype(key), decltype(std::forward<Args>(args))...>) {
+                return TResource::load(key, std::forward<Args>(args)...);
+
+            } else if constexpr (std::is_constructible_v<TResource, decltype(std::forward<Args>(args))...>) {
+                return std::make_shared<TResource>(std::forward<Args>(args)...);
+
+            } else if constexpr (std::is_constructible_v<TResource, decltype(key), decltype(std::forward<Args>(args))...>) {
+                return std::make_shared<TResource>(key, std::forward<Args>(args)...);
+
+            } else {
+
+                static_assert(
+                    false_v<TResource>,
+                    "Can't create a resource of this type with the given arguments. "
+                    "For this type there must exist at least one of: "
+                    "ResourceLoader specialization, "
+                    "static 'load' function, "
+                    "constructor, "
+                    "that takes either the arguments or the key and the arguments."
+                );
+                return nullptr;
+            }
+        }
+
         inline static map_t& getResourcesMap() {
             static map_t resources;
             return resources;

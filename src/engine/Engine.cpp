@@ -18,6 +18,7 @@
 #include "Sound.h"
 #include "Camera.h"
 #include "Name.h"
+#include "Font.h"
 
 using namespace en;
 
@@ -79,6 +80,8 @@ Engine::Engine() :
 }
 
 Engine::~Engine() {
+
+    Resources<Font>::clear();
 
     // If sf::SoundBuffer is being destroyed when statics are destroyed when the app quits,
     // that causes OpenAL to throw an error. This prevents that.

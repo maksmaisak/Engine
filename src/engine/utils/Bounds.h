@@ -46,6 +46,19 @@ namespace en {
             return bounds;
         }
 
+        inline vec_t size() const {
+            return max - min;
+        }
+
+        inline T area() const {
+
+            T result = max[0] - min[0];
+            for (glm::length_t i = 1; i < L; ++i) {
+                result *= max[i] - min[i];
+            }
+            return result;
+        }
+
         inline bool contains(const vec_t& position) const {
 
             for (glm::length_t i = 0; i < L; ++i) {

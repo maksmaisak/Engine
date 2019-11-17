@@ -9,6 +9,8 @@
 #include "glm.h"
 #include <vector>
 #include "Vertex.h"
+#include "VertexArrayObject.h"
+#include "VertexBufferObject.h"
 
 namespace en {
 
@@ -24,8 +26,8 @@ namespace en {
 
         std::size_t m_maxNumVerticesPerDrawCall = 0;
 
-        GLuint m_vao = 0;
-        GLuint m_vbo = 0;
+        gl::VertexArrayObject m_vao;
+        gl::VertexBufferObject m_vbo;
     };
 }
 

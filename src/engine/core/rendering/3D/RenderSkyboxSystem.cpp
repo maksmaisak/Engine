@@ -84,15 +84,15 @@ namespace {
             "back"
         };
 
-        std::array<std::string, 6> imagePaths;
+        std::array<Name, 6> imagePaths;
         for (int i = 0; i < 6; ++i) {
 
-            const std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
+            const std::optional<Name> path = lua.tryGetField<std::string>(keys[i]);
             if (!path) {
                 return nullptr;
             }
 
-            imagePaths[i] = "assets/" + *path;
+            imagePaths[i] = "assets/" + path->getString();
         }
 
         return Resources<Texture>::get("defaultSkybox", imagePaths);

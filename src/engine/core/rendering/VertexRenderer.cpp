@@ -3,32 +3,26 @@
 //
 
 #include "VertexRenderer.h"
-#include "GLHelpers.h"
 #include <algorithm>
 #include <cassert>
+#include "ScopedBind.h"
+#include "GLHelpers.h"
 
 using namespace en;
 
 VertexRenderer::VertexRenderer(std::size_t maxNumVerticesPerDrawCall) :
-    m_maxNumVerticesPerDrawCall(maxNumVerticesPerDrawCall) {
+    m_maxNumVerticesPerDrawCall(maxNumVerticesPerDrawCall),
+    m_vao(gl::ForceCreate),
+    m_vbo(gl::ForceCreate)
+{
+    const gl::ScopedBind bindVAO(m_vao);
+    const gl::ScopedBind bindVBO(m_vbo, GL_ARRAY_BUFFER);
 
-    glGenVertexArrays(1, &m_vao);
-    glGenBuffers(1, &m_vbo);
-    glBindVertexArray(m_vao);
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        {
-            glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 5 * m_maxNumVerticesPerDrawCall, nullptr, GL_DYNAMIC_DRAW);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, nullptr);
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*)(sizeof(GLfloat) * 3));
-        }
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-    glBindVertexArray(0);
-
-    glCheckError();
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 5 * m_maxNumVerticesPerDrawCall, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, nullptr);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 5, (void*)(sizeof(GLfloat) * 3));
 }
 
 void VertexRenderer::renderVertices(const std::vector<Vertex>& vertices) {
@@ -46,14 +40,13 @@ void VertexRenderer::renderVertices(const std::vector<Vertex>& vertices) {
         data[index + 4] = vertex.uv.y;
     }
 
-    glBindVertexArray(m_vao);
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * numFloats, data.get());
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    const gl::ScopedBind bindVAO(m_vao);
 
-        glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
-        glCheckError();
+    {
+        const gl::ScopedBind bindVBO(m_vbo, GL_ARRAY_BUFFER);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * numFloats, data.get());
     }
-    glBindVertexArray(0);
+
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size()));
+    glCheckError();
 }
