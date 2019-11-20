@@ -5,7 +5,6 @@
 #ifndef ENGINE_RESOURCELOADER_H
 #define ENGINE_RESOURCELOADER_H
 
-#include "SFML/Graphics.hpp"
 #include <exception>
 #include <type_traits>
 #include <cassert>

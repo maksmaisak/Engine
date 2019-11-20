@@ -41,10 +41,7 @@ glm::vec2 MouseHelper::getPosition(const en::Window& window) {
 
     double posX, posY;
     glfwGetCursorPos(window.getUnderlyingWindow(), &posX, &posY);
-    return {posX, posY};
-
-    //sf::Vector2i temp = sf::Mouse::getPosition(window);
-    //return {temp.x, window.getSize().y - temp.y};
+    return {posX, window.getSize().y - posY};
 }
 
 float MouseHelper::getScrollDelta() {
