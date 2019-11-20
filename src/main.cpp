@@ -71,7 +71,7 @@ int main() {
         systems.addSystem<en::DestroySystem>();
     }
 
-    openStartLuaScene(*engine);
+    //openStartLuaScene(*engine);
     //engine->getSceneManager().setCurrentScene<AITestingScene>();
     //engine->getSceneManager().setCurrentScene<GLTestScene>();
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>();
@@ -79,7 +79,7 @@ int main() {
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{100, 100, glm::vec3(50.f)});
     //engine->getSceneManager().setCurrentScene<PhysicsTestScene>(PhysicsTestScene::Preset{400, 1000, glm::vec3(50.f)});
     //engine->getSceneManager().setCurrentScene<en::CollisionDetectionTestScene>();
-    //engine->getSceneManager().setCurrentScene<LightingScene>();
+    engine->getSceneManager().setCurrentScene<LightingScene>();
     //engine->getSceneManager().setCurrentScene<TerrainScene>();
 
     engine->run();

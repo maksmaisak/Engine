@@ -32,9 +32,6 @@ namespace en {
 
         template<typename T, typename... Args>
         inline static constexpr bool has_valid_load_function_v = has_valid_load_function<T, Args...>::value;
-
-        template<class T>
-        struct dependent_false : std::false_type {};
     }
 
     template<typename TResource>

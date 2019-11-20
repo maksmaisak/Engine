@@ -11,12 +11,12 @@ enableDebugOutput    = true
 overlayPhiGrid       = false
 referenceResolution = {1920, 1080}
 --startScene = 'assets/scripts/test2DScene.lua'
---startScene = 'assets/scripts/UI/mainMenu.lua'
+startScene = 'assets/scripts/UI/mainMenu.lua'
 --startScene = 'assets/scripts/scenes/level1.lua'
 --startScene = 'assets/scripts/scenes/test/luaScene.lua'
 --startScene = 'assets/scripts/scenes/test/testTweening.lua'
 --startScene = 'assets/scripts/scenes/test/renderingShowcase.lua'
-startScene = 'assets/scripts/scenes/test/testUI.lua'
+--startScene = 'assets/scripts/scenes/test/testUI.lua'
 
 defaultSkybox = {
     right  = "textures/skybox/SkyboxMap_right.png" ,

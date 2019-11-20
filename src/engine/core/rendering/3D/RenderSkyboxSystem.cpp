@@ -115,8 +115,8 @@ RenderSkyboxSystem::RenderSkyboxSystem() :
     glCheckError();
 }
 
-void RenderSkyboxSystem::start()
-{
+void RenderSkyboxSystem::start() {
+
     m_defaultSkybox = getDefaultSkybox(m_engine->getLuaState());
 }
 

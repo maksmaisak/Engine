@@ -4,7 +4,7 @@
 #include <cassert>
 #include <array>
 #include <mutex>
-#include <SFML/Graphics.hpp> // For sf::Image
+#include "stb_image.h"
 #include "ScopedBind.h"
 #include "GLHelpers.h"
 #include "FramebufferObject.h"
@@ -40,6 +40,24 @@ namespace {
         static std::uint64_t nextId = 1;
         return nextId++;
     }
+
+    using imageData_t = std::unique_ptr<stbi_uc, decltype(&stbi_image_free)>;
+    struct ImageDescription {
+
+        imageData_t data = {nullptr, stbi_image_free};
+        Texture::Size size = {0, 0};
+        int numChannels = 0;
+    };
+
+    ImageDescription loadImage(const char* filename) {
+
+        stbi_set_flip_vertically_on_load(1);
+
+        Texture::Size size = {0, 0};
+        int numChannels = 0;
+        imageData_t data = {stbi_load(filename, &size.x, &size.y, &numChannels, 4), stbi_image_free};
+        return {std::move(data), size, numChannels};
+    }
 }
 
 Texture::CreationSettings::CreationSettings() :
@@ -71,32 +89,34 @@ unsigned int Texture::getMaxSize() {
 
 std::unique_ptr<Texture> Texture::load(const Name& path, const Texture::CreationSettings& settings) {
 
-    // Load from file using sf::Image, then put the data in an openGL buffer.
-    sf::Image image;
-    if (!image.loadFromFile(path)) {
+    const ImageDescription image = loadImage(path);
+    if (!image.data) {
         return nullptr;
     }
 
-    const auto sfSize = image.getSize();
-
-    // 0, 0 in sf::Image is top left, but openGL expects 0,0 to be bottom left, flip to compensate.
-    image.flipVertically();
-
-    return std::make_unique<Texture>(Size{sfSize.x, sfSize.y}, image.getPixelsPtr(), settings);
+    return std::make_unique<Texture>(image.size, static_cast<const GLvoid*>(image.data.get()), settings);
 }
 
 std::unique_ptr<Texture> Texture::load(const std::array<Name, 6>& cubeSidePaths, const Texture::CreationSettings& settings) {
 
-    std::array<sf::Image, 6> images;
+    std::array<ImageDescription, 6> images {};
     for (std::size_t i = 0; i < images.size(); ++i) {
-        if (!images[i].loadFromFile(cubeSidePaths[i])) {
+        images[i] = loadImage(cubeSidePaths[i]);
+        if (!images[i].data) {
             return nullptr;
         }
     }
 
     std::array<const GLvoid*, 6> cubeSideData {};
-    std::transform(images.begin(), images.end(), cubeSideData.begin(), [](const sf::Image& image) {return static_cast<const GLvoid*>(image.getPixelsPtr());});
-    return std::make_unique<Texture>(Size{images[0].getSize().x, images[0].getSize().y}, cubeSideData, settings);
+    std::transform(images.begin(), images.end(), cubeSideData.begin(), [](const ImageDescription& image) {
+        return static_cast<const GLvoid*>(image.data.get());
+    });
+
+    assert(std::all_of(images.begin(), images.end(), [&firstImage = images[0]](const ImageDescription& image) {
+        return image.size == firstImage.size && image.numChannels == firstImage.numChannels;
+    }));
+
+    return std::make_unique<Texture>(images[0].size, cubeSideData, settings);
 }
 
 Texture::Texture(const Size& size, const GLvoid* imageData, const CreationSettings& settings) :
