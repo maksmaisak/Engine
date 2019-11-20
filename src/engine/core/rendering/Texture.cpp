@@ -49,9 +49,9 @@ namespace {
         int numChannels = 0;
     };
 
-    ImageDescription loadImage(const char* filename) {
+    ImageDescription loadImage(const char* filename, bool flipVertically = true) {
 
-        stbi_set_flip_vertically_on_load(1);
+        stbi_set_flip_vertically_on_load(flipVertically);
 
         Texture::Size size = {0, 0};
         int numChannels = 0;
@@ -100,21 +100,20 @@ std::unique_ptr<Texture> Texture::load(const Name& path, const Texture::Creation
 std::unique_ptr<Texture> Texture::load(const std::array<Name, 6>& cubeSidePaths, const Texture::CreationSettings& settings) {
 
     std::array<ImageDescription, 6> images {};
-    for (std::size_t i = 0; i < images.size(); ++i) {
-        images[i] = loadImage(cubeSidePaths[i]);
-        if (!images[i].data) {
-            return nullptr;
-        }
-    }
+    std::transform(cubeSidePaths.begin(), cubeSidePaths.end(), images.begin(), [](const Name& path) {
+        return loadImage(path, false);
+    });
+
+    assert(std::all_of(images.begin(), images.end(), [&firstImage = images[0]](const ImageDescription& image) {
+        return image.data &&
+            image.size == firstImage.size &&
+            image.numChannels == firstImage.numChannels;
+    }));
 
     std::array<const GLvoid*, 6> cubeSideData {};
     std::transform(images.begin(), images.end(), cubeSideData.begin(), [](const ImageDescription& image) {
         return static_cast<const GLvoid*>(image.data.get());
     });
-
-    assert(std::all_of(images.begin(), images.end(), [&firstImage = images[0]](const ImageDescription& image) {
-        return image.size == firstImage.size && image.numChannels == firstImage.numChannels;
-    }));
 
     return std::make_unique<Texture>(images[0].size, cubeSideData, settings);
 }
