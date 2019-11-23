@@ -54,16 +54,15 @@ namespace {
 
     float getZoomDelta() {
 
-        float scrollDelta = utils::Mouse::getScrollDelta();
+        float scrollDelta = en::Mouse::getScrollDelta();
 
-        /*
-        if (sf::Keyboard::isKeyPressed(Key::LBracket)) {
+        if (en::Keyboard::isHeld(GLFW_KEY_LEFT_BRACKET)) {
             scrollDelta += 1.f;
         }
 
-        if (sf::Keyboard::isKeyPressed(Key::RBracket)) {
+        if (en::Keyboard::isHeld(GLFW_KEY_RIGHT_BRACKET)) {
             scrollDelta -= 1.f;
-        }*/
+        }
 
         return scrollDelta;
     }

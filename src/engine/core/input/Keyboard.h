@@ -6,12 +6,10 @@
 #define ENGINE_KEYBOARD_H
 
 #include <string>
-#include "Receiver.h"
-#include "Window.h"
 
-namespace utils {
+namespace en {
 
-    class Keyboard : en::Receiver<en::Window::KeyEvent> {
+    class Keyboard {
 
     public:
         using keyCode_t = int;
@@ -25,9 +23,6 @@ namespace utils {
         static bool isUp(const std::string& keyName);
 
         static void update();
-
-    private:
-        void receive(const en::Window::KeyEvent& info) override;
     };
 }
 

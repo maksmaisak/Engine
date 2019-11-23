@@ -4,6 +4,7 @@
 
 #include "CollisionDetectionTestScene.h"
 #include "Camera.h"
+#include "Keyboard.h"
 
 using namespace en;
 
@@ -69,6 +70,6 @@ void CollisionDetectionTestScene::open() {
 
 void CollisionDetectionTestScene::update(float dt) {
 
-    if (utils::Keyboard::isDown("r"))
+    if (en::Keyboard::isDown(GLFW_KEY_R))
         getEngine().getSceneManager().setCurrentSceneNextUpdate<CollisionDetectionTestScene>();
 }

@@ -38,7 +38,7 @@ namespace {
 
         const glm::mat4 viewMatrix = glm::inverse(cameraTransform.getWorldTransform());
 
-        return utils::Keyboard::isHeld("o") ?
+        return Keyboard::isHeld("o") ?
             glm::scale(glm::vec3(0.6f)) * viewMatrix :
             viewMatrix;
     }

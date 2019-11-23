@@ -169,9 +169,9 @@ namespace {
         lua_pushvalue(lua, -1);
         lua_newtable(lua);
         {
-            lua.setField("isHeld", [](const std::string& name){return utils::Keyboard::isHeld(name);});
-            lua.setField("isDown", [](const std::string& name){return utils::Keyboard::isDown(name);});
-            lua.setField("isUp"  , [](const std::string& name){return utils::Keyboard::isUp(name);});
+            lua.setField("isHeld", [](const std::string& name){return Keyboard::isHeld(name);});
+            lua.setField("isDown", [](const std::string& name){return Keyboard::isDown(name);});
+            lua.setField("isUp"  , [](const std::string& name){return Keyboard::isUp(name);});
         }
         lua_setfield(lua, -2, "keyboard");
     }
@@ -182,9 +182,9 @@ namespace {
         lua_pushvalue(lua, -1);
         lua_newtable(lua);
         {
-            lua.setField("isHeld", [](int buttonNum){return utils::Mouse::isHeld(buttonNum - 1);});
-            lua.setField("isDown", [](int buttonNum){return utils::Mouse::isDown(buttonNum - 1);});
-            lua.setField("isUp"  , [](int buttonNum){return utils::Mouse::isUp  (buttonNum - 1);});
+            lua.setField("isHeld", [](int buttonNum){return Mouse::isHeld(buttonNum - 1);});
+            lua.setField("isDown", [](int buttonNum){return Mouse::isDown(buttonNum - 1);});
+            lua.setField("isUp"  , [](int buttonNum){return Mouse::isUp  (buttonNum - 1);});
         }
         lua_setfield(lua, -2, "mouse");
     }

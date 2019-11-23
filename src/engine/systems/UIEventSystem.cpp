@@ -19,7 +19,7 @@ void UIEventSystem::update(float dt) {
         rect.wasEnabled = rect.isEnabled;
     }
 
-    const glm::vec2 mousePosition = utils::Mouse::getPosition(m_engine->getWindow());
+    const glm::vec2 mousePosition = Mouse::getPosition(m_engine->getWindow());
     for (Entity e : m_registry->with<UIRect, Transform>()) {
         if (!m_registry->get<Transform>(e).getParent()) {
             updateRect(e, m_registry->get<UIRect>(e), m_registry->get<Transform>(e), mousePosition);
@@ -57,15 +57,15 @@ void UIEventSystem::updateRect(Entity e, UIRect& rect, Transform& transform, con
     if (rect.isMouseOver) {
         for (int i = 0; i <= GLFW_MOUSE_BUTTON_LAST; ++i) {
 
-            if (utils::Mouse::isDown(i)) {
+            if (Mouse::isDown(i)) {
                 Receiver<MouseDown>::broadcast(e, i);
             }
 
-            if (utils::Mouse::isHeld(i)) {
+            if (Mouse::isHeld(i)) {
                 Receiver<MouseHold>::broadcast(e, i);
             }
 
-            if (utils::Mouse::isUp(i)) {
+            if (Mouse::isUp(i)) {
                 Receiver<MouseUp>::broadcast(e, i);
             }
         }

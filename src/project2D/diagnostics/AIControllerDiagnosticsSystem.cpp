@@ -22,7 +22,7 @@ namespace {
         const glm::mat4 clipspaceToWorldspace = cameraToWorldspace * glm::inverse(cameraToClipspace);
 
         const en::Window& window = cameraActor.getEngine().getWindow();
-        const glm::vec2 mousePositionPixels = utils::Mouse::getPosition(window);
+        const glm::vec2 mousePositionPixels = en::Mouse::getPosition(window);
         const glm::vec2 windowSize = window.getSize();
         const glm::vec2 mousePositionNormalized {
             mousePositionPixels.x / windowSize.x,

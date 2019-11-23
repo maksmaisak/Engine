@@ -6,8 +6,10 @@
 #include <unordered_map>
 #include <algorithm>
 #include <vector>
+#include "Receiver.h"
+#include "Window.h"
 
-using namespace utils;
+using namespace en;
 
 namespace {
 
@@ -52,6 +54,17 @@ namespace {
     bool isValid(Keyboard::keyCode_t keyCode) {
         return keyCode >= 0 && keyCode <= GLFW_KEY_LAST;
     }
+
+    class KeyboardEventReceiver : Receiver<Window::KeyEvent> {
+
+    private:
+        inline void receive(const Window::KeyEvent& info) override {
+
+            if (isValid(info.key)) {
+                isHeldNow.at(info.key) = info.action != GLFW_RELEASE;
+            }
+        }
+    } keyboardEventReceiver;
 }
 
 bool Keyboard::isHeld(keyCode_t keyCode) {
@@ -91,11 +104,4 @@ bool Keyboard::isDown(const std::string& keyName) {
 
 void Keyboard::update() {
     std::copy(isHeldNow.begin(), isHeldNow.end(), wasHeldLastUpdate.begin());
-}
-
-void Keyboard::receive(const en::Window::KeyEvent& info) {
-
-    if (isValid(info.key)) {
-        isHeldNow.at(info.key) = info.action != GLFW_RELEASE;
-    }
 }

@@ -11,8 +11,6 @@
 #include "Entity.h"
 #include "Scheduler.h"
 #include "SceneManager.h"
-#include "Keyboard.h"
-#include "Mouse.h"
 #include "Window.h"
 
 namespace en {
@@ -78,17 +76,14 @@ namespace en {
 
         Window m_window;
 
-        utils::Keyboard m_keyboardHelper;
-        utils::Mouse m_mouseHelper;
+        std::uint32_t m_framerateCap;
+        double m_fps;
+        std::int64_t m_frameTimeMicroseconds;
+        float m_deltaTime;
+        float m_deltaTimeRealtime;
+        float m_timeScale;
 
-        std::uint32_t m_framerateCap = 240;
-        double m_fps = 0.f;
-        std::int64_t m_frameTimeMicroseconds = 0;
-        float m_deltaTime = 0.f;
-        float m_deltaTimeRealtime = 0.f;
-        float m_timeScale = 1.f;
-
-        bool m_shouldExit = false;
+        bool m_shouldExit;
     };
 }
 

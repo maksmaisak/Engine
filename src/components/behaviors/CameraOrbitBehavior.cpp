@@ -45,7 +45,7 @@ CameraOrbitBehavior::CameraOrbitBehavior(
     m_maxTilt(maxTilt),
     m_rotationSpeed(rotationSpeed)
 {
-    m_previousMousePosition = utils::Mouse::getPosition();
+    m_previousMousePosition = en::Mouse::getPosition();
 }
 
 void CameraOrbitBehavior::update(float dt) {
@@ -89,7 +89,7 @@ void CameraOrbitBehavior::update(float dt) {
 
 glm::vec2 CameraOrbitBehavior::updateMouseInput() {
 
-    const glm::vec2 currentMousePosition = utils::Mouse::getPosition();
+    const glm::vec2 currentMousePosition = en::Mouse::getPosition();
     const glm::vec2 deltaMousePosition = currentMousePosition - m_previousMousePosition;
 
     // Wrap around screen

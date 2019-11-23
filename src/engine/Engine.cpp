@@ -19,6 +19,8 @@
 #include "Camera.h"
 #include "Name.h"
 #include "Font.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
 using namespace en;
 
@@ -73,7 +75,14 @@ Engine& Engine::get() {
 Engine::Engine() :
     m_lua(std::make_unique<LuaState>()),
     m_systems(*this),
-    m_sceneManager(*this)
+    m_sceneManager(*this),
+    m_framerateCap(240),
+    m_fps(0.0),
+    m_frameTimeMicroseconds(0),
+    m_deltaTime(0.f),
+    m_deltaTimeRealtime(0.f),
+    m_timeScale(1.f),
+    m_shouldExit(false)
 {
     assert(!g_engine && "Can't have more than one Engine!");
     g_engine = this;
@@ -166,8 +175,8 @@ void Engine::fixedUpdate() {
     m_systems.update(m_deltaTime);
     m_scheduler.update(m_deltaTime);
 
-    utils::Keyboard::update();
-    utils::Mouse::update();
+    Keyboard::update();
+    Mouse::update();
 }
 
 void Engine::draw() {

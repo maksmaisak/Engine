@@ -7,8 +7,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Engine.h"
+#include "Receiver.h"
+#include "Window.h"
 
-using namespace utils;
+using namespace en;
 
 namespace {
 
@@ -20,6 +22,14 @@ namespace {
 
     float previousScrollDelta = 0.f;
     float currentScrollDelta = 0.f;
+
+    class MouseEventReceiver : Receiver<Window::MouseScroll> {
+
+        inline void receive(const Window::MouseScroll& info) override {
+            currentScrollDelta += static_cast<float>(info.offsetY);
+        }
+
+    } mouseEventReceiver;
 }
 
 bool Mouse::isDown(int button) {
@@ -29,7 +39,7 @@ bool Mouse::isDown(int button) {
 
 bool Mouse::isHeld(int button) {
 
-    return isValidMouseButton(button) && glfwGetMouseButton(en::Engine::get().getWindow().getUnderlyingWindow(), button);
+    return isValidMouseButton(button) && glfwGetMouseButton(Engine::get().getWindow().getUnderlyingWindow(), button);
 }
 
 bool Mouse::isUp(int button) {
@@ -37,7 +47,7 @@ bool Mouse::isUp(int button) {
     return isValidMouseButton(button) && wasMouseButtonPressed[button] && !isHeld(button);
 }
 
-glm::vec2 Mouse::getPosition(const en::Window& window) {
+glm::vec2 Mouse::getPosition(const Window& window) {
 
     double posX, posY;
     glfwGetCursorPos(window.getUnderlyingWindow(), &posX, &posY);
@@ -46,7 +56,7 @@ glm::vec2 Mouse::getPosition(const en::Window& window) {
 
 glm::vec2 Mouse::getPosition() {
 
-    return getPosition(en::Engine::get().getWindow());
+    return getPosition(Engine::get().getWindow());
 }
 
 float Mouse::getScrollDelta() {
@@ -62,9 +72,4 @@ void Mouse::update() {
 
     previousScrollDelta = currentScrollDelta;
     currentScrollDelta = 0.f;
-}
-
-void Mouse::receive(const en::Window::MouseScroll& info) {
-
-    currentScrollDelta += static_cast<float>(info.offsetY);
 }
