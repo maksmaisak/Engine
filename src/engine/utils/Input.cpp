@@ -3,12 +3,13 @@
 //
 
 #include "Input.h"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include "Engine.h"
 
 namespace en {
 
-    using Keys = sf::Keyboard;
-
-    sf::Vector2f getMoveInput() {
+    glm::vec2 getMoveInput() {
 
         return {
             getAxisHorizontal(),
@@ -18,17 +19,45 @@ namespace en {
 
     float getAxisHorizontal() {
 
-        if (Keys::isKeyPressed(Keys::Right) || Keys::isKeyPressed(Keys::D)) return  1.f;
-        if (Keys::isKeyPressed(Keys::Left ) || Keys::isKeyPressed(Keys::A)) return -1.f;
+        constexpr int rightKeys[] { GLFW_KEY_D, GLFW_KEY_RIGHT };
+        constexpr int leftKeys[]  { GLFW_KEY_A, GLFW_KEY_LEFT };
 
-        return 0.f;
+        const auto isKeyPressed = [window = Engine::get().getWindow().getUnderlyingWindow()](int keyCode) {
+            return glfwGetKey(window, keyCode);
+        };
+
+        float result = 0.f;
+
+        if (std::any_of(std::begin(rightKeys), std::end(rightKeys), isKeyPressed)) {
+            result += 1.f;
+        }
+
+        if (std::any_of(std::begin(leftKeys), std::end(leftKeys), isKeyPressed)) {
+            result -= 1.f;
+        }
+
+        return result;
     }
 
     float getAxisVertical() {
 
-        if (Keys::isKeyPressed(Keys::Up  ) || Keys::isKeyPressed(Keys::W)) return  1.f;
-        if (Keys::isKeyPressed(Keys::Down) || Keys::isKeyPressed(Keys::S)) return -1.f;
+        constexpr int forwardKeys[] { GLFW_KEY_W, GLFW_KEY_UP };
+        constexpr int backKeys[]    { GLFW_KEY_S, GLFW_KEY_DOWN };
 
-        return 0.f;
+        const auto isKeyPressed = [window = Engine::get().getWindow().getUnderlyingWindow()](int keyCode) {
+            return glfwGetKey(window, keyCode);
+        };
+
+        float result = 0.f;
+
+        if (std::any_of(std::begin(forwardKeys), std::end(forwardKeys), isKeyPressed)) {
+            result += 1.f;
+        }
+
+        if (std::any_of(std::begin(backKeys), std::end(backKeys), isKeyPressed)) {
+            result -= 1.f;
+        }
+
+        return result;
     }
 }

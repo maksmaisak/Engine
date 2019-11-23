@@ -2,8 +2,8 @@
 // Created by Maksym Maisak on 2019-02-15.
 //
 
-#ifndef ENGINE_MOUSEHELPER_H
-#define ENGINE_MOUSEHELPER_H
+#ifndef ENGINE_MOUSE_H
+#define ENGINE_MOUSE_H
 
 #include "glm.h"
 #include "Window.h"
@@ -11,12 +11,13 @@
 
 namespace utils {
 
-    class MouseHelper : en::Receiver<en::Window::MouseScroll> {
+    class Mouse : en::Receiver<en::Window::MouseScroll> {
 
     public:
         static bool isDown(int button);
         static bool isHeld(int button);
         static bool isUp(int button);
+        static glm::vec2 getPosition();
         static glm::vec2 getPosition(const en::Window& window);
         static float getScrollDelta();
 
@@ -27,4 +28,4 @@ namespace utils {
     };
 }
 
-#endif //ENGINE_MOUSEHELPER_H
+#endif //ENGINE_MOUSE_H

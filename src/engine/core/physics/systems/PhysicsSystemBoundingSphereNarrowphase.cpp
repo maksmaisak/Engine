@@ -3,14 +3,11 @@
 //
 
 #include "PhysicsSystemBoundingSphereNarrowphase.h"
-#include <SFML/Graphics.hpp>
-#include <utility>
 #include "Transform.h"
 #include "Rigidbody.h"
 #include "Hit.h"
 #include "Messaging.h"
 #include "Collision.h"
-#include "UIRect.h"
 #include "Text.h"
 
 using namespace en;

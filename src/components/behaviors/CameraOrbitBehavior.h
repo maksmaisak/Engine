@@ -5,7 +5,6 @@
 #ifndef ENGINE_CAMERAORBITBEHAVIOUR_H
 #define ENGINE_CAMERAORBITBEHAVIOUR_H
 
-#include <SFML/Window.hpp>
 #include "Behavior.h"
 #include "Actor.h"
 #include "glm.h"
@@ -26,7 +25,7 @@ public:
 
 private:
 
-    sf::Vector2i updateMouseInput();
+    glm::vec2 updateMouseInput();
 
     en::Actor m_target;
 
@@ -35,7 +34,7 @@ private:
     float m_maxTilt;
     float m_rotationSpeed;
 
-    sf::Vector2i m_previousMousePosition;
+    glm::vec2 m_previousMousePosition;
 };
 
 

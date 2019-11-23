@@ -13,8 +13,8 @@
 #include "LuaState.h"
 #include "ClosureHelper.h"
 #include "Resources.h"
-#include "KeyboardHelper.h"
-#include "MouseHelper.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 #include "Sound.h"
 #include "Camera.h"
 #include "Name.h"
@@ -166,8 +166,8 @@ void Engine::fixedUpdate() {
     m_systems.update(m_deltaTime);
     m_scheduler.update(m_deltaTime);
 
-    utils::KeyboardHelper::update();
-    utils::MouseHelper::update();
+    utils::Keyboard::update();
+    utils::Mouse::update();
 }
 
 void Engine::draw() {
@@ -205,14 +205,6 @@ void Engine::initializeWindow() {
     const bool vsync = lua.tryGetField<bool>("vsync").value_or(true);
     const bool fullscreen = lua.tryGetField<bool>("fullscreen").value_or(false);
     const std::string windowTitle = lua.tryGetField<std::string>("windowTitle").value_or("Game");
-
-    /*
-    const auto contextSettings = sf::ContextSettings(24, 8, 8, 4, 5, sf::ContextSettings::Attribute::Core | sf::ContextSettings::Attribute::Debug);
-    window.create(sf::VideoMode(width, height), windowTitle, fullscreen ? sf::Style::Fullscreen : sf::Style::Default, contextSettings);
-    window.setVerticalSyncEnabled(vsync);
-    window.setKeyRepeatEnabled(false);
-    window.setFramerateLimit(0);
-    window.setActive(true);*/
 
     const bool didCreateWindow = m_window.create(width, height, windowTitle, fullscreen);
     if (!didCreateWindow) {

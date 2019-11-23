@@ -4,7 +4,6 @@
 
 #include "AITestingScene.h"
 #include <random>
-#include <SFML/Window.hpp>
 #include <imgui.h>
 #include "LineRenderer.h"
 #include "AIController.h"

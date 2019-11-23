@@ -5,8 +5,8 @@
 #include "CameraControls2DSystem.h"
 
 #include <algorithm>
-#include "KeyboardHelper.h"
-#include "MouseHelper.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 #include "Engine.h"
 #include "Transform.h"
 #include "Camera.h"
@@ -54,7 +54,7 @@ namespace {
 
     float getZoomDelta() {
 
-        float scrollDelta = utils::MouseHelper::getScrollDelta();
+        float scrollDelta = utils::Mouse::getScrollDelta();
 
         /*
         if (sf::Keyboard::isKeyPressed(Key::LBracket)) {

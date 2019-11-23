@@ -56,7 +56,7 @@ namespace en {
     };
 
     template<typename TMessage, typename... Rest>
-    class Receiver<TMessage, Rest...> : Receiver<TMessage>, Receiver<Rest...> {};
+    class Receiver<TMessage, Rest...> : Receiver<TMessage>, Receiver<Rest>... {};
 
     template<typename TMessage>
     inline std::unordered_set<Receiver<TMessage>*> Receiver<TMessage>::m_receivers;

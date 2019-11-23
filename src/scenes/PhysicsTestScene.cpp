@@ -12,7 +12,7 @@
 #include "Model.h"
 #include "Texture.h"
 #include "Resources.h"
-#include "KeyboardHelper.h"
+#include "Keyboard.h"
 #include "Config.h"
 
 #include "Transform.h"
@@ -91,7 +91,7 @@ void PhysicsTestScene::open() {
 
 void PhysicsTestScene::update(float dt) {
 
-    if (utils::KeyboardHelper::isDown("r"))
+    if (utils::Keyboard::isDown("r"))
         getEngine().getSceneManager().setCurrentSceneNextUpdate<PhysicsTestScene>();
 }
 

@@ -39,9 +39,6 @@ public:
     const Settings& getSettings() const;
     void setSettings(const Settings& settings);
 
-    const std::shared_ptr<sf::Drawable>& getDrawable() const;
-    void setDrawable(const std::shared_ptr<sf::Drawable>& pDrawable);
-
     const bool getIsEmissionActive() const;
     void setIsEmissionActive(bool isEmissionActive);
 
@@ -58,8 +55,6 @@ private:
 
     bool m_isEmissionActive = true;
     sf::Clock m_emissionTimer;
-
-    std::shared_ptr<sf::Drawable> m_pDrawable;
     Settings m_settings = {};
 
     ParticleIndex emitParticle();

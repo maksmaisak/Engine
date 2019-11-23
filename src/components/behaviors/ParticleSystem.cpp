@@ -48,14 +48,6 @@ void ParticleSystem::update(float dt) {
     }
 }
 
-const std::shared_ptr<sf::Drawable>& ParticleSystem::getDrawable() const {
-    return m_pDrawable;
-}
-
-void ParticleSystem::setDrawable(const std::shared_ptr<sf::Drawable>& m_pDrawable) {
-    ParticleSystem::m_pDrawable = m_pDrawable;
-}
-
 const ParticleSystem::Settings& ParticleSystem::getSettings() const {
     return m_settings;
 }

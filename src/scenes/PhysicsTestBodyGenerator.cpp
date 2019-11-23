@@ -12,7 +12,7 @@
 #include "Model.h"
 #include "Texture.h"
 #include "Resources.h"
-#include "KeyboardHelper.h"
+#include "Keyboard.h"
 #include "Config.h"
 
 #include "Transform.h"

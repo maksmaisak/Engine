@@ -9,8 +9,8 @@
 #include "ClosureHelper.h"
 #include "Material.h"
 
-#include "KeyboardHelper.h"
-#include "MouseHelper.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 #include "Sound.h"
 #include "MusicIntegration.h"
 #include "Ease.h"
@@ -169,9 +169,9 @@ namespace {
         lua_pushvalue(lua, -1);
         lua_newtable(lua);
         {
-            lua.setField("isHeld", static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isHeld));
-            lua.setField("isDown", static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isDown));
-            lua.setField("isUp"  , static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isUp));
+            lua.setField("isHeld", [](const std::string& name){return utils::Keyboard::isHeld(name);});
+            lua.setField("isDown", [](const std::string& name){return utils::Keyboard::isDown(name);});
+            lua.setField("isUp"  , [](const std::string& name){return utils::Keyboard::isUp(name);});
         }
         lua_setfield(lua, -2, "keyboard");
     }
@@ -182,9 +182,9 @@ namespace {
         lua_pushvalue(lua, -1);
         lua_newtable(lua);
         {
-            lua.setField("isHeld", [](int buttonNum){return utils::MouseHelper::isHeld((sf::Mouse::Button)(buttonNum - 1));});
-            lua.setField("isDown", [](int buttonNum){return utils::MouseHelper::isDown((sf::Mouse::Button)(buttonNum - 1));});
-            lua.setField("isUp"  , [](int buttonNum){return utils::MouseHelper::isUp  ((sf::Mouse::Button)(buttonNum - 1));});
+            lua.setField("isHeld", [](int buttonNum){return utils::Mouse::isHeld(buttonNum - 1);});
+            lua.setField("isDown", [](int buttonNum){return utils::Mouse::isDown(buttonNum - 1);});
+            lua.setField("isUp"  , [](int buttonNum){return utils::Mouse::isUp  (buttonNum - 1);});
         }
         lua_setfield(lua, -2, "mouse");
     }

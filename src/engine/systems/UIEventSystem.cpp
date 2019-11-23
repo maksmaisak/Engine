@@ -8,7 +8,7 @@
 #include "Transform.h"
 #include "UIRect.h"
 #include "UIEvents.h"
-#include "MouseHelper.h"
+#include "Mouse.h"
 
 using namespace en;
 
@@ -19,7 +19,7 @@ void UIEventSystem::update(float dt) {
         rect.wasEnabled = rect.isEnabled;
     }
 
-    const glm::vec2 mousePosition = utils::MouseHelper::getPosition(m_engine->getWindow());
+    const glm::vec2 mousePosition = utils::Mouse::getPosition(m_engine->getWindow());
     for (Entity e : m_registry->with<UIRect, Transform>()) {
         if (!m_registry->get<Transform>(e).getParent()) {
             updateRect(e, m_registry->get<UIRect>(e), m_registry->get<Transform>(e), mousePosition);
@@ -38,31 +38,36 @@ void UIEventSystem::updateRect(Entity e, UIRect& rect, Transform& transform, con
     const glm::vec2 localMousePosition = glm::inverse(transform.getWorldTransform()) * glm::vec4(mousePosition, 0.f, 1.f);
     rect.isMouseOver = localBounds.contains(localMousePosition);
 
-    if (!rect.isEnabled || !rect.wasEnabled)
+    if (!rect.isEnabled || !rect.wasEnabled) {
         return;
+    }
 
-    if (rect.isMouseOver && !rect.wasMouseOver)
+    if (rect.isMouseOver && !rect.wasMouseOver) {
         Receiver<MouseEnter>::broadcast(e);
-
-    if (rect.isMouseOver)
-        Receiver<MouseOver>::broadcast(e);
-
-    if (!rect.isMouseOver && rect.wasMouseOver)
-        Receiver<MouseLeave>::broadcast(e);
+    }
 
     if (rect.isMouseOver) {
-        for (int i = 0; i < sf::Mouse::ButtonCount; ++i) {
+        Receiver<MouseOver>::broadcast(e);
+    }
 
-            const auto buttonCode = static_cast<sf::Mouse::Button>(i);
+    if (!rect.isMouseOver && rect.wasMouseOver) {
+        Receiver<MouseLeave>::broadcast(e);
+    }
 
-            if (utils::MouseHelper::isDown(buttonCode))
-                Receiver<MouseDown>::broadcast(e, i + 1);
+    if (rect.isMouseOver) {
+        for (int i = 0; i <= GLFW_MOUSE_BUTTON_LAST; ++i) {
 
-            if (utils::MouseHelper::isHeld(buttonCode))
-                Receiver<MouseHold>::broadcast(e, i + 1);
+            if (utils::Mouse::isDown(i)) {
+                Receiver<MouseDown>::broadcast(e, i);
+            }
 
-            if (utils::MouseHelper::isUp(buttonCode))
-                Receiver<MouseUp>::broadcast(e, i + 1);
+            if (utils::Mouse::isHeld(i)) {
+                Receiver<MouseHold>::broadcast(e, i);
+            }
+
+            if (utils::Mouse::isUp(i)) {
+                Receiver<MouseUp>::broadcast(e, i);
+            }
         }
     }
 

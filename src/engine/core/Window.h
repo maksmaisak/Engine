@@ -24,6 +24,7 @@ namespace en {
         struct MouseReleased : public MouseButtonEvent {};
         struct MouseScroll : public WindowEvent {double offsetX = 0.0; double offsetY = 0.0;};
         struct FramebufferSizeEvent : public WindowEvent {int width = 0; int height = 0;};
+        struct KeyEvent : public WindowEvent {int key = 0; int scancode = 0; int action = 0; int mods = 0;};
 
         Window();
         bool create(int width, int height, const std::string& title = "Engine", bool fullscreen = false);

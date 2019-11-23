@@ -11,8 +11,8 @@
 #include "Entity.h"
 #include "Scheduler.h"
 #include "SceneManager.h"
-#include "KeyboardHelper.h"
-#include "MouseHelper.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 #include "Window.h"
 
 namespace en {
@@ -78,8 +78,8 @@ namespace en {
 
         Window m_window;
 
-        utils::KeyboardHelper m_keyboardHelper;
-        utils::MouseHelper m_mouseHelper;
+        utils::Keyboard m_keyboardHelper;
+        utils::Mouse m_mouseHelper;
 
         std::uint32_t m_framerateCap = 240;
         double m_fps = 0.f;

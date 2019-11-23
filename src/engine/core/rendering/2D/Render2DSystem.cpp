@@ -17,7 +17,7 @@
 #include "Transform.h"
 #include "Bounds.h"
 #include "DebugVolumeRenderer.h"
-#include "KeyboardHelper.h"
+#include "Keyboard.h"
 
 using namespace en;
 
@@ -38,7 +38,7 @@ namespace {
 
         const glm::mat4 viewMatrix = glm::inverse(cameraTransform.getWorldTransform());
 
-        return utils::KeyboardHelper::isHeld("o") ?
+        return utils::Keyboard::isHeld("o") ?
             glm::scale(glm::vec3(0.6f)) * viewMatrix :
             viewMatrix;
     }

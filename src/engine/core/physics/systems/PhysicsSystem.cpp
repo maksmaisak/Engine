@@ -3,7 +3,6 @@
 //
 
 #include "PhysicsSystem.h"
-#include <SFML/Graphics.hpp>
 #include <sstream>
 #include <chrono>
 #include "Transform.h"

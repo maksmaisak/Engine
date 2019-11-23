@@ -133,5 +133,6 @@ void Window::setGLFWCallbacks() {
     });
 
     setCallback<MouseScroll>(glfwSetScrollCallback, m_window);
+    setCallback<KeyEvent>(glfwSetKeyCallback, m_window);
     setCallback<FramebufferSizeEvent>(glfwSetFramebufferSizeCallback, m_window);
 }

@@ -69,6 +69,6 @@ void CollisionDetectionTestScene::open() {
 
 void CollisionDetectionTestScene::update(float dt) {
 
-    if (utils::KeyboardHelper::isDown("r"))
+    if (utils::Keyboard::isDown("r"))
         getEngine().getSceneManager().setCurrentSceneNextUpdate<CollisionDetectionTestScene>();
 }
