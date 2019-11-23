@@ -4,7 +4,6 @@
 
 #include "Keyboard.h"
 #include <unordered_map>
-#include <algorithm>
 #include <vector>
 #include "Receiver.h"
 #include "Window.h"
@@ -16,11 +15,11 @@ namespace {
     auto wasHeldLastUpdate = std::vector<bool>(GLFW_KEY_LAST + 1, false);
     auto isHeldNow         = std::vector<bool>(GLFW_KEY_LAST + 1, false);
 
-    int getKeyCode(const std::string& keyName) {
+    int getKeyCode(const Name& keyName) {
 
-        static std::unordered_map<std::string, Keyboard::keyCode_t> nameToKey = [](){
+        static std::unordered_map<Name, Keyboard::keyCode_t> nameToKey = [](){
 
-            std::unordered_map<std::string, Keyboard::keyCode_t> map {
+            std::unordered_map<Name, Keyboard::keyCode_t> map {
                 {"UP",     GLFW_KEY_UP    },
                 {"DOWN",   GLFW_KEY_DOWN  },
                 {"LEFT",   GLFW_KEY_LEFT  },
@@ -29,21 +28,15 @@ namespace {
             };
 
             for (Keyboard::keyCode_t i = 0; i <= GLFW_KEY_LAST; ++i) {
-
                 if (const char* nameCString = glfwGetKeyName(i, 0)) {
-                    std::string name(nameCString);
-                    std::transform(name.begin(), name.end(), name.begin(), ::toupper);
-                    map.emplace(name, i);
+                    map.emplace(Name(nameCString).getUppercase(), i);
                 }
             }
 
             return map;
         }();
 
-        std::string uppercaseKeyName = keyName;
-        std::transform(uppercaseKeyName.begin(), uppercaseKeyName.end(), uppercaseKeyName.begin(), ::toupper);
-
-        const auto it = nameToKey.find(uppercaseKeyName);
+        const auto it = nameToKey.find(keyName.getUppercase());
         if (it == nameToKey.end()) {
             return GLFW_KEY_UNKNOWN;
         }
@@ -59,7 +52,6 @@ namespace {
 
     private:
         inline void receive(const Window::KeyEvent& info) override {
-
             if (isValid(info.key)) {
                 isHeldNow.at(info.key) = info.action != GLFW_RELEASE;
             }
@@ -90,15 +82,15 @@ bool Keyboard::isDown(keyCode_t keyCode) {
     return !wasHeldLastUpdate[keyCode] && isHeldNow[keyCode];
 }
 
-bool Keyboard::isHeld(const std::string& keyName) {
+bool Keyboard::isHeld(const Name& keyName) {
     return isHeld(getKeyCode(keyName));
 }
 
-bool Keyboard::isUp(const std::string& keyName) {
+bool Keyboard::isUp(const Name& keyName) {
     return isUp(getKeyCode(keyName));
 }
 
-bool Keyboard::isDown(const std::string& keyName) {
+bool Keyboard::isDown(const Name& keyName) {
     return isDown(getKeyCode(keyName));
 }
 

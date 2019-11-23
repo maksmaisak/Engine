@@ -5,7 +5,7 @@
 #ifndef ENGINE_KEYBOARD_H
 #define ENGINE_KEYBOARD_H
 
-#include <string>
+#include "Name.h"
 
 namespace en {
 
@@ -18,9 +18,9 @@ namespace en {
         static bool isHeld(keyCode_t keyCode);
         static bool isUp(keyCode_t keyCode);
 
-        static bool isDown(const std::string& keyName);
-        static bool isHeld(const std::string& keyName);
-        static bool isUp(const std::string& keyName);
+        static bool isDown(const Name& keyName);
+        static bool isHeld(const Name& keyName);
+        static bool isUp(const Name& keyName);
 
         static void update();
     };
