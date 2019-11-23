@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include <algorithm>
+#include <thread>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -23,10 +24,11 @@
 #include "Mouse.h"
 
 using namespace en;
+using namespace std::chrono_literals;
 
 namespace {
 
-    constexpr float FixedTimestep = 0.01f;
+    constexpr DurationFloat FixedTimestep = 0.01s;
     constexpr unsigned int MaxNumFixedUpdatesPerFrame = 3;
 
     Engine* g_engine = nullptr;
@@ -110,49 +112,53 @@ void Engine::run() {
 
     m_systems.start();
 
-    const sf::Time fixedTimestepSf = sf::seconds(FixedTimestep);
-    sf::Clock fixedUpdateClock;
-    sf::Time fixedUpdateLag = sf::Time::Zero;
+    DurationFloat fixedUpdateLag = DurationFloat::zero();
+    const DurationFloat drawTimestep = 1s / m_framerateCap;
 
-    const sf::Time drawTimestepSf = sf::microseconds(1000000.0 / m_framerateCap);
-    sf::Clock drawClock;
+    TimePoint timeOfLastFixedUpdate = Clock::now();
+    TimePoint timeOfLastDraw = Clock::now();
 
     while (!m_shouldExit && !m_window.shouldClose()) {
 
         // Perform fixed updates if needed
-        fixedUpdateLag += fixedUpdateClock.restart() * m_timeScale;
-        fixedUpdateLag = std::min(fixedUpdateLag, fixedTimestepSf * static_cast<float>(MaxNumFixedUpdatesPerFrame) * std::max(1.f, m_timeScale));
-        while (fixedUpdateLag >= fixedTimestepSf) {
+        fixedUpdateLag += (Clock::now() - timeOfLastFixedUpdate) * m_timeScale;
+        timeOfLastFixedUpdate = Clock::now();
 
-            m_deltaTime = FixedTimestep;
-            m_deltaTimeRealtime = FixedTimestep / m_timeScale;
+        fixedUpdateLag = std::min(fixedUpdateLag, FixedTimestep * static_cast<float>(MaxNumFixedUpdatesPerFrame) * std::max(1.f, m_timeScale));
+        while (fixedUpdateLag >= FixedTimestep) {
+
+            m_deltaTime = FixedTimestep.count();
+            m_deltaTimeRealtime = m_deltaTime / m_timeScale;
             fixedUpdate();
 
-            fixedUpdateLag -= fixedTimestepSf;
+            fixedUpdateLag -= FixedTimestep;
         }
 
         // Perform draw if needed
-        if (drawClock.getElapsedTime() >= drawTimestepSf) {
+        const DurationFloat timeSinceLastDraw = Clock::now() - timeOfLastDraw;
+        if (timeSinceLastDraw >= drawTimestep) {
 
-            m_fps = static_cast<float>(1000000.0 / drawClock.restart().asMicroseconds());
+            m_fps = 1.f / timeSinceLastDraw.count();
+            timeOfLastDraw = Clock::now();
 
-            sf::Clock frameClock;
+            const TimePoint timeOfFrameStart = Clock::now();
             draw();
-            m_frameTimeMicroseconds = frameClock.getElapsedTime().asMicroseconds();
+            m_frameTimeMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - timeOfFrameStart).count();
+
             glfwPollEvents();
 
         } else {
 
             while (true) {
 
-                sf::sleep(sf::microseconds(1));
+                std::this_thread::sleep_for(1us);
 
-                const bool shouldDraw = drawClock.getElapsedTime() >= drawTimestepSf;
+                const bool shouldDraw = (Clock::now() - timeOfLastDraw) >= drawTimestep;
                 if (shouldDraw) {
                     break;
                 }
 
-                const bool shouldUpdate = fixedUpdateLag + fixedUpdateClock.getElapsedTime() * m_timeScale >= fixedTimestepSf;
+                const bool shouldUpdate = fixedUpdateLag + (Clock::now() - timeOfLastFixedUpdate) * m_timeScale >= FixedTimestep;
                 if (shouldUpdate) {
                     break;
                 }

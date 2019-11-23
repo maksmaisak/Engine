@@ -2,28 +2,24 @@
 // Created by Maksym Maisak on 14/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_TIME_H
-#define SAXION_Y2Q1_CPP_TIME_H
+#ifndef ENGINE_TIME_H
+#define ENGINE_TIME_H
 
 #include <chrono>
-#include <SFML/System.hpp>
 
-class GameTime {
+namespace en {
 
-public:
+    using Clock = std::chrono::high_resolution_clock;
+    using TimePoint = std::chrono::time_point<Clock>;
+    using Duration = Clock::duration;
+    using DurationFloat = std::chrono::duration<float>;
 
-    using clock = std::chrono::high_resolution_clock;
-    using timePoint = std::chrono::time_point<clock>;
-    using duration  = clock::duration;
+    class GameTime {
 
-    static duration now();
-    static float nowAsSeconds();
+    public:
+        static Duration sinceAppStart();
+        static float asSeconds(const Duration& duration);
+    };
+}
 
-    // Legacy, use now() instead.
-    static sf::Time nowSFTime();
-
-private:
-    static const timePoint m_start;
-};
-
-#endif //SAXION_Y2Q1_CPP_TIME_H
+#endif //ENGINE_TIME_H

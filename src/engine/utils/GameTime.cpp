@@ -4,23 +4,18 @@
 
 #include "GameTime.h"
 
-using namespace std::chrono;
+using namespace en;
 
-const GameTime::timePoint GameTime::m_start = std::chrono::high_resolution_clock::now();
+namespace {
+    const TimePoint applicationStart = Clock::now();
+}
 
 // TODO add current tick number support to avoid imprecision
 
-GameTime::duration GameTime::now() {
-
-    return std::chrono::high_resolution_clock::now() - m_start;
+Duration GameTime::sinceAppStart() {
+    return Clock::now() - applicationStart;
 }
 
-sf::Time GameTime::nowSFTime() {
-
-    return sf::microseconds(duration_cast<std::chrono::duration<sf::Uint64, std::micro>>(now()).count());
-}
-
-float GameTime::nowAsSeconds() {
-
-    return duration_cast<std::chrono::duration<float>>(now()).count();
+float GameTime::asSeconds(const Duration& duration) {
+    return std::chrono::duration_cast<DurationFloat>(duration).count();
 }

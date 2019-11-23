@@ -210,7 +210,7 @@ namespace {
             lua_pushcclosure(lua, &makeActorFromLua, 1);
             lua_setfield(lua, -2, "makeActor");
 
-            lua.setField("getTime", [](){return GameTime::nowAsSeconds();});
+            lua.setField("getTime", [](){return GameTime::asSeconds(GameTime::sinceAppStart());});
 
             lua.push(&engine);
             lua_pushcclosure(lua, &loadScene, 1);

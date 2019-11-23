@@ -220,7 +220,7 @@ void Material::setBuiltinUniforms(
         gl::setUniform(u.modelNormal, glm::mat3(glm::transpose(glm::inverse(modelMatrix))));
 
     if (valid(u.time))
-        gl::setUniform(u.time, GameTime::nowAsSeconds());
+        gl::setUniform(u.time, GameTime::asSeconds(GameTime::sinceAppStart()));
 
     if (valid(u.viewPosition))
         gl::setUniform(u.viewPosition, glm::vec3(glm::inverse(viewMatrix)[3]));

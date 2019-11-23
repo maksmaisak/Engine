@@ -16,7 +16,7 @@ DelayAction::DelayAction(float duration) :
 ActionOutcome DelayAction::execute() {
 
     if (!m_timer.isAssigned()) {
-        m_timer = m_actor.getEngine().getScheduler().delay(sf::seconds(m_duration));
+        m_timer = m_actor.getEngine().getScheduler().delay(m_duration);
     }
 
     if (m_timer.isInProgress()) {

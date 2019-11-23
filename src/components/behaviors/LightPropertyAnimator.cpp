@@ -9,14 +9,14 @@
 void LightPropertyAnimator::start() {
 
     m_initialLight = getActor().get<en::Light>();
-    m_startTime = GameTime::now();
+    m_startTime = en::Clock::now();
 }
 
 void LightPropertyAnimator::update(float dt) {
 
     auto& light = m_actor.get<en::Light>();
 
-    const float time = std::chrono::duration_cast<std::chrono::duration<float>>(GameTime::now() - m_startTime).count();
+    const float time = en::GameTime::asSeconds(en::Clock::now() - m_startTime);
     const float sinTime = glm::sin(time);
 
     const auto rotateColor = [&](const glm::vec3& color) {
@@ -30,5 +30,7 @@ void LightPropertyAnimator::update(float dt) {
     light.falloff.linear    = glm::abs(sinTime);
     light.falloff.quadratic = 1.f - glm::abs(sinTime);
 
-    light.kind = (en::Light::Kind)(((int)m_initialLight.kind + (int)(time / 4.f)) % (int)en::Light::Kind::COUNT);
+    light.kind = static_cast<en::Light::Kind>(
+        ((int)m_initialLight.kind + (int)(time * 0.25f)) % (int)en::Light::Kind::COUNT
+    );
 }
