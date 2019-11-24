@@ -28,7 +28,7 @@ namespace {
             };
 
             for (Keyboard::keyCode_t i = 0; i <= GLFW_KEY_LAST; ++i) {
-                if (const char* nameCString = glfwGetKeyName(i, 0)) {
+                if (const char* const nameCString = glfwGetKeyName(i, 0)) {
                     map.emplace(Name(nameCString).getUppercase(), i);
                 }
             }

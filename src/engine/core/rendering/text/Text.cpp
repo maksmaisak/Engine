@@ -43,7 +43,10 @@ Text::Text() :
     m_color(1.f),
     m_characterSize(32),
     m_alignment(0.5f, 0.5f),
-    m_needsGeometryUpdate(false)
+    m_needsGeometryUpdate(false),
+    m_usedTextureCacheId(0),
+    m_boundsMin(0, 0),
+    m_boundsMax(0, 0)
 {}
 
 const std::string& Text::getString() const {

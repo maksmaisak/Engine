@@ -245,7 +245,8 @@ void Texture::updateData2D(const Texture& otherTexture) {
     glGetIntegerv(GL_VIEWPORT, oldViewport);
     glViewport(0, 0, otherTexture.m_size.x, otherTexture.m_size.y);
 
-    gl::blit(otherTexture.getGLTextureObject(), fbo, true);
+    gl::blit(otherTexture.getGLTextureObject(), true);
+    m_cacheId = getNewCacheId();
 
     glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
 }

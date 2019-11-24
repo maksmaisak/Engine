@@ -57,7 +57,7 @@ namespace en {
         glm::vec2 m_alignment;
 
         mutable bool m_needsGeometryUpdate;
-        mutable bool m_usedTextureCacheId;
+        mutable std::uint64_t m_usedTextureCacheId;
         mutable std::vector<Vertex> m_vertices;
         mutable glm::vec2 m_boundsMin;
         mutable glm::vec2 m_boundsMax;
