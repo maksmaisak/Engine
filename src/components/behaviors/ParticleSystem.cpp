@@ -11,6 +11,14 @@
 #include "GameTime.h"
 #include "Actor.h"
 
+ParticleSystem::ParticleSystem(Actor actor, ParticleSystem::particleIndex_t maxNumParticles) :
+    Behavior(actor),
+    m_numActiveParticles(0),
+    m_maxNumParticles(maxNumParticles),
+    m_particles(maxNumParticles),
+    m_timeOfLastEmission(Clock::now())
+{}
+
 void ParticleSystem::draw() {
 
     throw "Not implemented";
@@ -31,29 +39,21 @@ void ParticleSystem::update(float dt) {
 
     if (m_isEmissionActive) {
 
-        sf::Time timeSinceEmission = m_emissionTimer.getElapsedTime();
+        Duration timeSinceEmission = Clock::now() - m_timeOfLastEmission;
 
         if (timeSinceEmission > m_settings.emissionInterval) {
             do {
                 timeSinceEmission -= m_settings.emissionInterval;
-                updateParticle(emitParticle(), timeSinceEmission.asSeconds());
+                updateParticle(emitParticle(), GameTime::asSeconds(timeSinceEmission));
             } while (timeSinceEmission > m_settings.emissionInterval);
         }
 
-        m_emissionTimer.restart();
+        m_timeOfLastEmission = Clock::now();
     }
 
-    for (ParticleIndex i = 0; i < m_numActiveParticles; ++i) {
+    for (particleIndex_t i = 0; i < m_numActiveParticles; ++i) {
         updateParticle(i, dt);
     }
-}
-
-const std::shared_ptr<sf::Drawable>& ParticleSystem::getDrawable() const {
-    return m_pDrawable;
-}
-
-void ParticleSystem::setDrawable(const std::shared_ptr<sf::Drawable>& m_pDrawable) {
-    ParticleSystem::m_pDrawable = m_pDrawable;
 }
 
 const ParticleSystem::Settings& ParticleSystem::getSettings() const {
@@ -64,18 +64,20 @@ void ParticleSystem::setSettings(const ParticleSystem::Settings& settings) {
     m_settings = settings;
 }
 
-const bool ParticleSystem::getIsEmissionActive() const {
+bool ParticleSystem::getIsEmissionActive() const {
     return m_isEmissionActive;
 }
 
 void ParticleSystem::setIsEmissionActive(bool isEmissionActive) {
 
-    if (isEmissionActive && !m_isEmissionActive) m_emissionTimer.restart();
+    if (isEmissionActive && !m_isEmissionActive) {
+        m_timeOfLastEmission = Clock::now();
+    }
 
     m_isEmissionActive = isEmissionActive;
 }
 
-ParticleSystem::ParticleIndex ParticleSystem::emitParticle() {
+ParticleSystem::particleIndex_t ParticleSystem::emitParticle() {
 
     if (m_numActiveParticles >= m_maxNumParticles) {
         destroyOldestParticle();
@@ -87,18 +89,17 @@ ParticleSystem::ParticleIndex ParticleSystem::emitParticle() {
 
     particle.transformMatrix = m_actor.get<en::Transform>().getWorldTransform();
     particle.transformMatrix = glm::translate(particle.transformMatrix, glm::sphericalRand(m_settings.emissionRadius));
-    particle.timeToDestroy = GameTime::nowSFTime() + m_settings.particleLifetime;
-
+    particle.timeToDestroy = Clock::now() + m_settings.particleLifetime;
     particle.velocity = m_settings.startVelocity + glm::sphericalRand(m_settings.startVelocityRandomness);
 
     return m_numActiveParticles++;
 }
 
-void ParticleSystem::updateParticle(ParticleIndex i, float dt) {
+void ParticleSystem::updateParticle(particleIndex_t i, float dt) {
 
     Particle& particle = m_particles.at(i);
 
-    if (GameTime::nowSFTime() >= particle.timeToDestroy) {
+    if (Clock::now() >= particle.timeToDestroy) {
         destroyParticle(i);
         return;
     }
@@ -106,20 +107,20 @@ void ParticleSystem::updateParticle(ParticleIndex i, float dt) {
     particle.transformMatrix = glm::translate(particle.transformMatrix, particle.velocity * dt);
 }
 
-void ParticleSystem::destroyParticle(ParticleIndex i) {
+void ParticleSystem::destroyParticle(particleIndex_t i) {
 
     assert(m_numActiveParticles > 0);
     m_numActiveParticles -= 1;
 
     std::swap(m_particles.at(i), m_particles.at(m_numActiveParticles));
 
-    // For safety. Can just remove to improve performance, as long as everything gets reinitialized when emitting.
+    // Default-initialize for safety. Can just remove to improve performance, as long as everything gets reinitialized when emitting.
     m_particles.at(m_numActiveParticles) = {};
 }
 
 void ParticleSystem::destroyOldestParticle() {
 
-    auto it = std::min_element(m_particles.begin(), m_particles.end(), [](Particle& a, Particle& b){return a.timeToDestroy < b.timeToDestroy;});
-    auto index = static_cast<ParticleIndex>(std::distance(m_particles.begin(), it));
+    const auto it = std::min_element(m_particles.begin(), m_particles.end(), [](Particle& a, Particle& b){return a.timeToDestroy < b.timeToDestroy;});
+    const auto index = static_cast<particleIndex_t>(std::distance(m_particles.begin(), it));
     destroyParticle(index);
 }

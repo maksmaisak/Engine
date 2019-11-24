@@ -12,6 +12,7 @@
 #include "DebugVolumeRenderer.h"
 #include "glm.h"
 #include "Grid.h"
+#include "Material.h"
 
 namespace en {
 
@@ -26,7 +27,7 @@ namespace en {
         void renderSprites(const Bounds2D& cameraBounds, const glm::mat4& matrixView, const glm::mat4& matrixProjection);
         void updateMapDataTexture(class TileLayer& tileLayer, const Bounds2DGrid& tileIndices);
 
-        std::unique_ptr<class Material> m_tileLayerMaterial;
+        std::unique_ptr<Material> m_tileLayerMaterial;
         std::shared_ptr<class Texture> m_tileset;
 
         std::vector<uint32_t> m_mapData;

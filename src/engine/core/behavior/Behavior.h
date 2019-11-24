@@ -2,13 +2,9 @@
 // Created by Maksym Maisak on 17/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_COMPONENT_H
-#define SAXION_Y2Q1_CPP_COMPONENT_H
+#ifndef ENGINE_BEHAVIOR_H
+#define ENGINE_BEHAVIOR_H
 
-#include <memory>
-#include <SFML/Graphics.hpp>
-#include <cassert>
-#include "Entity.h"
 #include "EntityRegistry.h"
 #include "ActorDecl.h"
 #include "UIEvents.h"
@@ -46,4 +42,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q1_CPP_COMPONENT_H
+#endif //ENGINE_BEHAVIOR_H

@@ -24,8 +24,7 @@ PostProcessingSystem::PostProcessingSystem(std::shared_ptr<RenderingSharedState>
 
 void PostProcessingSystem::start() {
 
-    const auto [width, height] = m_engine->getWindow().getSize();
-    setUp({width, height});
+    setUp(m_engine->getWindow().getFramebufferSize());
 }
 
 void PostProcessingSystem::draw() {
@@ -71,27 +70,24 @@ void PostProcessingSystem::draw() {
         }
     }
 
-    if (enabledPasses.size() == 0) {
+    if (enabledPasses.empty()) {
 
         glEnable(GL_FRAMEBUFFER_SRGB);
-        PostProcessingUtilities::blit(m_renderingSharedState->prePostProcessingFramebuffer.colorTexture, screenFramebuffer);
+        gl::blit(m_renderingSharedState->prePostProcessingFramebuffer.colorTexture, screenFramebuffer);
         glDisable(GL_FRAMEBUFFER_SRGB);
     }
 }
 
-void PostProcessingSystem::receive(const sf::Event& event) {
-
-    if (event.type == sf::Event::Resized) {
-        setUp({event.size.width, event.size.height});
-    }
+void PostProcessingSystem::receive(const Window::FramebufferSizeEvent& event) {
+    setUp({event.width, event.height});
 }
 
 void PostProcessingSystem::setUp(const glm::u32vec2& size) {
 
-    m_renderingSharedState->prePostProcessingFramebuffer = PostProcessingUtilities::makeFramebuffer(size, true);
+    m_renderingSharedState->prePostProcessingFramebuffer = gl::makeFramebuffer(size, true);
 
     for (gl::FramebufferBundle& fb : m_intermediateBuffers) {
-        fb = PostProcessingUtilities::makeFramebuffer(size);
+        fb = gl::makeFramebuffer(size);
     }
 
     for (const std::unique_ptr<PostProcessingPass>& pass : m_postProcessingPasses) {

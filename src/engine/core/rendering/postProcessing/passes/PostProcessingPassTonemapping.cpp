@@ -28,12 +28,12 @@ void PostProcessingPassTonemapping::displayImGui() {
 
 void PostProcessingPassTonemapping::render(const gl::TextureObject& sourceTexture) {
 
-    static const std::shared_ptr<ShaderProgram> shader = PostProcessingUtilities::getPostProcessingShader("postProcessing/tonemapping");
+    static const std::shared_ptr<ShaderProgram> shader = gl::getPostProcessingShader("postProcessing/tonemapping");
     static const GLint sourceTextureLocation = shader->getUniformLocation("sourceTexture");
     static const GLint exposureLocation = shader->getUniformLocation("exposure");
 
     shader->use();
     gl::setUniform(sourceTextureLocation, sourceTexture, 0);
     gl::setUniform(exposureLocation, m_exposure);
-    PostProcessingUtilities::renderQuad();
+    gl::renderQuad();
 }

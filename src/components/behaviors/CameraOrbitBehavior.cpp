@@ -3,30 +3,30 @@
 //
 
 #include "CameraOrbitBehavior.h"
-#include <SFML/Window.hpp>
 #include "glm.h"
 #include <glm/gtc/epsilon.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include "components/Transform.h"
+#include "Transform.h"
+#include "Mouse.h"
 
 CameraOrbitBehavior& CameraOrbitBehavior::addFromLua(en::Actor& actor, en::LuaState& lua) {
 
     auto& behavior = actor.add<CameraOrbitBehavior>();
 
-    auto targetName = lua.tryGetField<std::string>("target");
+    const auto targetName = lua.tryGetField<std::string>("target");
     if (targetName) behavior.m_target = actor.getEngine().findByName(*targetName);
 
-    auto distance = lua.tryGetField<float>("distance");
+    const auto distance = lua.tryGetField<float>("distance");
     if (distance) behavior.m_distance = *distance;
 
-    auto minTilt = lua.tryGetField<float>("minTilt");
+    const auto minTilt = lua.tryGetField<float>("minTilt");
     if (minTilt) behavior.m_minTilt = *minTilt;
 
-    auto maxTilt = lua.tryGetField<float>("maxTilt");
+    const auto maxTilt = lua.tryGetField<float>("maxTilt");
     if (maxTilt) behavior.m_maxTilt = *maxTilt;
 
-    auto rotationSpeed = lua.tryGetField<float>("rotationSpeed");
+    const auto rotationSpeed = lua.tryGetField<float>("rotationSpeed");
     if (rotationSpeed) behavior.m_rotationSpeed = *rotationSpeed;
 
     return behavior;
@@ -45,14 +45,16 @@ CameraOrbitBehavior::CameraOrbitBehavior(
     m_maxTilt(maxTilt),
     m_rotationSpeed(rotationSpeed)
 {
-    m_previousMousePosition = sf::Mouse::getPosition();
+    m_previousMousePosition = en::Mouse::getPosition();
 }
 
 void CameraOrbitBehavior::update(float dt) {
 
-    if (!m_target) return;
+    if (!m_target) {
+        return;
+    }
 
-    sf::Vector2i input = updateMouseInput();
+    const glm::vec2 input = updateMouseInput();
 
     const auto& targetTransform = m_target.get<en::Transform>();
     auto& ownTransform = m_actor.get<en::Transform>();
@@ -85,10 +87,10 @@ void CameraOrbitBehavior::update(float dt) {
     ownTransform.setLocalRotation(glm::quatLookAt(-forward, up));
 }
 
-sf::Vector2i CameraOrbitBehavior::updateMouseInput() {
+glm::vec2 CameraOrbitBehavior::updateMouseInput() {
 
-    sf::Vector2i currentMousePosition = sf::Mouse::getPosition();
-    sf::Vector2i deltaMousePosition = currentMousePosition - m_previousMousePosition;
+    const glm::vec2 currentMousePosition = en::Mouse::getPosition();
+    const glm::vec2 deltaMousePosition = currentMousePosition - m_previousMousePosition;
 
     // Wrap around screen
     // Doesn't seem to work on macOS, setPosition moves mouse out of screen bounds.

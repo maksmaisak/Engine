@@ -18,9 +18,7 @@ void Camera::initializeMetatable(LuaState& lua) {
 
 glm::mat4 Camera::getCameraProjectionMatrix(Engine& engine, std::optional<float> rangeLimit) const {
 
-    const auto size = engine.getWindow().getSize();
-    const float aspectRatio = (float)size.x / size.y;
-
+    const float aspectRatio = engine.getWindow().getAspectRatio();
     const float farPlaneDistanceEffective = std::min(rangeLimit.value_or(farPlaneDistance), farPlaneDistance);
 
     if (isOrthographic) {
@@ -47,9 +45,8 @@ glm::mat4 Camera::getCameraProjectionMatrix(Engine& engine, std::optional<float>
 
 glm::vec2 Camera::getOrthographicExtents(Engine& engine) const {
 
-    const auto windowSize = engine.getWindow().getSize();
     return {
-        orthographicHalfSize * ((float)windowSize.x / windowSize.y),
+        orthographicHalfSize * engine.getWindow().getAspectRatio(),
         orthographicHalfSize
     };
 }

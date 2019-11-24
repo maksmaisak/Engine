@@ -2,10 +2,8 @@
 // Created by Maksym Maisak on 22/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_SYSTEM_H
-#define SAXION_Y2Q1_CPP_SYSTEM_H
-
-#include <SFML/Graphics.hpp>
+#ifndef ENGINE_SYSTEM_H
+#define ENGINE_SYSTEM_H
 
 namespace en {
 
@@ -29,4 +27,4 @@ namespace en {
     };
 }
 
-#endif //SAXION_Y2Q1_CPP_SYSTEM_H
+#endif //ENGINE_SYSTEM_H

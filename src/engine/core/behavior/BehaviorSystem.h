@@ -2,14 +2,13 @@
 // Created by Maksym Maisak on 24/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_BEHAVIORSYSTEM_H
-#define SAXION_Y2Q1_CPP_BEHAVIORSYSTEM_H
+#ifndef ENGINE_BEHAVIORSYSTEM_H
+#define ENGINE_BEHAVIORSYSTEM_H
 
 #include <typeindex>
 #include <type_traits>
 #include <vector>
 #include <algorithm>
-#include <SFML/Graphics.hpp>
 
 #include "System.h"
 #include "Behavior.h"
@@ -99,4 +98,4 @@ namespace en {
 }
 
 
-#endif //SAXION_Y2Q1_CPP_BEHAVIORSYSTEM_H
+#endif //ENGINE_BEHAVIORSYSTEM_H

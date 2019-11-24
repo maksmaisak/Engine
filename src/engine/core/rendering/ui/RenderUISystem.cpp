@@ -116,8 +116,7 @@ float RenderUISystem::getUIScaleFactor() {
 
 glm::vec2 RenderUISystem::getWindowSize() {
 
-    const sf::Vector2u windowSizeSf = m_engine->getWindow().getSize();
-    return glm::vec2(windowSizeSf.x, windowSizeSf.y);
+    return m_engine->getWindow().getSize();
 }
 
 void RenderUISystem::renderSprite(const UISprite& sprite, const Transform& transform, const UIRect& rect, const glm::mat4& matrixProjection) {

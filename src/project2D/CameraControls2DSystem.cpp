@@ -5,8 +5,8 @@
 #include "CameraControls2DSystem.h"
 
 #include <algorithm>
-#include "KeyboardHelper.h"
-#include "MouseHelper.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 #include "Engine.h"
 #include "Transform.h"
 #include "Camera.h"
@@ -20,30 +20,32 @@ namespace {
     constexpr float MinMovementSpeed = 3.f;
     constexpr float MaxMovementSpeed = 24.f;
 
-    using Key = sf::Keyboard::Key;
-
-    const Key forwardKeys[] = { Key::W, Key::Up };
-    const Key backKeys[]    = { Key::S, Key::Down };
-    const Key rightKeys[]   = { Key::D, Key::Right };
-    const Key leftKeys[]    = { Key::A, Key::Left };
+    const int forwardKeys[] = { GLFW_KEY_W, GLFW_KEY_UP };
+    const int backKeys[]    = { GLFW_KEY_S, GLFW_KEY_DOWN };
+    const int rightKeys[]   = { GLFW_KEY_D, GLFW_KEY_RIGHT };
+    const int leftKeys[]    = { GLFW_KEY_A, GLFW_KEY_LEFT };
 
     glm::vec2 getMoveInput() {
 
         glm::vec2 result = {};
 
-        if (std::any_of(std::begin(rightKeys), std::end(rightKeys), sf::Keyboard::isKeyPressed)) {
+        const auto isKeyPressed = [window = en::Engine::get().getWindow().getUnderlyingWindow()](int keyCode) {
+            return glfwGetKey(window, keyCode);
+        };
+
+        if (std::any_of(std::begin(rightKeys), std::end(rightKeys), isKeyPressed)) {
             result.x += 1.f;
         }
 
-        if (std::any_of(std::begin(leftKeys), std::end(leftKeys), sf::Keyboard::isKeyPressed)) {
+        if (std::any_of(std::begin(leftKeys), std::end(leftKeys), isKeyPressed)) {
             result.x -= 1.f;
         }
 
-        if (std::any_of(std::begin(forwardKeys), std::end(forwardKeys), sf::Keyboard::isKeyPressed)) {
+        if (std::any_of(std::begin(forwardKeys), std::end(forwardKeys), isKeyPressed)) {
             result.y += 1.f;
         }
 
-        if (std::any_of(std::begin(backKeys), std::end(backKeys), sf::Keyboard::isKeyPressed)) {
+        if (std::any_of(std::begin(backKeys), std::end(backKeys), isKeyPressed)) {
             result.y -= 1.f;
         }
 
@@ -52,13 +54,13 @@ namespace {
 
     float getZoomDelta() {
 
-        float scrollDelta = utils::MouseHelper::getScrollDelta();
+        float scrollDelta = en::Mouse::getScrollDelta();
 
-        if (sf::Keyboard::isKeyPressed(Key::LBracket)) {
+        if (en::Keyboard::isHeld(GLFW_KEY_LEFT_BRACKET)) {
             scrollDelta += 1.f;
         }
 
-        if (sf::Keyboard::isKeyPressed(Key::RBracket)) {
+        if (en::Keyboard::isHeld(GLFW_KEY_RIGHT_BRACKET)) {
             scrollDelta -= 1.f;
         }
 

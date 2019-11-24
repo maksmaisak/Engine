@@ -16,7 +16,6 @@
 #include "Light.h"
 #include "Transform.h"
 #include "Exception.h"
-#include "SFML/Graphics.hpp"
 
 namespace en {
 
@@ -70,7 +69,7 @@ namespace en {
         // Information necessary to use a font atlas as a texture uniform.
         // Pass instances of this into setUniformValue<FontAtlas>
         struct FontAtlas {
-            std::shared_ptr<sf::Font> font;
+            std::shared_ptr<class Font> font;
             unsigned int characterSize = 30;
         };
 

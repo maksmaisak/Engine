@@ -11,5 +11,6 @@ namespace en {
     Behavior::Behavior(const Actor& actor) :
         m_actor(actor),
         m_engine(&m_actor.getEngine()),
-        m_registry(&m_engine->getRegistry()) {}
+        m_registry(&m_engine->getRegistry())
+    {}
 }

@@ -26,6 +26,7 @@ namespace en {
 
         bool isValid() const;
         const std::string& getString() const;
+        Name getUppercase() const;
 
         operator const std::string&() const;
         operator const char*() const;
@@ -35,7 +36,10 @@ namespace en {
         friend std::ostream& operator<<(std::ostream& stream, const Name& name);
 
     private:
+        Name(id_t id);
+
         id_t m_id;
+        bool m_isValid;
     };
 }
 
@@ -47,7 +51,7 @@ namespace std {
         using argument_type = en::Name;
         using result_type = std::size_t;
         inline result_type operator()(const argument_type& name) const noexcept {
-            return std::hash<en::Name::id_t>{}(name.m_id);
+            return name.m_isValid ? name.m_id : 0;
         }
     };
 }

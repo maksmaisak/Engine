@@ -7,11 +7,9 @@
 
 #include <string>
 #include <vector>
-#include <SFMl/Graphics.hpp>
 #include "Vertex.h"
 #include "Material.h"
 #include "ComponentsToLua.h"
-#include "Resources.h"
 
 namespace en {
 
@@ -23,14 +21,16 @@ namespace en {
         static Text& addFromLua(Actor& actor, LuaState& lua);
         static void initializeMetatable(LuaState& lua);
 
+        Text();
+
         const std::string& getString() const;
         Text& setString(const std::string& newString);
 
         const std::shared_ptr<Material>& getMaterial() const;
         Text& setMaterial(const std::shared_ptr<Material>& material);
 
-        const std::shared_ptr<sf::Font>& getFont() const;
-        Text& setFont(const std::shared_ptr<sf::Font>& font);
+        const std::shared_ptr<class Font>& getFont() const;
+        Text& setFont(const std::shared_ptr<class Font>& font);
 
         unsigned int getCharacterSize() const;
         Text& setCharacterSize(unsigned int size);
@@ -50,13 +50,14 @@ namespace en {
         void ensureGeometryUpdate() const;
 
         std::string m_string;
-        std::shared_ptr<Material> m_material = std::make_shared<Material>("text");
-        std::shared_ptr<sf::Font> m_font = Resources<sf::Font>::get(config::FONT_PATH + "arial.ttf");
-        glm::vec4 m_color = glm::vec4(1);
-        unsigned int m_characterSize = 30;
-        glm::vec2 m_alignment = {0.5f, 0.5f};
+        std::shared_ptr<Material> m_material;
+        std::shared_ptr<class Font> m_font;
+        glm::vec4 m_color;
+        unsigned int m_characterSize;
+        glm::vec2 m_alignment;
 
-        mutable bool m_needsGeometryUpdate = false;
+        mutable bool m_needsGeometryUpdate;
+        mutable std::uint64_t m_usedTextureCacheId;
         mutable std::vector<Vertex> m_vertices;
         mutable glm::vec2 m_boundsMin;
         mutable glm::vec2 m_boundsMax;

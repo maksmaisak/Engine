@@ -4,7 +4,6 @@
 
 #include "AITestingScene.h"
 #include <random>
-#include <SFML/Window.hpp>
 #include <imgui.h>
 #include "LineRenderer.h"
 #include "AIController.h"
@@ -449,6 +448,7 @@ void AITestingScene::open() {
         });
     }
 
+    /*
     engine.makeActor("TimescaleSetter").add<en::InlineBehavior>(en::InlineBehavior::Draw, [isControlsWindowOpen = true](en::Actor& actor) mutable {
 
         if (!isControlsWindowOpen) {
@@ -474,5 +474,5 @@ void AITestingScene::open() {
             }
         }
         ImGui::End();
-    });
+    });*/
 }

@@ -3,9 +3,12 @@
 #include <algorithm>
 #include <cassert>
 #include <array>
-#include <SFML/Graphics.hpp> // For sf::Image
+#include <mutex>
+#include "stb_image.h"
 #include "ScopedBind.h"
 #include "GLHelpers.h"
+#include "FramebufferObject.h"
+#include "PostProcessingUtilities.h"
 
 using namespace en;
 
@@ -26,6 +29,35 @@ namespace {
         settings.internalFormat = GL_RGBA8;
         return settings;
     }
+
+    std::mutex cacheIdMutex;
+    std::mutex getMaxSizeMutex;
+
+    std::uint64_t getNewCacheId() {
+
+        const std::unique_lock lock(cacheIdMutex);
+
+        static std::uint64_t nextId = 1;
+        return nextId++;
+    }
+
+    using imageData_t = std::unique_ptr<stbi_uc, decltype(&stbi_image_free)>;
+    struct ImageDescription {
+
+        imageData_t data = {nullptr, stbi_image_free};
+        Texture::Size size = {0, 0};
+        int numChannels = 0;
+    };
+
+    ImageDescription loadImage(const char* filename, bool flipVertically = true) {
+
+        stbi_set_flip_vertically_on_load(flipVertically);
+
+        Texture::Size size = {0, 0};
+        int numChannels = 0;
+        imageData_t data = {stbi_load(filename, &size.x, &size.y, &numChannels, 4), stbi_image_free};
+        return {std::move(data), size, numChannels};
+    }
 }
 
 Texture::CreationSettings::CreationSettings() :
@@ -41,60 +73,113 @@ Texture::CreationSettings::CreationSettings() :
 
 const Texture::CreationSettings Texture::CreationSettings::linearColorSettings = makeLinearColorSettings();
 
-Texture::Texture(const Size& size, const CreationSettings& settings) :
-    m_size(size),
-    m_kind(settings.kind)
-{
-    setUpOpenGLTexture2D(settings);
-}
+unsigned int Texture::getMaxSize() {
 
-Texture::Texture(const std::string& filename, const CreationSettings& settings) :
-    m_kind(Kind::Texture2D)
-{
-    assert(m_kind == settings.kind);
+    const std::unique_lock lock(getMaxSizeMutex);
 
-    // Load from file using sf::Image, then put the data in an openGL buffer.
-    sf::Image image;
-    if (!image.loadFromFile(filename)) {
-        return;
+    static bool checked = false;
+    static GLint maxSize = 0;
+    if (!checked) {
+        checked = true;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
     }
 
-    auto temp = image.getSize();
-    m_size = {temp.x, temp.y};
-
-    // 0, 0 in sf::Image is top left, but openGL expects 0,0 to be bottom left, flip to compensate.
-    image.flipVertically();
-    setUpOpenGLTexture2D(settings, image.getPixelsPtr());
+    return static_cast<unsigned int>(maxSize);
 }
 
-Texture::Texture(const std::array<std::string, 6>& cubeSidePaths, const CreationSettings& settings) :
-    m_kind(Kind::TextureCube)
+std::unique_ptr<Texture> Texture::load(const Name& path, const Texture::CreationSettings& settings) {
+
+    const ImageDescription image = loadImage(path);
+    if (!image.data) {
+        return nullptr;
+    }
+
+    return std::make_unique<Texture>(image.size, static_cast<const GLvoid*>(image.data.get()), settings);
+}
+
+std::unique_ptr<Texture> Texture::load(const std::array<Name, 6>& cubeSidePaths, const Texture::CreationSettings& settings) {
+
+    std::array<ImageDescription, 6> images {};
+    std::transform(cubeSidePaths.begin(), cubeSidePaths.end(), images.begin(), [](const Name& path) {
+        return loadImage(path, false);
+    });
+
+    assert(std::all_of(images.begin(), images.end(), [&firstImage = images[0]](const ImageDescription& image) {
+        return image.data &&
+            image.size == firstImage.size &&
+            image.numChannels == firstImage.numChannels;
+    }));
+
+    std::array<const GLvoid*, 6> cubeSideData {};
+    std::transform(images.begin(), images.end(), cubeSideData.begin(), [](const ImageDescription& image) {
+        return static_cast<const GLvoid*>(image.data.get());
+    });
+
+    return std::make_unique<Texture>(images[0].size, cubeSideData, settings);
+}
+
+Texture::Texture(const Size& size, const GLvoid* imageData, const CreationSettings& settings) :
+    m_glTexture(gl::ForceCreate),
+    m_kind(Kind::Texture2D),
+    m_size(size),
+    m_cacheId(getNewCacheId())
 {
+    constexpr GLenum target = GL_TEXTURE_2D;
+    const gl::ScopedBind bindTexture(m_glTexture, target);
 
-    std::array<sf::Image, 6> images;
-    for (GLuint i = 0; i < images.size(); ++i)
-        if (!images[i].loadFromFile(cubeSidePaths[i]))
-            return;
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, settings.wrapS);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, settings.wrapT);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, settings.minFilter);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, settings.magFilter);
 
-    {
-        m_glTexture.create();
-        const auto bindTexture = gl::ScopedBind(m_glTexture, GL_TEXTURE_CUBE_MAP);
+    // Mipmapping
+    if (!settings.generateMipmaps) {
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, settings.wrapS);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, settings.wrapT);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, settings.minFilter);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, settings.magFilter);
+        glTexImage2D(target, 0, settings.internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
 
-        for (GLuint i = 0; i < 6; ++i) {
-            const sf::Image& image = images[i];
-            const auto temp = image.getSize();
-            m_size = {temp.x, temp.y};
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, settings.internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
+    } else {
+
+        glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, settings.numMipmapLevels - 1);
+
+        const bool isDefaultMipmapLevelCount = settings.numMipmapLevels == DefaultMaxMipmapLevel + 1;
+        if (isDefaultMipmapLevelCount) {
+            glTexImage2D(target, 0, settings.internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+        } else {
+            glTexStorage2D(target, settings.numMipmapLevels, settings.internalFormat, m_size.x, m_size.y);
+            glTexSubImage2D(target, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         }
 
-        if (settings.generateMipmaps) {
-            glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-        }
+        glGenerateMipmap(target);
+        glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, DefaultMaxMipmapLevel);
+    }
+}
+
+Texture::Texture(const Size& size, const std::array<const GLvoid*, 6>& cubeSidesImageData, const CreationSettings& settings) :
+    m_glTexture(gl::ForceCreate),
+    m_kind(Kind::TextureCube),
+    m_size(size),
+    m_cacheId(getNewCacheId())
+{
+    constexpr GLenum target = GL_TEXTURE_CUBE_MAP;
+    const gl::ScopedBind bindTexture(m_glTexture, target);
+
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, settings.wrapS);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, settings.wrapT);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, settings.minFilter);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, settings.magFilter);
+
+    for (GLuint i = 0; i < 6; ++i) {
+        glTexImage2D(
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+            0, settings.internalFormat,
+            m_size.x, m_size.y, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, cubeSidesImageData[i]
+        );
+    }
+
+    if (settings.generateMipmaps) {
+        glGenerateMipmap(target);
     }
 }
 
@@ -110,6 +195,10 @@ Texture::Size Texture::getSize() const {
     return m_size;
 }
 
+std::uint64_t Texture::getCacheId() const {
+    return m_cacheId;
+}
+
 gl::TextureObject& Texture::getGLTextureObject() {
     return m_glTexture;
 }
@@ -118,47 +207,7 @@ const gl::TextureObject& Texture::getGLTextureObject() const {
     return m_glTexture;
 }
 
-void Texture::setUpOpenGLTexture2D(const CreationSettings& settings, const GLvoid* imageData) {
-
-    assert(settings.kind == Kind::Texture2D);
-
-    constexpr GLenum Target = GL_TEXTURE_2D;
-
-    {
-        m_glTexture.create();
-        const auto bindTexture = gl::ScopedBind(m_glTexture, Target);
-
-        glTexParameteri(Target, GL_TEXTURE_WRAP_S, settings.wrapS);
-        glTexParameteri(Target, GL_TEXTURE_WRAP_T, settings.wrapT);
-        glTexParameteri(Target, GL_TEXTURE_MIN_FILTER, settings.minFilter);
-        glTexParameteri(Target, GL_TEXTURE_MAG_FILTER, settings.magFilter);
-
-        if (!settings.generateMipmaps) {
-
-            glTexImage2D(Target, 0, settings.internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-
-        } else {
-
-            glTexParameteri(Target, GL_TEXTURE_BASE_LEVEL, 0);
-            glTexParameteri(Target, GL_TEXTURE_MAX_LEVEL, settings.numMipmapLevels - 1);
-
-            if (settings.numMipmapLevels == DefaultMaxMipmapLevel + 1) {
-
-                glTexImage2D(Target, 0, settings.internalFormat, m_size.x, m_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-
-            } else {
-
-                glTexStorage2D(Target, settings.numMipmapLevels, settings.internalFormat, m_size.x, m_size.y);
-                glTexSubImage2D(Target, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-            }
-
-            glGenerateMipmap(Target);
-            glTexParameteri(Target, GL_TEXTURE_MAX_LEVEL, DefaultMaxMipmapLevel);
-        }
-    }
-}
-
-void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height) {
+void Texture::updateData2D(const void* imageData, GLenum dataFormat, GLint offsetX, GLint offsetY, GLsizei width, GLsizei height) {
 
     assert(isValid());
     assert(m_kind == Kind::Texture2D);
@@ -167,11 +216,37 @@ void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat, GLint offsetX, 
     assert(0 <= offsetX + width && offsetX + width <= m_size.x);
     assert(0 <= offsetY + height && offsetY + height <= m_size.y);
 
-    const auto bindTexture = gl::ScopedBind(m_glTexture, GL_TEXTURE_2D);
+    const gl::ScopedBind bindTexture(m_glTexture, GL_TEXTURE_2D);
     glTexSubImage2D(GL_TEXTURE_2D, 0, offsetX, offsetY, width, height, GL_RGBA, dataFormat, imageData);
+    m_cacheId = getNewCacheId();
 }
 
-void Texture::updateData2D(GLvoid* imageData, GLenum dataFormat) {
-
+void Texture::updateData2D(const void* imageData, GLenum dataFormat) {
     updateData2D(imageData, dataFormat, 0, 0, m_size.x, m_size.y);
+}
+
+void Texture::updateData2D(const Texture& otherTexture) {
+
+    if (!otherTexture.isValid()) {
+        return;
+    }
+
+    assert(otherTexture.m_size.x <= m_size.x);
+    assert(otherTexture.m_size.y <= m_size.y);
+
+    const gl::FramebufferObject fbo(gl::ForceCreate);
+    const gl::ScopedBind bindFBO(fbo, GL_FRAMEBUFFER);
+    {
+        const gl::ScopedBind bindTexture(m_glTexture, GL_TEXTURE_2D);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_glTexture, 0);
+    }
+
+    GLint oldViewport[4];
+    glGetIntegerv(GL_VIEWPORT, oldViewport);
+    glViewport(0, 0, otherTexture.m_size.x, otherTexture.m_size.y);
+
+    gl::blit(otherTexture.getGLTextureObject(), true);
+    m_cacheId = getNewCacheId();
+
+    glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
 }

@@ -7,7 +7,8 @@
 
 #include <functional>
 #include <queue>
-#include <SFML/System.hpp>
+#include <chrono>
+#include "GameTime.h"
 
 namespace en {
 
@@ -16,12 +17,12 @@ namespace en {
         using function_t = std::function<void()>;
         using id_t = std::uint64_t;
 
-        sf::Time time;
+        TimePoint time;
         function_t function;
         id_t id;
         bool isCancelled;
 
-        ScheduleItem(sf::Time time, function_t function, id_t id);
+        ScheduleItem(TimePoint time, function_t function, id_t id);
     };
 
     class TimerHandle {
@@ -45,8 +46,9 @@ namespace en {
     public:
         Scheduler();
         void update(float dt);
-        TimerHandle delay(sf::Time timeDelay, const ScheduleItem::function_t& function = nullptr);
-        TimerHandle schedule(sf::Time time, const ScheduleItem::function_t& function = nullptr);
+        TimerHandle delay(float timeDelay, const ScheduleItem::function_t& function = nullptr);
+        TimerHandle delay(Duration timeDelay, const ScheduleItem::function_t& function = nullptr);
+        TimerHandle schedule(TimePoint time, const ScheduleItem::function_t& function = nullptr);
 
     private:
         friend class TimerHandle;

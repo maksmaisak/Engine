@@ -12,7 +12,7 @@
 #include "Model.h"
 #include "Texture.h"
 #include "Resources.h"
-#include "KeyboardHelper.h"
+#include "Keyboard.h"
 #include "Config.h"
 
 #include "Transform.h"
@@ -53,8 +53,8 @@ namespace {
 
                 // from (-1, -1) to (1, 1) inclusive
                 const glm::vec2 positionNormalized = {
-                    ((float) x / (numSpheresPerSide - 1) - 0.5f) * 2.f,
-                    ((float) y / (numSpheresPerSide - 1) - 0.5f) * 2.f
+                    (static_cast<float>(x) / static_cast<float>(numSpheresPerSide - 1) - 0.5f) * 2.f,
+                    (static_cast<float>(y) / static_cast<float>(numSpheresPerSide - 1) - 0.5f) * 2.f
                 };
                 tf.setLocalPosition({
                     sideLength * positionNormalized.x * 0.5f,
@@ -91,7 +91,7 @@ void PhysicsTestScene::open() {
 
 void PhysicsTestScene::update(float dt) {
 
-    if (utils::KeyboardHelper::isDown("r"))
+    if (en::Keyboard::isDown("r"))
         getEngine().getSceneManager().setCurrentSceneNextUpdate<PhysicsTestScene>();
 }
 

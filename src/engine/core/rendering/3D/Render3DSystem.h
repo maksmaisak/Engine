@@ -23,8 +23,9 @@ namespace en {
 
     private:
         void updateBatches();
-        void renderEntities();
-        void setViewportAndClear();
+        void render();
+        void renderBatches(const glm::mat4& matrixView, const glm::mat4& matrixProjection);
+        void renderEntities(const glm::mat4& matrixView, const glm::mat4& matrixProjection);
 
         std::shared_ptr<RenderingSharedState> m_renderingSharedState;
         std::unique_ptr<ShadowMapper> m_shadowMapper;

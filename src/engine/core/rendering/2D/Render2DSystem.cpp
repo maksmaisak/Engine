@@ -17,7 +17,7 @@
 #include "Transform.h"
 #include "Bounds.h"
 #include "DebugVolumeRenderer.h"
-#include "KeyboardHelper.h"
+#include "Keyboard.h"
 
 using namespace en;
 
@@ -38,7 +38,7 @@ namespace {
 
         const glm::mat4 viewMatrix = glm::inverse(cameraTransform.getWorldTransform());
 
-        return utils::KeyboardHelper::isHeld("o") ?
+        return Keyboard::isHeld("o") ?
             glm::scale(glm::vec3(0.6f)) * viewMatrix :
             viewMatrix;
     }
@@ -75,7 +75,7 @@ Render2DSystem::Render2DSystem() :
         settings.wrapT = GL_CLAMP_TO_BORDER;
         settings.minFilter = GL_NEAREST;
         settings.magFilter = GL_NEAREST;
-        m_mapDataTexture = std::make_shared<Texture>(Texture::Size(MapDataTextureResolution), settings);
+        m_mapDataTexture = std::make_shared<Texture>(Texture::Size(MapDataTextureResolution), nullptr, settings);
     }
 
     {

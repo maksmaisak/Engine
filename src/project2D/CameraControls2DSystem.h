@@ -6,7 +6,6 @@
 #define ENGINE_CAMERACONTROLS2DSYSTEM_H
 
 #include "System.h"
-#include "Receiver.h"
 
 class CameraControls2DSystem : public en::System {
 

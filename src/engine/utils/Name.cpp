@@ -3,6 +3,7 @@
 //
 
 #include "Name.h"
+#include <algorithm>
 #include <unordered_map>
 #include <cassert>
 #include <shared_mutex>
@@ -12,11 +13,16 @@ using namespace en;
 
 namespace {
 
+    struct NameInfo {
+
+        std::string string;
+        Name uppercaseName;
+    };
+
     struct NameTables {
 
         std::shared_mutex mutex;
-        std::unordered_map<std::string, Name::id_t> stringToId;
-        std::unordered_map<Name::id_t, std::string> idToString;
+        std::unordered_map<Name, NameInfo> nameToInfo;
     };
 
     NameTables& getNameTables() {
@@ -26,47 +32,69 @@ namespace {
         static NameTables nameTables;
         return nameTables;
     }
+
+    inline Name::id_t getId(const std::string& string) {
+        return std::hash<std::string>{}(string);
+    }
+
+    const NameInfo& getInfoChecked(const Name& name) {
+
+        assert(name.isValid());
+
+        NameTables& tables = getNameTables();
+        const std::shared_lock readerLock(tables.mutex);
+
+        const auto it = tables.nameToInfo.find(name);
+        assert(it != tables.nameToInfo.end());
+        return it->second;
+    }
 }
 
-Name::Name() : m_id(0) {}
+Name::Name() : m_id(0), m_isValid(false) {}
 
-Name::Name(const std::string& string) {
+Name::Name(Name::id_t id) : m_id(id), m_isValid(true) {}
+
+Name::Name(const std::string& string) : m_id(getId(string)), m_isValid(true) {
 
     NameTables& tables = getNameTables();
     const std::unique_lock writeLock(tables.mutex);
 
-    const auto it = tables.stringToId.find(string);
-    if (it != tables.stringToId.end()) {
+    const auto isNewName = [&](const Name& name){
+        return tables.nameToInfo.find(name) == tables.nameToInfo.end();
+    };
 
-        // Existing name
-        m_id = it->second;
+    if (isNewName(*this)) {
 
-    } else {
+        std::string uppercaseString = string;
+        std::transform(uppercaseString.begin(), uppercaseString.end(), uppercaseString.begin(), ::toupper);
+        const Name uppercaseName = Name(getId(uppercaseString));
+        if (uppercaseName.m_id != m_id) {
+            if (isNewName(uppercaseName)) {
+                tables.nameToInfo.emplace(uppercaseName, NameInfo{uppercaseString, uppercaseName});
+            }
+        }
 
-        // New name
-        m_id = std::hash<std::string>{}(string);
-        tables.stringToId.emplace(string, m_id);
-        tables.idToString.emplace(m_id, string);
+        tables.nameToInfo.emplace(*this, NameInfo{string, uppercaseName});
     }
 }
 
-Name::Name(const char* string) :
-    Name(std::string(string))
-{}
+Name::Name(const char* string) : Name(std::string(string)) {}
 
 bool Name::isValid() const {
-    return m_id;
+    return m_isValid;
 }
 
 const std::string& Name::getString() const {
+    return getInfoChecked(*this).string;
+}
 
-    NameTables& tables = getNameTables();
-    const std::shared_lock readerLock(tables.mutex);
+Name Name::getUppercase() const {
 
-    assert(isValid());
-    const auto it = tables.idToString.find(m_id);
-    assert(it != tables.idToString.end());
-    return it->second;
+    if (!isValid()) {
+        return Name();
+    }
+
+    return getInfoChecked(*this).uppercaseName;
 }
 
 Name::operator const std::string&() const {
@@ -82,11 +110,15 @@ Name::operator bool() const {
 }
 
 bool en::operator==(const Name& lhs, const Name& rhs) {
-    return lhs.m_id == rhs.m_id;
+
+    if (!lhs.m_isValid && !rhs.m_isValid) {
+        return true;
+    }
+
+    return lhs.m_isValid == rhs.m_isValid && lhs.m_id == rhs.m_id;
 }
 
 std::ostream& en::operator<<(std::ostream& stream, const Name& name) {
-
-    return stream << name.getString();
+    return stream << (name.isValid() ? name.getString() : "INVALID_NAME");
 }
 

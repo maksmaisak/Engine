@@ -3,10 +3,21 @@
 #include <fstream>
 #include <sstream>
 #include "GLHelpers.h"
+#include "Config.h"
 
 using namespace en;
 
 namespace {
+
+    static_assert(std::is_convertible_v<decltype(ResourceLoader<ShaderProgram>::load(std::declval<const std::string&>(), std::declval<const PreprocessorDefinitions&>())), std::shared_ptr<ShaderProgram>>);
+    static_assert(std::is_convertible_v<decltype(ResourceLoader<ShaderProgram>::load(std::declval<const std::string&>())), std::shared_ptr<ShaderProgram>>);
+    static_assert(std::is_convertible_v<decltype(ResourceLoader<ShaderProgram>::load(std::declval<const std::string&>(), std::declval<const std::string&>())), std::shared_ptr<ShaderProgram>>);
+    static_assert(std::is_convertible_v<decltype(ResourceLoader<ShaderProgram>::load(config::SHADER_PATH + "blit.vs", config::SHADER_PATH + "blur.fs")), std::shared_ptr<ShaderProgram>>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const Name&>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const std::string&>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const Name&>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const std::string&, const PreprocessorDefinitions&>);
+    static_assert(detail::has_valid_load_function_v<ResourceLoader<ShaderProgram>, const Name&, const PreprocessorDefinitions&>);
 
     std::optional<std::string> getSource(const std::string& filepath, const PreprocessorDefinitions& preprocessorDefinitions) {
 
@@ -45,8 +56,11 @@ namespace {
 
     void printProgramError(GLuint programId) {
 
+        glCheckError();
+
         int infoLogLength;
         glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        glCheckError();
         auto errorMessage = std::make_unique<char[]>(infoLogLength + 1);
 
         glGetProgramInfoLog(programId, infoLogLength, nullptr, errorMessage.get());
@@ -55,7 +69,7 @@ namespace {
 
     void printShaderError(GLuint shaderId) {
 
-        int infoLogLength;
+        GLint infoLogLength = 0;
         glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
         auto errorMessage = std::make_unique<char[]>(infoLogLength + 1);
 
@@ -91,11 +105,14 @@ ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) {
 
 bool ShaderProgram::addShader(GLuint shaderType, const std::string& filepath, const PreprocessorDefinitions& preprocessorDefinitions) {
 
+    glCheckError();
+
     std::optional<std::string> shaderCode = getSource(filepath, preprocessorDefinitions);
     if (!shaderCode) {
         return false;
     }
 
+    glCheckError();
     GLuint shaderId = compileShader(shaderType, *shaderCode);
     if (shaderId == 0) {
         return false;

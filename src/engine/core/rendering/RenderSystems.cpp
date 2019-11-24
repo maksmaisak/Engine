@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <GL/glew.h>
+#include <imgui.h>
 
 #include "Render3DSystem.h"
 #include "Render2DSystem.h"
@@ -46,6 +47,21 @@ namespace {
 
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     }
+
+    void renderGLTest() {
+
+        static auto shader = Resources<ShaderProgram>::get("sprite");
+        static GLint matrixLocation = shader->getUniformLocation("matrixProjection");
+        static GLint spriteTextureLocation = shader->getUniformLocation("spriteTexture");
+        static GLint spriteColorLocation = shader->getUniformLocation("spriteColor");
+
+        shader->use();
+        gl::setUniform(matrixLocation, glm::ortho(-2.f, 2.f, -2.f, 2.f));
+        gl::setUniform(spriteTextureLocation, Textures::white().get(), 0);
+        gl::setUniform(spriteColorLocation, glm::vec4(0, 1, 0, 1));
+
+        Mesh::getQuad()->render(0, -1, 1);
+    }
 }
 
 RenderSystems::RenderSystems() :
@@ -56,7 +72,6 @@ void RenderSystems::start() {
 
     setOpenGLSettings();
     m_renderingSharedState->loadConfigFromLua(m_engine->getLuaState());
-    m_debugHud = std::make_unique<DebugHud>(*m_engine, m_renderingSharedState->vertexRenderer);
 
     addSystem<Render3DSystem>(m_renderingSharedState);
     addSystem<RenderSkyboxSystem>();
@@ -75,42 +90,50 @@ void RenderSystems::draw() {
     }
 
     const gl::FramebufferObject& prePostProcessingFbo = m_renderingSharedState->prePostProcessingFramebuffer.framebuffer;
-    if (prePostProcessingFbo) {
+    const bool usePostProcessing = prePostProcessingFbo.isValid();
+    if (usePostProcessing) {
 
         const gl::ScopedBind bind(prePostProcessingFbo, GL_FRAMEBUFFER);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        CompoundSystem::draw();
+        renderToCurrentFramebuffer();
 
     } else {
 
         // Convert output from fragment shaders from linear to sRGB
         glEnable(GL_FRAMEBUFFER_SRGB);
-        CompoundSystem::draw();
+        renderToCurrentFramebuffer();
         glDisable(GL_FRAMEBUFFER_SRGB);
-    }
-
-    if (m_renderingSharedState->enableDebugOutput) {
-        renderDebug();
     }
 }
 
-void RenderSystems::receive(const SceneManager::OnSceneClosed& info) {
+void RenderSystems::receive(const SceneManager::OnSceneClosed& event) {
 
     if (m_renderingSharedState) {
         m_renderingSharedState->batches.clear();
     }
 }
 
-void RenderSystems::receive(const sf::Event& event) {
+void RenderSystems::receive(const Window::FramebufferSizeEvent& event) {
 
-    if (event.type == sf::Event::EventType::Resized) {
-        // Make viewport match window size.
-        glViewport(0, 0, event.size.width, event.size.height);
+    // Make viewport match window size.
+    glViewport(0, 0, event.width, event.height);
+}
+
+void RenderSystems::renderToCurrentFramebuffer() {
+
+    m_engine->getWindow().setViewport();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //renderGLTest();
+
+    CompoundSystem::draw();
+
+    if (m_renderingSharedState->enableDebugOutput) {
+        renderDebug();
     }
 }
 
 void RenderSystems::renderDebug() {
 
-    m_debugHud->setDebugInfo({m_engine->getFps(), m_engine->getFrameTimeMicroseconds()});
-    m_debugHud->draw();
+    ImGui::Text("fps: %i", glm::iround(m_engine->getFps()));
+    ImGui::Text("render time: %f ms", m_engine->getFrameTimeMicroseconds() / 1000.0);
 }

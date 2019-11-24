@@ -20,7 +20,7 @@ public:
 
 private:
     en::Light m_initialLight;
-    GameTime::duration m_startTime;
+    en::TimePoint m_startTime;
 };
 
 #endif //ENGINE_LIGHTPROPERTYANIMATOR_H

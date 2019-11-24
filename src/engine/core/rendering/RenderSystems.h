@@ -6,14 +6,14 @@
 #define ENGINE_RENDERSYSTEMS_H
 
 #include "CompoundSystem.h"
-#include "DebugHud.h"
 #include "Receiver.h"
 #include "SceneManager.h"
+#include "Window.h"
 
 namespace en {
 
     /// Contains all rendering systems and creates the shared rendering state.
-    class RenderSystems : public CompoundSystem, Receiver<SceneManager::OnSceneClosed, sf::Event> {
+    class RenderSystems : public CompoundSystem, Receiver<SceneManager::OnSceneClosed, Window::FramebufferSizeEvent> {
 
     public:
         RenderSystems();
@@ -22,12 +22,12 @@ namespace en {
 
     private:
         void receive(const SceneManager::OnSceneClosed&) override;
-        void receive(const sf::Event&) override;
+        void receive(const Window::FramebufferSizeEvent&) override;
 
+        void renderToCurrentFramebuffer();
         void renderDebug();
 
         std::shared_ptr<class RenderingSharedState> m_renderingSharedState;
-        std::unique_ptr<DebugHud> m_debugHud;
     };
 }
 

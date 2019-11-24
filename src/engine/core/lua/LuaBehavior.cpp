@@ -163,13 +163,13 @@ void LuaBehavior::on(const MouseLeave& leave) {
 }
 
 void LuaBehavior::on(const MouseDown& down) {
-    callCallbackFunction(m_self, m_onMouseDown, down.button);
+    callCallbackFunction(m_self, m_onMouseDown, down.button + 1);
 }
 
 void LuaBehavior::on(const MouseHold& hold) {
-    callCallbackFunction(m_self, m_onMouseHold, hold.button);
+    callCallbackFunction(m_self, m_onMouseHold, hold.button + 1);
 }
 
 void LuaBehavior::on(const MouseUp& up) {
-    callCallbackFunction(m_self, m_onMouseUp, up.button);
+    callCallbackFunction(m_self, m_onMouseUp, up.button + 1);
 }

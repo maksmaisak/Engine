@@ -15,12 +15,6 @@ namespace {
 
     constexpr std::size_t NumComponentsPerVertex = 3 + 1 + 4; // 3 for position, 1 for line width, 4 for color
     constexpr std::size_t InitialVertexCapacity = 100;
-
-    glm::vec2 getInverseWindowSize(Engine& engine) {
-
-        const sf::Vector2u size = engine.getWindow().getSize();
-        return {1.f / size.x, 1.f / size.y};
-    }
 }
 
 LineRenderer& LineRenderer::get(Engine& engine) {
@@ -30,16 +24,13 @@ LineRenderer& LineRenderer::get(Engine& engine) {
 LineRenderer::LineRenderer(Actor& actor, std::size_t maxNumVerticesPerDrawCall) :
     Behavior(actor),
     m_maxNumVerticesPerDrawCall(maxNumVerticesPerDrawCall),
-    m_wireframeShader(Resources<ShaderProgram>::get("line")),
     m_vao(gl::ForceCreate),
     m_vbo(gl::ForceCreate)
 {
-    assert(m_wireframeShader);
-
     m_vertexData.reserve(InitialVertexCapacity * NumComponentsPerVertex);
 
-    const auto bindVAO = gl::ScopedBind(m_vao);
-    const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
+    const gl::ScopedBind bindVAO(m_vao);
+    const gl::ScopedBind bindVBO(m_vbo, GL_ARRAY_BUFFER);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * NumComponentsPerVertex * m_maxNumVerticesPerDrawCall, nullptr, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -65,16 +56,16 @@ void LineRenderer::render(const glm::mat4& matrixPVM) {
 
     useWireframeShader(matrixPVM);
     glDisable(GL_DEPTH_TEST);
-    const auto bindVAO = gl::ScopedBind(m_vao);
-    const auto bindVBO = gl::ScopedBind(m_vbo, GL_ARRAY_BUFFER);
+    const gl::ScopedBind bindVAO(m_vao);
+    const gl::ScopedBind bindVBO(m_vbo, GL_ARRAY_BUFFER);
 
-    std:size_t startIndex = 0;
+    std::size_t startIndex = 0;
     while (startIndex < m_vertexData.size()) {
 
         const std::size_t numRenderedVertexComponents = std::min(m_vertexData.size() - startIndex, maxNumVertexComponentsPerDrawCall);
+
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * numRenderedVertexComponents, m_vertexData.data() + startIndex);
         glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(numRenderedVertexComponents / NumComponentsPerVertex));
-
         startIndex += numRenderedVertexComponents;
     }
     m_vertexData.clear();
@@ -116,10 +107,14 @@ void LineRenderer::addVertex(const glm::vec3& position, const glm::vec4& color, 
 
 void LineRenderer::useWireframeShader(const glm::mat4& matrixPVM) {
 
-    assert(m_wireframeShader);
-    m_wireframeShader->use();
-    m_wireframeShader->setUniformValue("matrixPVM", matrixPVM);
-    const sf::Vector2u viewportSize = getEngine().getWindow().getSize();
-    m_wireframeShader->setUniformValue("viewportSize", glm::vec2(viewportSize.x, viewportSize.y));
-    m_wireframeShader->setUniformValue("inverseViewportSize", glm::vec2(1.f / viewportSize.x, 1.f / viewportSize.y));
+    static const auto shader = Resources<ShaderProgram>::get("line");
+    static const GLint matrixPVMLocation = shader->getUniformLocation("matrixPVM");
+    static const GLint viewportSizeLocation = shader->getUniformLocation("viewportSize");
+    static const GLint inverseViewportSizeLocation = shader->getUniformLocation("inverseViewportSize");
+
+    shader->use();
+    gl::setUniform(matrixPVMLocation, matrixPVM);
+    const glm::vec2 viewportSize = getEngine().getWindow().getFramebufferSize();
+    gl::setUniform(viewportSizeLocation, viewportSize);
+    gl::setUniform(inverseViewportSizeLocation, 1.f / viewportSize);
 }

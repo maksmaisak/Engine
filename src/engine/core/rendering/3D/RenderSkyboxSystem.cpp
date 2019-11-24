@@ -84,15 +84,15 @@ namespace {
             "back"
         };
 
-        std::array<std::string, 6> imagePaths;
+        std::array<Name, 6> imagePaths;
         for (int i = 0; i < 6; ++i) {
 
-            const std::optional<std::string> path = lua.tryGetField<std::string>(keys[i]);
+            const std::optional<Name> path = lua.tryGetField<std::string>(keys[i]);
             if (!path) {
                 return nullptr;
             }
 
-            imagePaths[i] = "assets/" + *path;
+            imagePaths[i] = "assets/" + path->getString();
         }
 
         return Resources<Texture>::get("defaultSkybox", imagePaths);
@@ -100,26 +100,23 @@ namespace {
 }
 
 RenderSkyboxSystem::RenderSkyboxSystem() :
+    m_vao(gl::ForceCreate),
+    m_buffer(gl::ForceCreate),
     m_shader(Resources<ShaderProgram>::get("skybox"))
 {
-    m_vao.create();
-    const auto bindVAO = gl::ScopedBind(m_vao);
+    const gl::ScopedBind bindVAO(m_vao);
+    const gl::ScopedBind bindBuffer(m_buffer, GL_ARRAY_BUFFER);
 
-    {
-        m_buffer.create();
-        const auto bindBuffer = gl::ScopedBind(m_buffer, GL_ARRAY_BUFFER);
-
-        glBufferData(GL_ARRAY_BUFFER, skyboxVertices.size() * sizeof(float), &skyboxVertices, GL_STATIC_DRAW);
-        glCheckError();
-        glEnableVertexAttribArray(0);
-        glCheckError();
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-        glCheckError();
-    }
+    glBufferData(GL_ARRAY_BUFFER, skyboxVertices.size() * sizeof(float), &skyboxVertices, GL_STATIC_DRAW);
+    glCheckError();
+    glEnableVertexAttribArray(0);
+    glCheckError();
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glCheckError();
 }
 
-void RenderSkyboxSystem::start()
-{
+void RenderSkyboxSystem::start() {
+
     m_defaultSkybox = getDefaultSkybox(m_engine->getLuaState());
 }
 
@@ -147,12 +144,10 @@ void RenderSkyboxSystem::draw() {
 
     const glm::mat4 matrixView = glm::mat4(glm::inverse(mainCamera.get<Transform>().getWorldRotation()));
 
-    const auto size = m_engine->getWindow().getSize();
-    const float aspectRatio = (float)size.x / size.y;
     const auto& camera = mainCamera.get<Camera>();
     const glm::mat4 matrixProjection = glm::perspective(
         glm::radians(camera.isOrthographic ? 90.f : camera.fov),
-        aspectRatio,
+        m_engine->getWindow().getAspectRatio(),
         camera.nearPlaneDistance,
         camera.farPlaneDistance
     );
@@ -168,7 +163,7 @@ void RenderSkyboxSystem::renderSkyboxCubemap(const Texture& cubemap, const glm::
     glDepthFunc(GL_LEQUAL);
 
     {
-        const auto bindVAO = gl::ScopedBind(m_vao);
+        const gl::ScopedBind bindVAO(m_vao);
 
         m_shader->use();
         gl::setUniform(m_shader->getUniformLocation("matrixPV"), matrixPV);

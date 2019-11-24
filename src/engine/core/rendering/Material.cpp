@@ -17,6 +17,7 @@
 #include "TupleUtils.h"
 #include "GameTime.h"
 #include "LuaState.h"
+#include "Font.h"
 
 using namespace en;
 using namespace std::string_literals;
@@ -219,7 +220,7 @@ void Material::setBuiltinUniforms(
         gl::setUniform(u.modelNormal, glm::mat3(glm::transpose(glm::inverse(modelMatrix))));
 
     if (valid(u.time))
-        gl::setUniform(u.time, GameTime::nowAsSeconds());
+        gl::setUniform(u.time, GameTime::asSeconds(GameTime::sinceAppStart()));
 
     if (valid(u.viewPosition))
         gl::setUniform(u.viewPosition, glm::vec3(glm::inverse(viewMatrix)[3]));
@@ -307,7 +308,7 @@ template<>
 void Material::setCustomUniformsOfType<Material::FontAtlas>(const Material::LocationToUniformValue<FontAtlas>& values) {
 
     for (auto& [location, setting] : values) {
-        if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getNativeHandle())) {
+        if (!setUniformTexture(location, setting.font->getTexture(setting.characterSize).getGLTextureObject())) {
             break;
         }
     }

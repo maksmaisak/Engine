@@ -14,7 +14,7 @@ Scheduler::Scheduler() :
 
 void Scheduler::update(float dt) {
 
-    while (!m_scheduled.empty() && m_scheduled.top().time <= GameTime::nowSFTime()) {
+    while (!m_scheduled.empty() && m_scheduled.top().time <= Clock::now()) {
 
         const ScheduleItem& scheduleItem = m_scheduled.top();
         if (!scheduleItem.isCancelled) {
@@ -27,19 +27,24 @@ void Scheduler::update(float dt) {
     }
 }
 
-TimerHandle Scheduler::delay(sf::Time timeDelay, const ScheduleItem::function_t& function) {
+TimerHandle Scheduler::delay(float timeDelay, const ScheduleItem::function_t& function) {
 
-    return schedule(GameTime::nowSFTime() + timeDelay, function);
+    return delay(std::chrono::duration_cast<Duration>(DurationFloat(timeDelay)), function);
 }
 
-TimerHandle Scheduler::schedule(sf::Time time, const ScheduleItem::function_t& function) {
+TimerHandle Scheduler::delay(Duration timeDelay, const ScheduleItem::function_t& function) {
+
+    return schedule(TimePoint(Clock::now() + timeDelay), function);
+}
+
+TimerHandle Scheduler::schedule(TimePoint time, const ScheduleItem::function_t& function) {
 
     const ScheduleItem::id_t id = m_nextFreeId++;
     m_scheduled.emplace(time, function, id);
     return TimerHandle(this, id);
 }
 
-ScheduleItem::ScheduleItem(sf::Time time, ScheduleItem::function_t function, ScheduleItem::id_t id) :
+ScheduleItem::ScheduleItem(TimePoint time, function_t function, id_t id) :
     time(time),
     function(std::move(function)),
     id(id),
@@ -87,7 +92,6 @@ TimerHandle::TimerHandle(struct Scheduler* scheduler, ScheduleItem::id_t schedul
 {}
 
 bool TimerHandle::isAssigned() const {
-
     return m_scheduler && m_scheduleItemId;
 }
 

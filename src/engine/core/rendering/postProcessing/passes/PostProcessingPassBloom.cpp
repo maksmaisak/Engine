@@ -55,7 +55,7 @@ namespace {
 void PostProcessingPassBloom::setUp(const glm::u32vec2& size) {
 
     for (gl::FramebufferBundle& fb : m_blurFramebuffers) {
-        fb = PostProcessingUtilities::makeFramebuffer(size);
+        fb = gl::makeFramebuffer(size);
     }
 }
 
@@ -92,7 +92,7 @@ void PostProcessingPassBloom::displayImGui() {
 
 void PostProcessingPassBloom::isolateBrightFragments(const gl::TextureObject& sourceTexture, const gl::FramebufferObject& target) {
 
-    static const std::shared_ptr<ShaderProgram> shader = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/isolateBrightFragments");
+    static const std::shared_ptr<ShaderProgram> shader = gl::getPostProcessingShader("postProcessing/bloom/isolateBrightFragments");
     static const GLint textureLocation = shader->getUniformLocation("sourceTexture");
     static const GLint brightnessThresholdLocation = shader->getUniformLocation("threshold");
 
@@ -102,12 +102,12 @@ void PostProcessingPassBloom::isolateBrightFragments(const gl::TextureObject& so
 
     const gl::ScopedBind bindFBO(target, GL_FRAMEBUFFER);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    PostProcessingUtilities::renderQuad();
+    gl::renderQuad();
 }
 
 void PostProcessingPassBloom::blur() {
 
-    static const std::shared_ptr<ShaderProgram> shader = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/gaussianBlur");
+    static const std::shared_ptr<ShaderProgram> shader = gl::getPostProcessingShader("postProcessing/bloom/gaussianBlur");
     static const GLint sourceTextureLocation = shader->getUniformLocation("sourceTexture");
     static const GLint isHorizontalLocation = shader->getUniformLocation("isHorizontal");
     static const GLint kernelSizeLocation = shader->getUniformLocation("kernelSize");
@@ -128,7 +128,7 @@ void PostProcessingPassBloom::blur() {
 
         const gl::ScopedBind bindFBO(target, GL_FRAMEBUFFER);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        PostProcessingUtilities::renderQuad();
+        gl::renderQuad();
     };
 
     for (int i = 0; i < m_settings.numBlurIterations; ++i) {
@@ -139,7 +139,7 @@ void PostProcessingPassBloom::blur() {
 
 void PostProcessingPassBloom::bloomCombine(const gl::TextureObject& originalTexture, const gl::TextureObject& blurredTexture) {
 
-    static const std::shared_ptr<ShaderProgram> bloomCombine = PostProcessingUtilities::getPostProcessingShader("postProcessing/bloom/bloomCombine");
+    static const std::shared_ptr<ShaderProgram> bloomCombine = gl::getPostProcessingShader("postProcessing/bloom/bloomCombine");
     static const GLint sourceTextureLocation  = bloomCombine->getUniformLocation("sourceTexture");
     static const GLint blurredTextureLocation = bloomCombine->getUniformLocation("blurredTexture");
     static const GLint intensityLocation = bloomCombine->getUniformLocation("intensity");
@@ -149,5 +149,5 @@ void PostProcessingPassBloom::bloomCombine(const gl::TextureObject& originalText
     gl::setUniform(sourceTextureLocation, originalTexture, 0);
     gl::setUniform(blurredTextureLocation, blurredTexture, 1);
 
-    PostProcessingUtilities::renderQuad();
+    gl::renderQuad();
 }

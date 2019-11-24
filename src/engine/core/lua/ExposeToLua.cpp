@@ -9,8 +9,8 @@
 #include "ClosureHelper.h"
 #include "Material.h"
 
-#include "KeyboardHelper.h"
-#include "MouseHelper.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 #include "Sound.h"
 #include "MusicIntegration.h"
 #include "Ease.h"
@@ -108,8 +108,11 @@ namespace {
         lua_newtable(lua);
         {
             lua.setField("getSize", [&window = engine.getWindow()]() -> glm::vec2 {
-                auto size = window.getSize();
-                return {size.x, size.y};
+                return window.getSize();
+            });
+
+            lua.setField("getFramebufferSize", [&window = engine.getWindow()]() -> glm::vec2 {
+                return window.getFramebufferSize();
             });
         }
         lua_setfield(lua, -2, "window");
@@ -166,9 +169,9 @@ namespace {
         lua_pushvalue(lua, -1);
         lua_newtable(lua);
         {
-            lua.setField("isHeld", static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isHeld));
-            lua.setField("isDown", static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isDown));
-            lua.setField("isUp"  , static_cast<bool(*)(const std::string&)>(utils::KeyboardHelper::isUp));
+            lua.setField("isHeld", [](const std::string& name){return Keyboard::isHeld(name);});
+            lua.setField("isDown", [](const std::string& name){return Keyboard::isDown(name);});
+            lua.setField("isUp"  , [](const std::string& name){return Keyboard::isUp(name);});
         }
         lua_setfield(lua, -2, "keyboard");
     }
@@ -179,9 +182,9 @@ namespace {
         lua_pushvalue(lua, -1);
         lua_newtable(lua);
         {
-            lua.setField("isHeld", [](int buttonNum){return utils::MouseHelper::isHeld((sf::Mouse::Button)(buttonNum - 1));});
-            lua.setField("isDown", [](int buttonNum){return utils::MouseHelper::isDown((sf::Mouse::Button)(buttonNum - 1));});
-            lua.setField("isUp"  , [](int buttonNum){return utils::MouseHelper::isUp  ((sf::Mouse::Button)(buttonNum - 1));});
+            lua.setField("isHeld", [](int buttonNum){return Mouse::isHeld(buttonNum - 1);});
+            lua.setField("isDown", [](int buttonNum){return Mouse::isDown(buttonNum - 1);});
+            lua.setField("isUp"  , [](int buttonNum){return Mouse::isUp  (buttonNum - 1);});
         }
         lua_setfield(lua, -2, "mouse");
     }
@@ -207,7 +210,7 @@ namespace {
             lua_pushcclosure(lua, &makeActorFromLua, 1);
             lua_setfield(lua, -2, "makeActor");
 
-            lua.setField("getTime", [](){return GameTime::nowAsSeconds();});
+            lua.setField("getTime", [](){return GameTime::asSeconds(GameTime::sinceAppStart());});
 
             lua.push(&engine);
             lua_pushcclosure(lua, &loadScene, 1);

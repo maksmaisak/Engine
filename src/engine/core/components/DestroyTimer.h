@@ -2,17 +2,17 @@
 // Created by Maksym Maisak on 25/10/18.
 //
 
-#ifndef SAXION_Y2Q1_CPP_DESTROYONTIME_H
-#define SAXION_Y2Q1_CPP_DESTROYONTIME_H
+#ifndef ENGINE_DESTROYONTIMER_H
+#define ENGINE_DESTROYONTIMER_H
 
-#include <SFML/System.hpp>
+#include "GameTime.h"
 
 namespace en {
 
     struct DestroyTimer {
 
-        sf::Time timeToDestroy;
+        TimePoint timeToDestroy;
     };
 }
 
-#endif //SAXION_Y2Q1_CPP_DESTROYONTIME_H
+#endif //ENGINE_DESTROYONTIMER_H

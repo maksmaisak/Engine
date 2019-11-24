@@ -1,11 +1,11 @@
 
 -- engine
-width  = 1920
-height = 1080
+width  = 800
+height = 600
 windowTitle = "Engine"
 fullscreen = false
-framerateCap = 2400000
-vsync = false
+framerateCap = 240
+vsync = true
 enableStaticBatching = true
 enableDebugOutput    = true
 overlayPhiGrid       = false
@@ -16,6 +16,7 @@ startScene = 'assets/scripts/UI/mainMenu.lua'
 --startScene = 'assets/scripts/scenes/test/luaScene.lua'
 --startScene = 'assets/scripts/scenes/test/testTweening.lua'
 --startScene = 'assets/scripts/scenes/test/renderingShowcase.lua'
+--startScene = 'assets/scripts/scenes/test/testUI.lua'
 
 defaultSkybox = {
     right  = "textures/skybox/SkyboxMap_right.png" ,

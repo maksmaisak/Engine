@@ -3,8 +3,9 @@
 //
 #include <iostream>
 #include <algorithm>
+#include <thread>
 #include <GL/glew.h>
-#include <SFML/Graphics.hpp>
+#include <GLFW/glfw3.h>
 
 #include "Engine.h"
 #include "ExposeToLua.h"
@@ -13,20 +14,24 @@
 #include "LuaState.h"
 #include "ClosureHelper.h"
 #include "Resources.h"
-#include "KeyboardHelper.h"
-#include "MouseHelper.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 #include "Sound.h"
 #include "Camera.h"
 #include "Name.h"
+#include "Font.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
 using namespace en;
+using namespace std::chrono_literals;
 
 namespace {
 
-    constexpr float FixedTimestep = 0.01f;
+    constexpr DurationFloat FixedTimestep = 0.01s;
     constexpr unsigned int MaxNumFixedUpdatesPerFrame = 3;
 
-    static Engine* g_engine = nullptr;
+    Engine* g_engine = nullptr;
 
     void printGLContextVersionInfo() {
 
@@ -72,13 +77,22 @@ Engine& Engine::get() {
 Engine::Engine() :
     m_lua(std::make_unique<LuaState>()),
     m_systems(*this),
-    m_sceneManager(*this)
+    m_sceneManager(*this),
+    m_framerateCap(240),
+    m_fps(0.0),
+    m_frameTimeMicroseconds(0),
+    m_deltaTime(0.f),
+    m_deltaTimeRealtime(0.f),
+    m_timeScale(1.f),
+    m_shouldExit(false)
 {
     assert(!g_engine && "Can't have more than one Engine!");
     g_engine = this;
 }
 
 Engine::~Engine() {
+
+    Resources<Font>::clear();
 
     // If sf::SoundBuffer is being destroyed when statics are destroyed when the app quits,
     // that causes OpenAL to throw an error. This prevents that.
@@ -90,7 +104,7 @@ Engine::~Engine() {
 void Engine::initialize() {
 
     initializeLua();
-    initializeWindow(m_window);
+    initializeWindow();
     initializeGlew();
 }
 
@@ -98,55 +112,58 @@ void Engine::run() {
 
     m_systems.start();
 
-    const sf::Time fixedTimestepSf = sf::seconds(FixedTimestep);
-    sf::Clock fixedUpdateClock;
-    sf::Time fixedUpdateLag = sf::Time::Zero;
+    DurationFloat fixedUpdateLag = DurationFloat::zero();
+    const DurationFloat drawTimestep = 1s / m_framerateCap;
 
-    const sf::Time drawTimestepSf = sf::microseconds(1000000.0 / m_framerateCap);
-    sf::Clock drawClock;
+    TimePoint timeOfLastFixedUpdate = Clock::now();
+    TimePoint timeOfLastDraw = Clock::now();
 
-    while (m_window.isOpen()) {
+    while (!m_shouldExit && !m_window.shouldClose()) {
 
         // Perform fixed updates if needed
-        fixedUpdateLag += fixedUpdateClock.restart() * m_timeScale;
-        fixedUpdateLag = std::min(fixedUpdateLag, fixedTimestepSf * static_cast<float>(MaxNumFixedUpdatesPerFrame) * std::max(1.f, m_timeScale));
-        while (fixedUpdateLag >= fixedTimestepSf) {
+        fixedUpdateLag += (Clock::now() - timeOfLastFixedUpdate) * m_timeScale;
+        timeOfLastFixedUpdate = Clock::now();
 
-            m_deltaTime = FixedTimestep;
-            m_deltaTimeRealtime = FixedTimestep / m_timeScale;
+        fixedUpdateLag = std::min(fixedUpdateLag, FixedTimestep * static_cast<float>(MaxNumFixedUpdatesPerFrame) * std::max(1.f, m_timeScale));
+        while (fixedUpdateLag >= FixedTimestep) {
+
+            m_deltaTime = FixedTimestep.count();
+            m_deltaTimeRealtime = m_deltaTime / m_timeScale;
             fixedUpdate();
 
-            fixedUpdateLag -= fixedTimestepSf;
+            fixedUpdateLag -= FixedTimestep;
         }
 
         // Perform draw if needed
-        if (drawClock.getElapsedTime() >= drawTimestepSf) {
+        const DurationFloat timeSinceLastDraw = Clock::now() - timeOfLastDraw;
+        if (timeSinceLastDraw >= drawTimestep) {
 
-            m_fps = static_cast<float>(1000000.0 / drawClock.restart().asMicroseconds());
+            m_fps = 1.f / timeSinceLastDraw.count();
+            timeOfLastDraw = Clock::now();
 
-            sf::Clock frameClock;
+            const TimePoint timeOfFrameStart = Clock::now();
             draw();
-            m_frameTimeMicroseconds = frameClock.getElapsedTime().asMicroseconds();
+            m_frameTimeMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - timeOfFrameStart).count();
+
+            glfwPollEvents();
 
         } else {
 
             while (true) {
 
-                sf::sleep(sf::microseconds(1));
+                std::this_thread::sleep_for(1us);
 
-                const bool shouldDraw = drawClock.getElapsedTime() >= drawTimestepSf;
+                const bool shouldDraw = (Clock::now() - timeOfLastDraw) >= drawTimestep;
                 if (shouldDraw) {
                     break;
                 }
 
-                const bool shouldUpdate = fixedUpdateLag + fixedUpdateClock.getElapsedTime() * m_timeScale >= fixedTimestepSf;
+                const bool shouldUpdate = fixedUpdateLag + (Clock::now() - timeOfLastFixedUpdate) * m_timeScale >= FixedTimestep;
                 if (shouldUpdate) {
                     break;
                 }
             }
         }
-
-        processWindowEvents();
     }
 
     m_sceneManager.closeCurrentScene();
@@ -164,15 +181,15 @@ void Engine::fixedUpdate() {
     m_systems.update(m_deltaTime);
     m_scheduler.update(m_deltaTime);
 
-    utils::KeyboardHelper::update();
-    utils::MouseHelper::update();
+    Keyboard::update();
+    Mouse::update();
 }
 
 void Engine::draw() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_systems.draw();
-    m_window.display();
+    glfwSwapBuffers(m_window.getUnderlyingWindow());
 }
 
 void Engine::initializeLua() {
@@ -190,7 +207,7 @@ void Engine::initializeLua() {
     m_framerateCap = lua.tryGetField<unsigned int>("framerateCap").value_or(m_framerateCap);
 }
 
-void Engine::initializeWindow(sf::RenderWindow& window) {
+void Engine::initializeWindow() {
 
     std::cout << "Initializing window..." << std::endl;
 
@@ -198,39 +215,23 @@ void Engine::initializeWindow(sf::RenderWindow& window) {
     lua_getglobal(lua, "Config");
     const auto popConfig = lua::PopperOnDestruct(lua);
 
-    const unsigned int width      = lua.tryGetField<unsigned int>("width").value_or(800);
-    const unsigned int height     = lua.tryGetField<unsigned int>("height").value_or(600);
-    const bool vsync              = lua.tryGetField<bool>("vsync").value_or(true);
-    const bool fullscreen         = lua.tryGetField<bool>("fullscreen").value_or(false);
+    const int width = lua.tryGetField<int>("width").value_or(800);
+    const int height = lua.tryGetField<int>("height").value_or(600);
+    const bool vsync = lua.tryGetField<bool>("vsync").value_or(true);
+    const bool fullscreen = lua.tryGetField<bool>("fullscreen").value_or(false);
     const std::string windowTitle = lua.tryGetField<std::string>("windowTitle").value_or("Game");
 
-    const auto contextSettings = sf::ContextSettings(24, 8, 8, 4, 5, sf::ContextSettings::Attribute::Core | sf::ContextSettings::Attribute::Debug);
-    window.create(sf::VideoMode(width, height), windowTitle, fullscreen ? sf::Style::Fullscreen : sf::Style::Default, contextSettings);
-    window.setVerticalSyncEnabled(vsync);
-    window.setKeyRepeatEnabled(false);
-    window.setFramerateLimit(0);
-    window.setActive(true);
+    const bool didCreateWindow = m_window.create(width, height, windowTitle, fullscreen);
+    if (!didCreateWindow) {
+        std::cerr << "Failed to initialize window" << std::endl;
+        return;
+    }
+    m_window.makeCurrent();
+    glfwSwapInterval(vsync ? 1 : 0);
 
     std::cout << "Window initialized." << std::endl << std::endl;
 
     printGLContextVersionInfo();
-}
-
-void Engine::processWindowEvents() {
-
-    sf::Event event{};
-    while (m_window.pollEvent(event)) {
-
-        if (event.type == sf::Event::Closed) {
-            m_shouldExit = true;
-        }
-
-        Receiver<sf::Event>::broadcast(event);
-    }
-
-    if (m_shouldExit) {
-        m_window.close();
-    }
 }
 
 Actor Engine::actor(Entity entity) const {

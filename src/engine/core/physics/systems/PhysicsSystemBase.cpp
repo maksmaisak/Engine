@@ -3,7 +3,6 @@
 //
 
 #include "PhysicsSystemBase.h"
-#include <SFML/Graphics.hpp>
 #include <sstream>
 #include <chrono>
 #include <locale>
@@ -14,6 +13,7 @@
 #include "Collision.h"
 #include "UIRect.h"
 #include "Text.h"
+#include "Font.h"
 
 using namespace en;
 
@@ -157,7 +157,7 @@ Text& PhysicsSystemBase::ensureDebugText() {
     return m_debugTextActor.add<Text>()
         .setString("Test")
         .setAlignment({0, 1})
-        .setFont(Resources<sf::Font>::get(config::FONT_PATH + "Menlo.ttc"));
+        .setFont(Resources<Font>::get(config::FONT_PATH + "Menlo.ttc"));
 }
 
 const PhysicsSystemBase::DiagnosticsInfo& PhysicsSystemBase::getDiagnosticsInfo() const {
